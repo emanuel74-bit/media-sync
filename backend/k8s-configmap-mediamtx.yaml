@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: mediamtx-cluster-config
+data:
+    mediamtx.yml: |
+        api: true
+        apiAddress: :9000
+
+        rtsp: true
+        rtspAddress: :8554
+
+        hls: true
+        hlsAddress: :8888
+
+        webrtc: true
+        webrtcAddress: :8889
+
+        srt: true
+        srtAddress: :8890
+
+        record: false
+
+        pathDefaults:
+            runOnDemand: true
+            runOnDemandRestart: true

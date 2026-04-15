@@ -1,0 +1,10 @@
+# docker-compose.cluster
+# Use this to scale the MediaMTX cluster horizontally
+# Run with: docker-compose -f docker-compose.local -f docker-compose.cluster up --build
+
+services:
+    mediamtx-cluster:
+        scale: 3
+        environment:
+            - POD_ID=cluster-pod-{{.Task.Slot}}
+            - MEDIA_SYNC_API=http://app:3000

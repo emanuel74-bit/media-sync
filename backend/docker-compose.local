@@ -1,0 +1,81 @@
+services:
+    mongodb:
+        image: mongodb/mongodb-community-server:latest
+        ports:
+            - "27017:27017"
+        environment:
+            - MONGO_INITDB_ROOT_USERNAME=admin
+            - MONGO_INITDB_ROOT_PASSWORD=password
+        volumes:
+            - mongodb_data:/data/db
+
+    mediamtx-ingest:
+        build:
+            context: .
+            dockerfile: Dockerfile.mediamtx-pod
+        ports:
+            - "8554:8554" # RTSP
+            - "8888:8888" # HLS
+            - "9000:9000" # API
+        volumes:
+            - ./k8s-deployment-mediamtx-ingest.yaml:/mediamtx.yml
+        environment:
+            - POD_ID=ingest-pod-${POD_INDEX:-1}
+            - POD_TYPE=ingest
+            - MEDIA_SYNC_API=http://app:3000
+        restart: unless-stopped
+
+    mediamtx-cluster:
+        build:
+            context: .
+            dockerfile: Dockerfile.mediamtx-pod
+        ports:
+            - "8555:8554" # RTSP
+            - "8889:8888" # HLS
+            - "9001:9000" # API
+        volumes:
+            - ./k8s-deployment-mediamtx-cluster.yaml:/mediamtx.yml
+        environment:
+            - POD_ID=cluster-pod-${POD_INDEX:-1}
+            - MEDIA_SYNC_API=http://app:3000
+        depends_on:
+            - app
+        restart: unless-stopped
+        # Health check for Docker Compose
+        healthcheck:
+            test:
+                [
+                    "CMD-SHELL",
+                    "curl -fsS -u sync:syncpass http://localhost:9000/v3/paths/list >/dev/null",
+                ]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 40s
+
+    # mediamtx-viewer:
+    #     image: mchauge/mediamtx-path-viewer:latest
+    #     ports:
+    #         - "8080:8080"
+    #     environment:
+    #         - MEDIAMTX_API_URL=http://mediamtx-ingest:9000,http://mediamtx-cluster:9000
+    #     depends_on:
+    #         - mediamtx-ingest
+    #         - mediamtx-cluster
+    #     restart: unless-stopped
+
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile.app
+        ports:
+            - "3000:3000"
+        env_file:
+            - .env
+        depends_on:
+            - mongodb
+            - mediamtx-ingest
+        restart: unless-stopped
+
+volumes:
+    mongodb_data:

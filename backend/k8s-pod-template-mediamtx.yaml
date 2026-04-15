@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: mediamtx-cluster
+    labels:
+        app: mediamtx-cluster
+spec:
+    replicas: 1 # Scale this as needed
+    selector:
+        matchLabels:
+            app: mediamtx-cluster
+    template:
+        metadata:
+            labels:
+                app: mediamtx-cluster
+        spec:
+            containers:
+                - name: mediamtx
+                  image: your-registry/mediamtx-pod:latest
+                  ports:
+                      - containerPort: 8554
+                        name: rtmp
+                      - containerPort: 8888
+                        name: hls
+                      - containerPort: 8889
+                        name: webrtc
+                      - containerPort: 8890
+                        name: srt
+                      - containerPort: 9000
+                        name: api
+                  env:
+                      - name: MEDIA_SYNC_API
+                        value: "http://media-sync:3000"
+                      - name: POD_ID
+                        valueFrom:
+                            fieldRef:
+                                fieldPath: metadata.name
+                      - name: POD_HOST
+                        valueFrom:
+                            fieldRef:
+                                fieldPath: status.podIP
+                      - name: HEARTBEAT_INTERVAL
+                        value: "20"
+                  volumeMounts:
+                      - name: mediamtx-config
+                        mountPath: /mediamtx.yml
+                        subPath: mediamtx.yml
+                  # Readiness probe - checks if MediaMTX API is responding
+                  readinessProbe:
+                      httpGet:
+                          path: /api/streams
+                          port: 9000
+                      initialDelaySeconds: 10
+                      periodSeconds: 5
+                      timeoutSeconds: 3
+                      failureThreshold: 3
+                  # Liveness probe - checks if MediaMTX is healthy
+                  livenessProbe:
+                      httpGet:
+                          path: /api/streams
+                          port: 9000
+                      initialDelaySeconds: 30
+                      periodSeconds: 10
+                      timeoutSeconds: 5
+                      failureThreshold: 3
+            volumes:
+                - name: mediamtx-config
+                  configMap:
+                      name: mediamtx-cluster-config
+            restartPolicy: Always

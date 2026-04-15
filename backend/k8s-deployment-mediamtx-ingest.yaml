@@ -1,0 +1,25 @@
+api: true
+apiAddress: :9000
+
+authMethod: internal
+authInternalUsers:
+    - user: sync
+      pass: syncpass
+      permissions:
+          - action: api
+          - action: read
+          - action: publish
+
+rtsp: true
+rtspAddress: :8554
+
+hls: true
+hlsAddress: :8888
+
+webrtc: true
+webrtcAddress: :8889
+
+srt: true
+srtAddress: :8890
+
+record: false
