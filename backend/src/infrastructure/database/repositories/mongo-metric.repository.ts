@@ -4,7 +4,8 @@ import { InjectModel } from "@nestjs/mongoose";
 
 import { Metric } from "../../../metrics/domain";
 import { MongoDomainRepository } from "./mongo-domain.repository";
-import { MetricRepository, NewMetricData } from "../../../metrics/repositories";
+import { MetricRepository } from "../../../metrics/repositories";
+import { NewMetricData } from "../../../metrics/domain";
 import { Metric as MetricSchema, MetricDocument } from "../schemas/metric.schema";
 
 type LeanMetric = MetricSchema & { createdAt: Date; updatedAt: Date };

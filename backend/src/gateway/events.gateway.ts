@@ -11,11 +11,11 @@ import {
 import { SystemEventNames, SystemEventName } from "../common";
 
 @WebSocketGateway({ cors: { origin: "*" } })
-export class GatewayGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit {
+export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit {
     @WebSocketServer()
     server!: Server;
 
-    private readonly logger = new Logger(GatewayGateway.name);
+    private readonly logger = new Logger(EventsGateway.name);
 
     private static readonly BROADCAST_EVENTS: readonly SystemEventName[] = [
         SystemEventNames.STREAM_SYNCED,
@@ -32,7 +32,7 @@ export class GatewayGateway implements OnGatewayConnection, OnGatewayDisconnect,
     constructor(private readonly events: EventEmitter2) {}
 
     onModuleInit(): void {
-        for (const event of GatewayGateway.BROADCAST_EVENTS) {
+        for (const event of EventsGateway.BROADCAST_EVENTS) {
             this.events.on(event, (payload: unknown) => this.broadcast(event, payload));
         }
     }

@@ -1,11 +1,11 @@
 import { Module } from "@nestjs/common";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 
-import { GatewayGateway } from "./gateway.gateway";
+import { EventsGateway } from "./events.gateway";
 
 @Module({
     imports: [EventEmitterModule.forRoot()],
-    providers: [GatewayGateway],
-    exports: [GatewayGateway],
+    providers: [EventsGateway],
+    exports: [EventsGateway],
 })
 export class GatewayModule {}

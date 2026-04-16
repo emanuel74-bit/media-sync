@@ -112,6 +112,28 @@ If applying a rule could affect:
 
 ---
 
+## Imports & Exports
+
+### No re-exports in non-`index.ts` files
+
+- A file must only `export` what it **defines** — not what it imports from another file.
+- Re-exporting an import (e.g. `export { Foo } from "./foo"` or `export * from "./foo"`) is **only allowed in barrel `index.ts` files**.
+- Consumers must import each symbol directly from the file that defines it.
+
+❌ Bad — `stream-inspection.repository.ts` re-exporting a type from the domain layer:
+```ts
+export { NewStreamInspectionData } from "../domain/stream-inspection-creation.domain";
+```
+
+✅ Good — each consumer imports `NewStreamInspectionData` from the domain directly:
+```ts
+import { NewStreamInspectionData } from "../../domain";
+```
+
+> Deprecated compatibility stubs (files that contain only re-exports) must be deleted; consumers must be updated to reference the canonical source.
+
+---
+
 ## Function Readability
 
 - Keep functions readable and focused

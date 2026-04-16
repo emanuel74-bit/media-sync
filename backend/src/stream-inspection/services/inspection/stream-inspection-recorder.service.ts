@@ -2,7 +2,8 @@ import { Injectable, Logger } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
 import { parseTracksFromPathItem } from "../parsing";
-import { NewStreamInspectionData, StreamInspectionRepository } from "../../repositories";
+import { NewStreamInspectionData } from "../../domain";
+import { StreamInspectionRepository } from "../../repositories";
 import { PodRole, SystemEventNames } from "../../../common";
 import { MediaMtxStreamInfo, V3PathItem } from "../../../infrastructure/media-mtx/types";
 import { MediaMtxStreamStatsService } from "../../../infrastructure/media-mtx/services";
