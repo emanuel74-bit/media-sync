@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 
-import { PodRole } from "../../../common";
+import { PodRole } from "../../../common/domain";
 import { MediaMtxClient } from "../clients";
 import { MediaMtxStreamInfo } from "../types";
 import { PodQueryService } from "../../../pods/services";

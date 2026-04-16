@@ -3,7 +3,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { PodQueryService } from "./pod-query.service";
 import { PodRepository } from "../repositories";
 import { ConfigService } from "../../config";
-import { PodRole, PodStatus } from "../../common";
+import { PodRole, PodStatus } from "../../common/domain";
 import { Pod } from "../domain";
 
 const makePod = (podId: string, overrides: Partial<Pod> = {}): Pod => ({

@@ -4,7 +4,8 @@ import { OnEvent } from "@nestjs/event-emitter";
 import { StreamTrack, StreamTrackAlertContext } from "../../domain";
 import { StreamQueryService } from "../../../streams/services/query";
 import { STREAM_TRACK_ALERT_RULES } from "./stream-track-alert-rules";
-import { AlertRuleEvaluator, StreamInspectedPayload, SystemEventNames } from "../../../common";
+import { StreamInspectedPayload, SystemEventNames } from "../../../common/events";
+import { AlertRuleEvaluator } from "../../../common/services";
 
 @Injectable()
 export class StreamTrackAlertService {

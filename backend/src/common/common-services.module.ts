@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 
-import { AlertRuleEvaluator, SequentialStreamTaskRunner } from "./services";
+import { AlertRuleEvaluator } from "./services/alert-rule-evaluator.service";
+import { SequentialStreamTaskRunner } from "./services/sequential-stream-task-runner.service";
 
 @Module({
     providers: [AlertRuleEvaluator, SequentialStreamTaskRunner],

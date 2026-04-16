@@ -4,7 +4,7 @@ import { Stream } from "../../domain";
 import { CreateStreamDto } from "../../dto";
 import { PodQueryService } from "../../../pods/services";
 import { StreamAssignmentService } from "../assignment";
-import { PodRole, StreamStatus } from "../../../common";
+import { PodRole, StreamStatus } from "../../../common/domain";
 import { StreamCrudService } from "./stream-crud.service";
 import { StreamProvisioningService } from "./stream-provisioning.service";
 

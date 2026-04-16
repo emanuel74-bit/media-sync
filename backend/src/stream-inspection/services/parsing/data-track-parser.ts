@@ -1,5 +1,5 @@
 import { StreamTrack } from "../../domain";
-import { TrackType } from "../../../common";
+import { TrackType } from "../../../common/domain";
 import { V3TrackItem } from "../../../infrastructure/media-mtx/types";
 import { TrackParser } from "./track-parser.interface";
 

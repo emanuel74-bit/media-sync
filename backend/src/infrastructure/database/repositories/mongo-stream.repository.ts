@@ -2,7 +2,7 @@ import { Model } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 
-import { StreamStatus } from "../../../common";
+import { StreamStatus } from "../../../common/domain";
 import { StreamRepository } from "../../../streams/repositories";
 import { MongoDomainRepository } from "./mongo-domain.repository";
 import { Stream, StreamAssignmentInfo } from "../../../streams/domain";

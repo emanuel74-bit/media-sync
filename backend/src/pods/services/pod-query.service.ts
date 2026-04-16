@@ -4,7 +4,7 @@ import { Pod } from "../domain";
 import { ActivePodRef } from "../domain/active-pod-ref.domain";
 import { ConfigService } from "../../config";
 import { PodRepository } from "../repositories";
-import { PodRole } from "../../common";
+import { PodRole } from "../../common/domain";
 
 @Injectable()
 export class PodQueryService {

@@ -1,11 +1,6 @@
 import { MetricAlertRule } from "./metric-alert-rule";
-import {
-    AlertSeverity,
-    AlertType,
-    isBitrateLow,
-    isLatencyHigh,
-    isPacketLossHigh,
-} from "../../../common";
+import { AlertSeverity, AlertType } from "../../../common/domain";
+import { isBitrateLow, isLatencyHigh, isPacketLossHigh } from "../../../common/rules";
 
 export const METRIC_ALERT_RULES: MetricAlertRule[] = [
     {

@@ -2,7 +2,7 @@ import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
 import { StreamsModule } from "../streams";
-import { CommonServicesModule } from "../common";
+import { CommonServicesModule } from "../common/common-services.module";
 import { StreamInspectionController } from "./controllers";
 import { StreamTrackAlertService } from "./services/alerts";
 import { StreamInspectionRepository } from "./repositories";

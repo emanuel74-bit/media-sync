@@ -1,7 +1,7 @@
 import { Document } from "mongoose";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 
-import { PodRole, PodStatus } from "../../../common";
+import { PodRole, PodStatus } from "../../../common/domain";
 
 export type PodDocument = Pod & Document;
 

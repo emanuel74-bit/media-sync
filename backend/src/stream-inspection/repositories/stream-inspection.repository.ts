@@ -1,4 +1,4 @@
-import { PodRole } from "../../common";
+import { PodRole } from "../../common/domain";
 import { StreamInspectionRecord, StreamTrack } from "../domain";
 import { NewStreamInspectionData } from "../domain/stream-inspection-creation.domain";
 

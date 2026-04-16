@@ -1,16 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { AlertSeverity, AlertType } from "../types";
-import { AlertCreateRequestedPayload } from "../events";
-import { SystemEventNames } from "../event-names";
-
-export type RuntimeAlertRule<TInput, TContext> = {
-    check: (input: TInput, context: TContext) => boolean;
-    type: AlertType;
-    severity: AlertSeverity;
-    message: (input: TInput) => string;
-};
+import { RuntimeAlertRule } from "../rules/runtime-alert-rule.type";
+import { AlertCreateRequestedPayload } from "../events/event-payloads";
+import { SystemEventNames } from "../events/system-event-names";
 
 @Injectable()
 export class AlertRuleEvaluator {

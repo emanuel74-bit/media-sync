@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 
-import { StreamStatus } from "../../../common";
+import { StreamStatus } from "../../../common/domain";
 import { SyncDiscoveredStream } from "../../domain";
 import { Stream, StreamMetadata } from "../../../streams/domain";
 import { StreamStatusService } from "../../../streams/services/lifecycle";

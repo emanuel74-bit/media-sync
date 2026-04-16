@@ -2,7 +2,7 @@ import { Model } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 
-import { AlertType } from "../../../common";
+import { AlertType } from "../../../common/domain";
 import { AlertRepository } from "../../../alerts/repositories";
 import { MongoDomainRepository } from "./mongo-domain.repository";
 import { Alert, AlertCreationData } from "../../../alerts/domain";

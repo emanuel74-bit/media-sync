@@ -3,7 +3,8 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 
 import { PodRegistrationService } from "./pod-registration.service";
 import { PodRepository } from "../repositories";
-import { PodRole, PodStatus, SystemEventNames } from "../../common";
+import { PodRole, PodStatus } from "../../common/domain";
+import { SystemEventNames } from "../../common/events";
 import { Pod } from "../domain";
 
 const makePod = (overrides: Partial<Pod> = {}): Pod => ({

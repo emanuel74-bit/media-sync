@@ -1,4 +1,4 @@
-import { AlertMetricInput } from "../alert-metric-input";
+import { AlertMetricInput } from "../domain/alert-metric-input.interface";
 
 export interface MetricThresholds {
     alertBitrateLowThreshold: number;

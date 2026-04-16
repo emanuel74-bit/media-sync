@@ -3,7 +3,7 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 
 import { SyncContext, SyncWorkflow } from "../../domain";
 import { SYNC_WORKFLOWS } from "../../sync-workflows.token";
-import { SystemEventNames } from "../../../common";
+import { SystemEventNames } from "../../../common/events";
 
 @Injectable()
 export class SyncOrchestratorService {

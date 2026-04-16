@@ -1,6 +1,6 @@
 import { IsArray, IsEnum, IsOptional, IsString } from "class-validator";
 
-import { PodRole } from "../../common";
+import { PodRole } from "../../common/domain";
 
 export class RegisterPodDto {
     @IsString()

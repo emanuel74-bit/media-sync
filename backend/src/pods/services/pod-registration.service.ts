@@ -4,7 +4,8 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Pod } from "../domain";
 import { PodRegistrationRequest } from "../dto/pod-registration-request.dto";
 import { PodRepository } from "../repositories";
-import { PodStatus, SystemEventNames } from "../../common";
+import { PodStatus } from "../../common/domain";
+import { SystemEventNames } from "../../common/events";
 
 @Injectable()
 export class PodRegistrationService {

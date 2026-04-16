@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 
 import { Stream } from "../../domain";
-import { StreamStatus } from "../../../common";
+import { StreamStatus } from "../../../common/domain";
 import { StreamRepository } from "../../repositories";
 import { CreateStreamDto, UpdateStreamDto } from "../../dto";
 

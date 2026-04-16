@@ -1,4 +1,4 @@
-import { AlertType } from "../../common";
+import { AlertType } from "../../common/domain";
 import { Alert, AlertCreationData } from "../domain";
 
 export abstract class AlertRepository {

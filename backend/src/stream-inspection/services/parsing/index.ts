@@ -4,6 +4,7 @@
 
 export * from "./audio-track-parser";
 export * from "./data-track-parser";
+export * from "./stream-track-parser.spec";
 export * from "./stream-track-parser";
 export * from "./subtitle-track-parser";
 export * from "./track-parser.interface";

@@ -4,4 +4,4 @@
 
 export * from "./stream-inspection-creation.domain";
 export * from "./stream-inspection.domain";
-export { StreamTrack } from "../../common";
+export { StreamTrack } from "../../common/domain";

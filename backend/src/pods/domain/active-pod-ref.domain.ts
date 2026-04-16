@@ -1,4 +1,4 @@
-import { PodRole } from "../../common";
+import { PodRole } from "../../common/domain";
 
 export interface ActivePodRef {
     podId: string;

@@ -3,7 +3,7 @@ import { Cron, CronExpression } from "@nestjs/schedule";
 
 import { SyncQueryAggregatorService } from "../query";
 import { SyncOrchestratorService } from "../orchestration";
-import { SequentialStreamTaskRunner } from "../../../common";
+import { SequentialStreamTaskRunner } from "../../../common/services";
 
 @Injectable()
 export class SyncService {

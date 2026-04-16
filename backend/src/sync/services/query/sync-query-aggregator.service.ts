@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 
-import { PodRole } from "../../../common";
+import { PodRole } from "../../../common/domain";
 import { SyncContext } from "../../domain";
 import { PodQueryService } from "../../../pods/services";
 import { StreamQueryService } from "../../../streams/services/query";

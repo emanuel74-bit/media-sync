@@ -3,7 +3,7 @@ import { VideoTrackParser } from "./video-track-parser";
 import { AudioTrackParser } from "./audio-track-parser";
 import { DataTrackParser } from "./data-track-parser";
 import { SubtitleTrackParser } from "./subtitle-track-parser";
-import { TrackType } from "../../../common";
+import { TrackType } from "../../../common/domain";
 import { V3PathItem, V3TrackItem } from "../../../infrastructure/media-mtx/types";
 
 // ─── Individual parser unit tests ────────────────────────────────────────────
@@ -29,7 +29,13 @@ describe("VideoTrackParser", () => {
             fps: 30,
         };
         const result = parser.parse(track);
-        expect(result).toEqual({ type: TrackType.VIDEO, codec: "H264", width: 1920, height: 1080, fps: 30 });
+        expect(result).toEqual({
+            type: TrackType.VIDEO,
+            codec: "H264",
+            width: 1920,
+            height: 1080,
+            fps: 30,
+        });
     });
 
     it("maps undefined optional fields as undefined", () => {
@@ -138,10 +144,7 @@ describe("parseTracksFromPathItem", () => {
 
     it("skips tracks with an unrecognised type", () => {
         const item: V3PathItem = {
-            tracks: [
-                { type: "unknown-type" },
-                { type: "video", codec: "H264" },
-            ],
+            tracks: [{ type: "unknown-type" }, { type: "video", codec: "H264" }],
         };
         const result = parseTracksFromPathItem(item);
         expect(result).toHaveLength(1);
@@ -150,12 +153,7 @@ describe("parseTracksFromPathItem", () => {
 
     it("parses all four supported track types together", () => {
         const item: V3PathItem = {
-            tracks: [
-                { type: "video" },
-                { type: "audio" },
-                { type: "data" },
-                { type: "subtitle" },
-            ],
+            tracks: [{ type: "video" }, { type: "audio" }, { type: "data" }, { type: "subtitle" }],
         };
         const result = parseTracksFromPathItem(item);
         expect(result).toHaveLength(4);

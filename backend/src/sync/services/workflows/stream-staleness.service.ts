@@ -5,7 +5,7 @@ import { Stream } from "../../../streams/domain";
 import { SyncContext, SyncWorkflow } from "../../domain";
 import { StreamStatusService } from "../../../streams/services/lifecycle";
 import { MediaMtxPipelineService } from "../../../infrastructure/media-mtx/services";
-import { SystemEventNames } from "../../../common";
+import { SystemEventNames } from "../../../common/events";
 
 @Injectable()
 export class StreamStalenessService implements SyncWorkflow {

@@ -5,7 +5,7 @@ import { SyncOrchestratorService } from "./sync-orchestrator.service";
 import { SYNC_WORKFLOWS } from "../../sync-workflows.token";
 import { SyncWorkflow } from "../../domain";
 import { SyncContext } from "../../domain/sync-context";
-import { SystemEventNames } from "../../../common";
+import { SystemEventNames } from "../../../common/events";
 
 const makeContext = (podIds: string[] = ["pod-1"]): SyncContext => ({
     podIds,
@@ -49,8 +49,12 @@ describe("SyncOrchestratorService", () => {
 
         it("runs all registered workflows in order", async () => {
             const executionOrder: number[] = [];
-            workflow1.execute.mockImplementation(async () => { executionOrder.push(1); });
-            workflow2.execute.mockImplementation(async () => { executionOrder.push(2); });
+            workflow1.execute.mockImplementation(async () => {
+                executionOrder.push(1);
+            });
+            workflow2.execute.mockImplementation(async () => {
+                executionOrder.push(2);
+            });
 
             await service.execute(makeContext());
 
@@ -99,7 +103,10 @@ describe("SyncOrchestratorService", () => {
 
         it("emits SYNC_TICK even with zero workflows", async () => {
             await service.execute(makeContext());
-            expect(events.emit).toHaveBeenCalledWith(SystemEventNames.SYNC_TICK, expect.any(Object));
+            expect(events.emit).toHaveBeenCalledWith(
+                SystemEventNames.SYNC_TICK,
+                expect.any(Object),
+            );
         });
     });
 });

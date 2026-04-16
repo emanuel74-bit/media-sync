@@ -7,7 +7,7 @@ import { Injectable } from "@nestjs/common";
 import { Pod } from "../domain";
 import { ActivePodRef } from "../domain/active-pod-ref.domain";
 import { PodRegistrationRequest } from "../dto/pod-registration-request.dto";
-import { PodRole } from "../../common";
+import { PodRole } from "../../common/domain";
 import { PodRegistrationService } from "./pod-registration.service";
 import { PodQueryService } from "./pod-query.service";
 

@@ -89,10 +89,31 @@ All contributors must follow these conventions to keep the codebase consistent a
 
 ```
 src/
-├── common/                     # Shared, framework-agnostic utilities and types
-│   ├── stream-hash.util.ts     # Pure hashing utility
-│   ├── types.ts                # Domain enums (PodRole, PodStatus, StreamStatus, TrackType)
-│   └── events.ts               # Event payload interfaces for internal pub/sub
+├── common/                     # Shared, framework-agnostic domain contracts
+│   ├── domain/                 # Cross-module enums and interfaces
+│   │   ├── pod-role.enum.ts
+│   │   ├── pod-status.enum.ts
+│   │   ├── stream-status.enum.ts
+│   │   ├── track-type.enum.ts
+│   │   ├── stream-track.interface.ts
+│   │   ├── alert-severity.enum.ts
+│   │   ├── alert-type.enum.ts
+│   │   ├── alert-metric-input.interface.ts
+│   │   └── index.ts
+│   ├── events/                 # Event name constants and typed payloads
+│   │   ├── system-event-names.ts
+│   │   ├── event-payloads.ts
+│   │   └── index.ts
+│   ├── rules/                  # Shared predicate functions and rule types
+│   │   ├── metric-threshold-predicates.ts
+│   │   ├── runtime-alert-rule.type.ts
+│   │   └── index.ts
+│   ├── services/               # Injectable shared services
+│   │   ├── alert-rule-evaluator.service.ts
+│   │   ├── sequential-stream-task-runner.service.ts
+│   │   └── index.ts
+│   ├── common-services.module.ts
+│   └── index.ts
 ├── config/                     # Environment → typed config
 │   ├── config.module.ts
 │   └── config.service.ts
@@ -258,9 +279,7 @@ These rules enforce explicit, safe typing across the entire codebase.
 ```typescript
 // Good — boundary cast
 const res = await client.get("/v3/paths/list");
-const items: V3PathItem[] = Array.isArray(res?.data?.items)
-    ? res.data.items
-    : [];
+const items: V3PathItem[] = Array.isArray(res?.data?.items) ? res.data.items : [];
 
 // Bad — leaking any into business logic
 const items = res.data.items; // items: any
@@ -334,9 +353,12 @@ async createAlert(streamName: string, type: string, severity: AlertSeverity, mes
 
 | What                                           | Where                                              |
 | ---------------------------------------------- | -------------------------------------------------- |
-| Cross-domain enums                             | `src/common/types.ts`                              |
+| Cross-domain enums and interfaces              | `src/common/domain/`                               |
+| Event name constants                           | `src/common/events/system-event-names.ts`          |
+| Event payload interfaces                       | `src/common/events/event-payloads.ts`              |
+| Shared predicate functions and rule types      | `src/common/rules/`                                |
+| Injectable shared services                     | `src/common/services/`                             |
 | External API shapes (HTTP response interfaces) | `src/{adapter}/{adapter}.types.ts`                 |
-| Internal event payload interfaces              | `src/common/events.ts`                             |
 | Domain concept interfaces for a single feature | Co-located in the feature's schema or service file |
 
 ### Schema Field Types
@@ -875,12 +897,12 @@ class StreamInspectionService {
 
 When a service accumulates methods that fall into multiple named verb families (reads, assignment mutations, status transitions, provisioning side-effects), split it one service per family. Each caller injects only the families it actually uses.
 
-| Family | Responsibility | Example class |
-|---|---|---|
-| Query | Pure reads; no side effects | `StreamQueryService` |
-| Assignment | Pod-binding mutations + event emission | `StreamAssignmentService` |
-| Status | Discovery upsert + status flag mutations | `StreamStatusService` |
-| Lifecycle | Create/update/delete + external pipeline side-effects | `StreamLifecycleService` |
+| Family     | Responsibility                                        | Example class             |
+| ---------- | ----------------------------------------------------- | ------------------------- |
+| Query      | Pure reads; no side effects                           | `StreamQueryService`      |
+| Assignment | Pod-binding mutations + event emission                | `StreamAssignmentService` |
+| Status     | Discovery upsert + status flag mutations              | `StreamStatusService`     |
+| Lifecycle  | Create/update/delete + external pipeline side-effects | `StreamLifecycleService`  |
 
 ```typescript
 // Good — each caller injects only what it uses:

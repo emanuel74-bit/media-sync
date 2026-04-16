@@ -1,9 +1,10 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { AlertRuleEvaluator, RuntimeAlertRule } from "./alert-rule-evaluator.service";
-import { AlertSeverity, AlertType } from "../types";
-import { SystemEventNames } from "../event-names";
+import { AlertRuleEvaluator } from "./alert-rule-evaluator.service";
+import { RuntimeAlertRule } from "../rules/runtime-alert-rule.type";
+import { AlertSeverity, AlertType } from "../domain";
+import { SystemEventNames } from "../events";
 
 describe("AlertRuleEvaluator", () => {
     let service: AlertRuleEvaluator;
@@ -13,10 +14,7 @@ describe("AlertRuleEvaluator", () => {
         events = { emit: jest.fn() } as unknown as jest.Mocked<EventEmitter2>;
 
         const module: TestingModule = await Test.createTestingModule({
-            providers: [
-                AlertRuleEvaluator,
-                { provide: EventEmitter2, useValue: events },
-            ],
+            providers: [AlertRuleEvaluator, { provide: EventEmitter2, useValue: events }],
         }).compile();
 
         service = module.get<AlertRuleEvaluator>(AlertRuleEvaluator);
@@ -94,12 +92,9 @@ describe("AlertRuleEvaluator", () => {
                 message: () => "below threshold",
             };
 
-            const result = await service.evaluateAndEmit(
-                "stream1",
-                50,
-                { threshold: 100 },
-                [contextRule],
-            );
+            const result = await service.evaluateAndEmit("stream1", 50, { threshold: 100 }, [
+                contextRule,
+            ]);
 
             expect(result).toHaveLength(1);
         });

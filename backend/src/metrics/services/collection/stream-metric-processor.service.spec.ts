@@ -5,7 +5,8 @@ import { StreamMetricProcessor } from "./stream-metric-processor.service";
 import { MediaMtxStreamStatsService } from "../../../infrastructure/media-mtx/services";
 import { MetricPersistenceService } from "../persistence";
 import { StreamFailoverService } from "../failover";
-import { PodRole, SystemEventNames } from "../../../common";
+import { PodRole } from "../../../common/domain";
+import { SystemEventNames } from "../../../common/events";
 import { Metric } from "../../domain";
 
 const makeMetric = (): Metric => ({
@@ -65,7 +66,11 @@ describe("StreamMetricProcessor", () => {
             await service.processStreamMetric("live", PodRole.CLUSTER);
 
             expect(mediaMtxStats.getStreamStats).toHaveBeenCalledWith(PodRole.CLUSTER, "live");
-            expect(metricPersistence.saveFromStats).toHaveBeenCalledWith("live", PodRole.CLUSTER, stats);
+            expect(metricPersistence.saveFromStats).toHaveBeenCalledWith(
+                "live",
+                PodRole.CLUSTER,
+                stats,
+            );
             expect(events.emit).toHaveBeenCalledWith(SystemEventNames.METRIC_COLLECTED, {
                 streamName: "live",
                 metric,
@@ -80,7 +85,10 @@ describe("StreamMetricProcessor", () => {
 
             await service.processStreamMetric("live", PodRole.CLUSTER);
 
-            expect(streamFailover.evaluateAndReassignIfDegraded).toHaveBeenCalledWith("live", metric);
+            expect(streamFailover.evaluateAndReassignIfDegraded).toHaveBeenCalledWith(
+                "live",
+                metric,
+            );
         });
 
         it("skips failover evaluation for INGEST role", async () => {

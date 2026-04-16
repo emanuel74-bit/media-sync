@@ -8,7 +8,7 @@ import {
     WebSocketServer,
 } from "@nestjs/websockets";
 
-import { SystemEventNames, SystemEventName } from "../common";
+import { SystemEventNames, SystemEventName } from "../common/events";
 
 @WebSocketGateway({ cors: { origin: "*" } })
 export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit {

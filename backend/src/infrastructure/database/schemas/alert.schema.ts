@@ -1,7 +1,7 @@
 import { Document } from "mongoose";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 
-import { AlertSeverity, AlertType } from "../../../common";
+import { AlertSeverity, AlertType } from "../../../common/domain";
 
 export type AlertDocument = Alert & Document;
 

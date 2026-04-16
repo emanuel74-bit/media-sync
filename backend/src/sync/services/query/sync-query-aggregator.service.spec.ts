@@ -4,7 +4,7 @@ import { SyncQueryAggregatorService } from "./sync-query-aggregator.service";
 import { MediaMtxStreamListingService } from "../../../infrastructure/media-mtx/services";
 import { StreamQueryService } from "../../../streams/services/query";
 import { PodQueryService } from "../../../pods/services";
-import { PodRole } from "../../../common";
+import { PodRole } from "../../../common/domain";
 import { MediaMtxStreamInfo } from "../../../infrastructure/media-mtx/types";
 import { Stream } from "../../../streams/domain";
 

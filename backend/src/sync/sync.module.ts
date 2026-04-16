@@ -2,7 +2,7 @@ import { Module } from "@nestjs/common";
 
 import { PodsModule } from "../pods";
 import { StreamsModule } from "../streams";
-import { CommonServicesModule } from "../common";
+import { CommonServicesModule } from "../common/common-services.module";
 import { SyncService } from "./services/scheduler";
 import { MediaMtxModule } from "../infrastructure/media-mtx";
 import { SyncQueryAggregatorService } from "./services/query";

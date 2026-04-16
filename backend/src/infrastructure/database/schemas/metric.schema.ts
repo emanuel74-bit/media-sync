@@ -1,7 +1,7 @@
 import { Document } from "mongoose";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 
-import { PodRole } from "../../../common";
+import { PodRole } from "../../../common/domain";
 
 export type MetricDocument = Metric & Document;
 

@@ -4,7 +4,8 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 import { parseTracksFromPathItem } from "../parsing";
 import { NewStreamInspectionData } from "../../domain";
 import { StreamInspectionRepository } from "../../repositories";
-import { PodRole, SystemEventNames } from "../../../common";
+import { PodRole } from "../../../common/domain";
+import { SystemEventNames } from "../../../common/events";
 import { MediaMtxStreamInfo, V3PathItem } from "../../../infrastructure/media-mtx/types";
 import { MediaMtxStreamStatsService } from "../../../infrastructure/media-mtx/services";
 

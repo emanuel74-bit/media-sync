@@ -2,7 +2,7 @@ import { ApiTags } from "@nestjs/swagger";
 import { Body, Controller, Get, Post } from "@nestjs/common";
 
 import { Pod } from "../domain";
-import { PodRole } from "../../common";
+import { PodRole } from "../../common/domain";
 import { RegisterPodDto } from "../dto";
 import { PodRegistrationService, PodQueryService } from "../services";
 

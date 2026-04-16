@@ -1,7 +1,8 @@
 import { Test, TestingModule } from "@nestjs/testing";
 
 import { StreamInspectionSchedulerService } from "./stream-inspection-scheduler.service";
-import { PodRole, SequentialStreamTaskRunner } from "../../../common";
+import { PodRole } from "../../../common/domain";
+import { SequentialStreamTaskRunner } from "../../../common/services";
 import {
     ContextualMediaMtxStream,
     MediaMtxStreamListingService,
