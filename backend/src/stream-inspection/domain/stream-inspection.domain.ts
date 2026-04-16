@@ -1,5 +1,4 @@
-import { PodRole } from "../../common";
-export { StreamTrack } from "../../common";
+import { PodRole, StreamTrack } from "../../common";
 
 export interface StreamTrackAlertContext {
     metadata?: {

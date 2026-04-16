@@ -3,7 +3,4 @@
  */
 
 export * from "./alert-rule-evaluator.service";
-export * from "./alert-rule-runtime.service";
-export * from "./rule-evaluation-coordinator.service";
-export * from "./scheduled-work-coordinator.service";
 export * from "./sequential-stream-task-runner.service";

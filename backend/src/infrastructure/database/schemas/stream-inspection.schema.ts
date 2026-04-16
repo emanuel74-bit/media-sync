@@ -2,11 +2,9 @@ import { Document } from "mongoose";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 
 import { PodRole } from "../../../common";
-import { StreamTrack } from "../../../stream-inspection/domain";
+import { StreamTrack } from "../../../common";
 
 export type StreamInspectionDocument = StreamInspection & Document;
-
-export { StreamTrack };
 
 @Schema({ timestamps: true })
 export class StreamInspection {

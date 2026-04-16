@@ -5,7 +5,7 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 
 import { AppModule } from "./app.module";
 
-async function bootstrap() {
+async function bootstrap(): Promise<void> {
     dotenv.config();
     const app = await NestFactory.create(AppModule, { logger: new Logger() });
     app.useGlobalPipes(

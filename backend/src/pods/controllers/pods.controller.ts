@@ -1,6 +1,7 @@
 import { ApiTags } from "@nestjs/swagger";
 import { Body, Controller, Get, Post } from "@nestjs/common";
 
+import { Pod } from "../domain";
 import { PodRole } from "../../common";
 import { RegisterPodDto } from "../dto";
 import { PodRegistrationService, PodQueryService } from "../services";
@@ -14,17 +15,17 @@ export class PodsController {
     ) {}
 
     @Get()
-    async listPods() {
+    async listPods(): Promise<Pod[]> {
         return this.podQuery.listPods();
     }
 
     @Get("active")
-    async listActivePods() {
+    async listActivePods(): Promise<Pod[]> {
         return this.podQuery.getActivePods();
     }
 
     @Post("register")
-    async registerPod(@Body() dto: RegisterPodDto) {
+    async registerPod(@Body() dto: RegisterPodDto): Promise<Pod> {
         return this.podRegistration.registerPod({
             podId: dto.podId,
             host: dto.host,
@@ -34,7 +35,7 @@ export class PodsController {
     }
 
     @Post("heartbeat")
-    async heartbeat(@Body() dto: RegisterPodDto) {
+    async heartbeat(@Body() dto: RegisterPodDto): Promise<Pod> {
         return this.podRegistration.heartbeat(dto.podId);
     }
 }

@@ -11,7 +11,7 @@ import { SYNC_WORKFLOWS } from "./sync-workflows.token";
 import {
     StreamIngestActivationService,
     StreamIngestDiscoveryService,
-    IngestStreamSynchronizer,
+    IngestStreamSynchronizerService,
     StreamReconcileService,
     StreamStalenessService,
 } from "./services/workflows";
@@ -24,17 +24,21 @@ import {
         SyncQueryAggregatorService,
         StreamIngestDiscoveryService,
         StreamIngestActivationService,
-        IngestStreamSynchronizer,
+        IngestStreamSynchronizerService,
         StreamReconcileService,
         StreamStalenessService,
         {
             provide: SYNC_WORKFLOWS,
             useFactory: (
-                ingestSync: IngestStreamSynchronizer,
+                ingestSync: IngestStreamSynchronizerService,
                 reconcile: StreamReconcileService,
                 staleness: StreamStalenessService,
             ) => [ingestSync, reconcile, staleness],
-            inject: [IngestStreamSynchronizer, StreamReconcileService, StreamStalenessService],
+            inject: [
+                IngestStreamSynchronizerService,
+                StreamReconcileService,
+                StreamStalenessService,
+            ],
         },
     ],
     exports: [SyncService],

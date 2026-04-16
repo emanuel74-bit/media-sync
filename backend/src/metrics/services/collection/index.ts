@@ -3,5 +3,4 @@
  */
 
 export * from "./metric-collection.service";
-export * from "./metric-processor.service";
 export * from "./stream-metric-processor.service";
