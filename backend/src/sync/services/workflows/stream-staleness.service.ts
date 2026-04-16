@@ -5,6 +5,7 @@ import { Stream } from "../../../streams/domain";
 import { SyncContext, SyncWorkflow } from "../../domain";
 import { StreamStatusService } from "../../../streams/services/lifecycle";
 import { MediaMtxPipelineService } from "../../../infrastructure/media-mtx/services";
+import { SystemEventNames } from "../../../common";
 
 @Injectable()
 export class StreamStalenessService implements SyncWorkflow {
@@ -35,7 +36,7 @@ export class StreamStalenessService implements SyncWorkflow {
 
             if (clusterNames.has(stream.name)) {
                 await this.mediaMtxPipeline.deleteClusterPipeline(stream.name);
-                this.events.emit("stream.removed", stream.name);
+                this.events.emit(SystemEventNames.STREAM_REMOVED, stream.name);
             }
         } catch (error) {
             this.logger.warn(`Failed to remove stale stream ${stream.name}`, error);
@@ -43,10 +44,6 @@ export class StreamStalenessService implements SyncWorkflow {
     }
 
     async execute(context: SyncContext): Promise<void> {
-        if (!context.allStreams) {
-            return;
-        }
-
         await this.removeStale(context.allStreams, context.ingestNames, context.clusterNames);
     }
 }

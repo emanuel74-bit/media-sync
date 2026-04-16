@@ -1,38 +1,20 @@
 import { StreamTrack } from "../../domain";
-import { TrackType } from "../../../common";
-import { V3PathItem, V3TrackItem } from "../../../infrastructure/media-mtx/types";
+import { V3PathItem } from "../../../infrastructure/media-mtx/types";
+import { TrackParser } from "./track-parser.interface";
+import { VideoTrackParser } from "./video-track-parser";
+import { AudioTrackParser } from "./audio-track-parser";
+import { DataTrackParser } from "./data-track-parser";
+import { SubtitleTrackParser } from "./subtitle-track-parser";
+
+const TRACK_PARSERS: TrackParser[] = [
+    new VideoTrackParser(),
+    new AudioTrackParser(),
+    new DataTrackParser(),
+    new SubtitleTrackParser(),
+];
 
 export function parseTracksFromPathItem(item: V3PathItem): StreamTrack[] {
-    return (item.tracks ?? []).map(parseTrack).filter((t): t is StreamTrack => t !== null);
-}
-
-function parseTrack(track: V3TrackItem): StreamTrack | null {
-    switch (track.type) {
-        case TrackType.VIDEO:
-            return {
-                type: TrackType.VIDEO,
-                codec: track.codec,
-                width: track.width,
-                height: track.height,
-                fps: track.fps,
-            };
-        case TrackType.AUDIO:
-            return {
-                type: TrackType.AUDIO,
-                codec: track.codec,
-                channels: track.channels,
-                sampleRate: track.sampleRate,
-                language: track.language,
-            };
-        case TrackType.DATA:
-        case TrackType.SUBTITLE:
-            return {
-                ...track,
-                type: track.type as TrackType,
-                codec: track.codec,
-                language: track.language,
-            };
-        default:
-            return null;
-    }
+    return (item.tracks ?? [])
+        .map((track) => TRACK_PARSERS.find((p) => p.canParse(track.type))?.parse(track) ?? null)
+        .filter((t): t is StreamTrack => t !== null);
 }

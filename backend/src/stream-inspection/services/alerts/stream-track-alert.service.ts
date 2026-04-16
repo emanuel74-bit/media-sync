@@ -4,16 +4,16 @@ import { OnEvent } from "@nestjs/event-emitter";
 import { StreamTrack, StreamTrackAlertContext } from "../../domain";
 import { StreamQueryService } from "../../../streams/services/query";
 import { STREAM_TRACK_ALERT_RULES } from "./stream-track-alert-rules";
-import { RuleEvaluationCoordinatorService, StreamInspectedPayload } from "../../../common";
+import { AlertRuleEvaluator, StreamInspectedPayload, SystemEventNames } from "../../../common";
 
 @Injectable()
 export class StreamTrackAlertService {
     constructor(
         private readonly streamQuery: StreamQueryService,
-        private readonly ruleEvaluator: RuleEvaluationCoordinatorService,
+        private readonly ruleEvaluator: AlertRuleEvaluator,
     ) {}
 
-    @OnEvent("stream.inspected")
+    @OnEvent(SystemEventNames.STREAM_INSPECTED)
     async handleStreamInspected(payload: StreamInspectedPayload): Promise<void> {
         if (payload.lastError !== null) {
             return;

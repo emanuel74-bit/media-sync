@@ -49,10 +49,6 @@ export class StreamReconcileService implements SyncWorkflow {
     }
 
     async execute(context: SyncContext): Promise<void> {
-        if (!context.allStreams) {
-            return;
-        }
-
         await this.reconcileAll(context.allStreams, context.clusterNames, context.podIds);
     }
 }

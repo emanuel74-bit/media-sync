@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 
 import { Stream } from "../../domain";
 import { CreateStreamDto } from "../../dto";
-import { PodsService } from "../../../pods/services";
+import { PodQueryService } from "../../../pods/services";
 import { StreamAssignmentService } from "../assignment";
 import { PodRole, StreamStatus } from "../../../common";
 import { StreamCrudService } from "./stream-crud.service";
@@ -13,7 +13,7 @@ export class StreamLifecycleService {
     constructor(
         private readonly streamCrud: StreamCrudService,
         private readonly streamAssignment: StreamAssignmentService,
-        private readonly podsService: PodsService,
+        private readonly podsService: PodQueryService,
         private readonly streamProvisioning: StreamProvisioningService,
     ) {}
 

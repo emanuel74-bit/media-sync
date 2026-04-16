@@ -3,7 +3,7 @@ import { EventEmitter2, OnEvent } from "@nestjs/event-emitter";
 
 import { AlertRepository } from "../repositories";
 import { Alert, AlertCreationData } from "../domain";
-import { AlertCreateRequestedPayload } from "../../common";
+import { AlertCreateRequestedPayload, SystemEventNames } from "../../common";
 
 @Injectable()
 export class AlertLifecycleService {
@@ -12,12 +12,12 @@ export class AlertLifecycleService {
         private readonly events: EventEmitter2,
     ) {}
 
-    @OnEvent("alert.create")
+    @OnEvent(SystemEventNames.ALERT_CREATE)
     async handleAlertCreateRequested(payload: AlertCreateRequestedPayload): Promise<void> {
-        await this.createAlert(payload);
+        await this.findOrCreateAlert(payload);
     }
 
-    async createAlert(data: AlertCreationData): Promise<Alert> {
+    async findOrCreateAlert(data: AlertCreationData): Promise<Alert> {
         const existing = await this.alertRepository.findUnresolvedByStreamAndType(
             data.streamName,
             data.type,
@@ -26,7 +26,7 @@ export class AlertLifecycleService {
             return existing;
         }
         const created = await this.alertRepository.create(data);
-        this.events.emit("alert.created", created);
+        this.events.emit(SystemEventNames.ALERT_CREATED, created);
         return created;
     }
 
@@ -37,7 +37,7 @@ export class AlertLifecycleService {
     async resolveAlert(alertId: string): Promise<Alert | null> {
         const resolved = await this.alertRepository.resolveById(alertId, new Date());
         if (resolved) {
-            this.events.emit("alert.resolved", resolved);
+            this.events.emit(SystemEventNames.ALERT_RESOLVED, resolved);
         }
         return resolved;
     }

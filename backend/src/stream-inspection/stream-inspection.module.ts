@@ -7,7 +7,12 @@ import { StreamInspectionController } from "./controllers";
 import { StreamTrackAlertService } from "./services/alerts";
 import { StreamInspectionRepository } from "./repositories";
 import { MediaMtxModule } from "../infrastructure/media-mtx";
-import { StreamInspectionService } from "./services/inspection";
+import {
+    StreamInspectionService,
+    StreamInspectionSchedulerService,
+    StreamInspectionRecorderService,
+    StreamInspectionQueryService,
+} from "./services/inspection";
 import { MongoStreamInspectionRepository } from "../infrastructure/database/repositories";
 import {
     StreamInspection,
@@ -24,6 +29,9 @@ import {
         CommonServicesModule,
     ],
     providers: [
+        StreamInspectionSchedulerService,
+        StreamInspectionRecorderService,
+        StreamInspectionQueryService,
         StreamInspectionService,
         StreamTrackAlertService,
         {
@@ -32,6 +40,6 @@ import {
         },
     ],
     controllers: [StreamInspectionController],
-    exports: [StreamInspectionService],
+    exports: [StreamInspectionService, StreamInspectionQueryService],
 })
 export class StreamInspectionModule {}
