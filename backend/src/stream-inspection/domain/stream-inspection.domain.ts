@@ -1,16 +1,5 @@
-import { PodRole, TrackType } from "../../common";
-
-export interface StreamTrack {
-    type: TrackType;
-    codec?: string;
-    language?: string;
-    bitrate?: number;
-    width?: number;
-    height?: number;
-    fps?: number;
-    channels?: number;
-    sampleRate?: number;
-}
+import { PodRole } from "../../common";
+export { StreamTrack } from "../../common";
 
 export interface StreamTrackAlertContext {
     metadata?: {

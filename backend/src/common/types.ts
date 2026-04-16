@@ -35,6 +35,19 @@ export enum TrackType {
     SUBTITLE = "subtitle",
 }
 
+/** Describes a single media track within a stream, used in events and inspection records. */
+export interface StreamTrack {
+    type: TrackType;
+    codec?: string;
+    language?: string;
+    bitrate?: number;
+    width?: number;
+    height?: number;
+    fps?: number;
+    channels?: number;
+    sampleRate?: number;
+}
+
 /** Severity level assigned to generated alerts. */
 export enum AlertSeverity {
     INFO = "info",

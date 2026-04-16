@@ -18,14 +18,18 @@ export class StreamInspectionRecorderService {
     ) {}
 
     async inspectAndRecord(stream: MediaMtxStreamInfo, source: PodRole): Promise<void> {
+        let details: V3PathItem | null = null;
+        let lastError: string | null = null;
+
         try {
-            const details = await this.mediaMtxStats.getStreamDetails(stream.name, source);
-            await this.recordInspection(stream.name, source, details, null);
+            details = await this.mediaMtxStats.getStreamDetails(stream.name, source);
         } catch (error) {
-            const lastError = error instanceof Error ? error.message : String(error);
+            lastError = error instanceof Error ? error.message : String(error);
             this.logger.error(`Failed to inspect stream ${stream.name}`, error);
-            await this.recordInspection(stream.name, source, null, lastError);
         }
+
+        // Save happens exactly once regardless of fetch outcome; save errors propagate to caller.
+        await this.recordInspection(stream.name, source, details, lastError);
     }
 
     private async recordInspection(
