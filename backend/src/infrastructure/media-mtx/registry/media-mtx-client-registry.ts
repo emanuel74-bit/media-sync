@@ -18,12 +18,14 @@ type IngestPodEndpoint = {
  */
 @Injectable()
 export class MediaMtxClientRegistry {
-    private readonly factory = new MediaMtxClientFactory();
     private readonly ingestClient: MediaMtxClient;
     private readonly clusterClients: MediaMtxClient[];
     private clusterRoundRobinIndex = 0;
 
-    constructor(private readonly config: ConfigService) {
+    constructor(
+        private readonly config: ConfigService,
+        private readonly factory: MediaMtxClientFactory,
+    ) {
         this.ingestClient = this.factory.getOrCreate(this.config.ingestBaseUrl);
         this.clusterClients = this.config.clusterBaseUrls.map((url: string) =>
             this.factory.getOrCreate(url),

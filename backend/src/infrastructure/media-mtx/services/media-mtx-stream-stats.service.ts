@@ -30,7 +30,7 @@ export class MediaMtxStreamStatsService {
             return await client.getPathItem(name);
         } catch (error) {
             this.logger.warn(`Failed to get stream details for ${name} on ${source}`, error);
-            return {};
+            throw error;
         }
     }
 }

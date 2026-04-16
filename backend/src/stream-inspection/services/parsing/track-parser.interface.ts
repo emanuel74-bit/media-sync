@@ -1,5 +1,5 @@
-import { StreamTrack } from "../../../domain";
-import { V3TrackItem } from "../../../../infrastructure/media-mtx/types";
+import { StreamTrack } from "../../domain";
+import { V3TrackItem } from "../../../infrastructure/media-mtx/types";
 
 export interface TrackParser {
     canParse(type: string): boolean;
