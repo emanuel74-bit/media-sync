@@ -7,7 +7,8 @@ import { MetricAlertThresholds } from "./metric-alert-rule";
 import {
     AlertMetricInput,
     MetricCollectedPayload,
-    RuleEvaluationCoordinatorService,
+    AlertRuleEvaluator,
+    SystemEventNames,
 } from "../../../common";
 
 @Injectable()
@@ -15,7 +16,7 @@ export class MetricAlertInvocationService {
     private readonly logger = new Logger(MetricAlertInvocationService.name);
 
     constructor(
-        private readonly ruleEvaluator: RuleEvaluationCoordinatorService,
+        private readonly ruleEvaluator: AlertRuleEvaluator,
         private readonly config: ConfigService,
     ) {}
 
@@ -38,7 +39,7 @@ export class MetricAlertInvocationService {
         }
     }
 
-    @OnEvent("metric.collected")
+    @OnEvent(SystemEventNames.METRIC_COLLECTED)
     async handleMetricCollected(payload: MetricCollectedPayload): Promise<void> {
         await this.checkMetricsAndAlert(payload.streamName, payload.metric);
     }

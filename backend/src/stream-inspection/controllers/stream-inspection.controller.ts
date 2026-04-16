@@ -1,12 +1,12 @@
 import { ApiTags } from "@nestjs/swagger";
 import { Controller, Get, Param, Query } from "@nestjs/common";
 
-import { StreamInspectionService } from "../services/inspection";
+import { StreamInspectionQueryService } from "../services/inspection";
 
 @ApiTags("stream-inspection")
 @Controller("api/stream-inspection")
 export class StreamInspectionController {
-    constructor(private readonly streamInspection: StreamInspectionService) {}
+    constructor(private readonly streamInspection: StreamInspectionQueryService) {}
 
     @Get()
     getAllLatestInspections() {

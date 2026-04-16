@@ -1,14 +1,8 @@
 import { PodRole } from "../../common";
 import { StreamInspectionRecord, StreamTrack } from "../domain";
+import { NewStreamInspectionData } from "../domain/stream-inspection-creation.domain";
 
-export interface NewStreamInspectionData {
-    streamName: string;
-    source: PodRole;
-    tracks: StreamTrack[];
-    metadata: Record<string, unknown>;
-    lastError: string | null;
-    inspectedAt: Date;
-}
+export { NewStreamInspectionData } from "../domain/stream-inspection-creation.domain";
 
 export abstract class StreamInspectionRepository {
     abstract save(data: NewStreamInspectionData): Promise<void>;

@@ -2,7 +2,7 @@ import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
 import { ConfigModule } from "../config";
-import { PodsService } from "./services";
+import { PodsService, PodRegistrationService, PodQueryService } from "./services";
 import { PodRepository } from "./repositories";
 import { PodsController } from "./controllers";
 import { MongoPodRepository } from "../infrastructure/database/repositories";
@@ -10,8 +10,13 @@ import { Pod, PodSchema } from "../infrastructure/database/schemas/pod.schema";
 
 @Module({
     imports: [MongooseModule.forFeature([{ name: Pod.name, schema: PodSchema }]), ConfigModule],
-    providers: [PodsService, { provide: PodRepository, useClass: MongoPodRepository }],
+    providers: [
+        PodRegistrationService,
+        PodQueryService,
+        PodsService,
+        { provide: PodRepository, useClass: MongoPodRepository },
+    ],
     controllers: [PodsController],
-    exports: [PodsService],
+    exports: [PodsService, PodRegistrationService, PodQueryService],
 })
 export class PodsModule {}

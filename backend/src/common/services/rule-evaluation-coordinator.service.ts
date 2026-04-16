@@ -1,18 +1,5 @@
-import { Injectable } from "@nestjs/common";
-
-import { AlertCreateRequestedPayload } from "../events";
-import { RuntimeAlertRule, AlertRuleRuntimeService } from "./alert-rule-runtime.service";
-
-@Injectable()
-export class RuleEvaluationCoordinatorService {
-    constructor(private readonly runtime: AlertRuleRuntimeService) {}
-
-    async evaluateAndEmit<TInput, TContext>(
-        streamName: string,
-        input: TInput,
-        context: TContext,
-        rules: readonly RuntimeAlertRule<TInput, TContext>[],
-    ): Promise<AlertCreateRequestedPayload[]> {
-        return this.runtime.evaluateAndEmit(streamName, input, context, rules);
-    }
-}
+/**
+ * @deprecated Use AlertRuleEvaluator from "./alert-rule-evaluator.service" instead.
+ * This pass-through wrapper has been removed. Re-exports for backward compatibility only.
+ */
+export { AlertRuleEvaluator as RuleEvaluationCoordinatorService } from "./alert-rule-evaluator.service";

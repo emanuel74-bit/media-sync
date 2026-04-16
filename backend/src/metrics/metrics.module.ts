@@ -12,7 +12,7 @@ import { MediaMtxModule } from "../infrastructure/media-mtx";
 import { MetricAlertInvocationService } from "./services/alerts";
 import { MetricPersistenceService } from "./services/persistence";
 import { MongoMetricRepository } from "../infrastructure/database/repositories";
-import { MetricCollectionService, MetricProcessorService } from "./services/collection";
+import { MetricCollectionService, StreamMetricProcessor } from "./services/collection";
 import { Metric, MetricSchema } from "../infrastructure/database/schemas/metric.schema";
 
 @Module({
@@ -26,7 +26,7 @@ import { Metric, MetricSchema } from "../infrastructure/database/schemas/metric.
     ],
     providers: [
         MetricCollectionService,
-        MetricProcessorService,
+        StreamMetricProcessor,
         MetricPersistenceService,
         MetricAlertInvocationService,
         StreamFailoverService,

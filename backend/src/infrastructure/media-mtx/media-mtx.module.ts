@@ -2,7 +2,7 @@ import { Module } from "@nestjs/common";
 
 import { PodsModule } from "../../pods";
 import { ConfigModule } from "../../config";
-import { MediaMtxClientRegistry } from "./registry";
+import { MediaMtxClientFactory, MediaMtxClientRegistry } from "./registry";
 import {
     MediaMtxPipelineService,
     MediaMtxStreamStatsService,
@@ -14,6 +14,7 @@ import {
 @Module({
     imports: [ConfigModule, PodsModule],
     providers: [
+        MediaMtxClientFactory,
         MediaMtxClientRegistry,
         IngestStreamListingStrategy,
         ClusterStreamListingStrategy,
@@ -22,6 +23,7 @@ import {
         MediaMtxPipelineService,
     ],
     exports: [
+        MediaMtxClientFactory,
         MediaMtxClientRegistry,
         MediaMtxStreamListingService,
         MediaMtxStreamStatsService,

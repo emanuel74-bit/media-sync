@@ -3,7 +3,7 @@ import { Cron, CronExpression } from "@nestjs/schedule";
 
 import { SyncQueryAggregatorService } from "../query";
 import { SyncOrchestratorService } from "../orchestration";
-import { ScheduledWorkCoordinatorService } from "../../../common";
+import { SequentialStreamTaskRunner } from "../../../common";
 
 @Injectable()
 export class SyncService {
@@ -12,7 +12,7 @@ export class SyncService {
     constructor(
         private readonly queryAggregator: SyncQueryAggregatorService,
         private readonly orchestrator: SyncOrchestratorService,
-        private readonly scheduledWork: ScheduledWorkCoordinatorService,
+        private readonly scheduledWork: SequentialStreamTaskRunner,
     ) {}
 
     @Cron(CronExpression.EVERY_10_SECONDS)

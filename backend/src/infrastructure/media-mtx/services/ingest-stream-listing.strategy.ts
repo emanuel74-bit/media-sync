@@ -3,7 +3,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { PodRole } from "../../../common";
 import { MediaMtxClient } from "../clients";
 import { MediaMtxStreamInfo } from "../types";
-import { PodsService } from "../../../pods/services";
+import { PodQueryService } from "../../../pods/services";
 import { MediaMtxClientRegistry } from "../registry";
 
 /**
@@ -16,7 +16,7 @@ export class IngestStreamListingStrategy {
 
     constructor(
         private readonly registry: MediaMtxClientRegistry,
-        private readonly podsService: PodsService,
+        private readonly podsService: PodQueryService,
     ) {}
 
     /**

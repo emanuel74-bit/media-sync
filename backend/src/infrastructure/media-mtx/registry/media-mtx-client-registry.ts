@@ -3,6 +3,7 @@ import { Injectable } from "@nestjs/common";
 import { PodRole } from "../../../common";
 import { MediaMtxClient } from "../clients";
 import { ConfigService } from "../../../config";
+import { MediaMtxClientFactory } from "./media-mtx-client-factory";
 
 type IngestPodEndpoint = {
     podId: string;
@@ -21,10 +22,13 @@ export class MediaMtxClientRegistry {
     private readonly clusterClients: MediaMtxClient[];
     private clusterRoundRobinIndex = 0;
 
-    constructor(private readonly config: ConfigService) {
-        this.ingestClient = new MediaMtxClient(this.config.ingestBaseUrl);
-        this.clusterClients = this.config.clusterBaseUrls.map(
-            (url: string) => new MediaMtxClient(url),
+    constructor(
+        private readonly config: ConfigService,
+        private readonly factory: MediaMtxClientFactory,
+    ) {
+        this.ingestClient = this.factory.getOrCreate(this.config.ingestBaseUrl);
+        this.clusterClients = this.config.clusterBaseUrls.map((url: string) =>
+            this.factory.getOrCreate(url),
         );
     }
 
@@ -53,7 +57,7 @@ export class MediaMtxClientRegistry {
     getIngestClientsFromPods(pods: readonly IngestPodEndpoint[]): readonly MediaMtxClient[] {
         return pods.map((pod) => {
             const host = pod.host || pod.podId;
-            return new MediaMtxClient(`http://${host}:${this.config.ingestPodMediaMtxPort}`);
+            return this.factory.getOrCreate(`http://${host}:${this.config.ingestPodMediaMtxPort}`);
         });
     }
 }

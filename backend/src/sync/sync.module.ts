@@ -7,10 +7,11 @@ import { SyncService } from "./services/scheduler";
 import { MediaMtxModule } from "../infrastructure/media-mtx";
 import { SyncQueryAggregatorService } from "./services/query";
 import { SyncOrchestratorService } from "./services/orchestration";
+import { SYNC_WORKFLOWS } from "./sync-workflows.token";
 import {
     StreamIngestActivationService,
     StreamIngestDiscoveryService,
-    StreamIngestSyncService,
+    IngestStreamSynchronizer,
     StreamReconcileService,
     StreamStalenessService,
 } from "./services/workflows";
@@ -23,9 +24,18 @@ import {
         SyncQueryAggregatorService,
         StreamIngestDiscoveryService,
         StreamIngestActivationService,
-        StreamIngestSyncService,
+        IngestStreamSynchronizer,
         StreamReconcileService,
         StreamStalenessService,
+        {
+            provide: SYNC_WORKFLOWS,
+            useFactory: (
+                ingestSync: IngestStreamSynchronizer,
+                reconcile: StreamReconcileService,
+                staleness: StreamStalenessService,
+            ) => [ingestSync, reconcile, staleness],
+            inject: [IngestStreamSynchronizer, StreamReconcileService, StreamStalenessService],
+        },
     ],
     exports: [SyncService],
 })
