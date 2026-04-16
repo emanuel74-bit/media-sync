@@ -4,8 +4,7 @@
  */
 
 import { AlertMetricInput } from "./alert-metric-input";
-import { StreamTrack } from "../stream-inspection/domain";
-import { AlertSeverity, AlertType, PodRole, StreamStatus } from "./types";
+import { AlertSeverity, AlertType, PodRole, StreamStatus, StreamTrack } from "./types";
 
 /** Emitted when a stream has been successfully synced to the cluster. */
 export interface StreamSyncedPayload {
@@ -44,7 +43,7 @@ export interface AlertCreateRequestedPayload {
 
 /** Emitted when a new alert is created. */
 export interface AlertCreatedPayload {
-    _id: unknown;
+    id: string;
     streamName: string;
     type: string;
     severity: string;
@@ -83,6 +82,8 @@ export type PodRemovedPayload = string;
 export interface SyncTickPayload {
     ingest: number;
     cluster: number;
+    /** Names of any workflows that failed during this tick. Empty when all workflows succeeded. */
+    failures?: string[];
 }
 
 /** Emitted when a stream sync attempt fails. */

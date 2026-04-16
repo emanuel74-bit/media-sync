@@ -2,7 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 
 import { Metric } from "../../domain";
 import { ConfigService } from "../../../config";
-import { PodsService } from "../../../pods/services";
+import { PodQueryService } from "../../../pods/services";
 import { isMetricDegraded, PodRole } from "../../../common";
 import { StreamQueryService } from "../../../streams/services/query";
 import { StreamAssignmentService } from "../../../streams/services/assignment";
@@ -15,10 +15,10 @@ export class StreamFailoverService {
         private readonly config: ConfigService,
         private readonly streamQuery: StreamQueryService,
         private readonly streamAssignment: StreamAssignmentService,
-        private readonly podsService: PodsService,
+        private readonly podsService: PodQueryService,
     ) {}
 
-    async evaluate(streamName: string, metric: Metric): Promise<void> {
+    async evaluateAndReassignIfDegraded(streamName: string, metric: Metric): Promise<void> {
         if (
             !isMetricDegraded(metric, {
                 alertPacketLossThreshold: this.config.alertPacketLossThreshold,

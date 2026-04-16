@@ -4,10 +4,8 @@ import { InjectModel } from "@nestjs/mongoose";
 
 import { MongoDomainRepository } from "./mongo-domain.repository";
 import { StreamInspectionRecord, StreamTrack } from "../../../stream-inspection/domain";
-import {
-    StreamInspectionRepository,
-    NewStreamInspectionData,
-} from "../../../stream-inspection/repositories";
+import { NewStreamInspectionData } from "../../../stream-inspection/domain";
+import { StreamInspectionRepository } from "../../../stream-inspection/repositories";
 import {
     StreamInspection as StreamInspectionSchema,
     StreamInspectionDocument,

@@ -3,6 +3,7 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 
 import { AlertSeverity, AlertType } from "../types";
 import { AlertCreateRequestedPayload } from "../events";
+import { SystemEventNames } from "../event-names";
 
 export type RuntimeAlertRule<TInput, TContext> = {
     check: (input: TInput, context: TContext) => boolean;
@@ -12,7 +13,7 @@ export type RuntimeAlertRule<TInput, TContext> = {
 };
 
 @Injectable()
-export class AlertRuleRuntimeService {
+export class AlertRuleEvaluator {
     constructor(private readonly events: EventEmitter2) {}
 
     async evaluateAndEmit<TInput, TContext>(
@@ -36,7 +37,7 @@ export class AlertRuleRuntimeService {
             };
 
             payloads.push(payload);
-            this.events.emit("alert.create", payload);
+            this.events.emit(SystemEventNames.ALERT_CREATE, payload);
         }
 
         return payloads;

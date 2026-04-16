@@ -1,8 +1,8 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 
-import { ScheduledWorkCoordinatorService } from "../../../common";
-import { MetricProcessorService } from "./metric-processor.service";
+import { SequentialStreamTaskRunner } from "../../../common";
+import { StreamMetricProcessor } from "./stream-metric-processor.service";
 import { MediaMtxStreamListingService } from "../../../infrastructure/media-mtx/services";
 
 @Injectable()
@@ -11,8 +11,8 @@ export class MetricCollectionService {
 
     constructor(
         private readonly mediaMtxListing: MediaMtxStreamListingService,
-        private readonly metricProcessor: MetricProcessorService,
-        private readonly scheduledWork: ScheduledWorkCoordinatorService,
+        private readonly metricProcessor: StreamMetricProcessor,
+        private readonly scheduledWork: SequentialStreamTaskRunner,
     ) {}
 
     @Cron(CronExpression.EVERY_10_SECONDS)

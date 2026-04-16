@@ -3,7 +3,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 
 import { Stream } from "../../domain";
 import { StreamQueryService } from "../query";
-import { hashStreamToPod } from "../../../common";
+import { hashStreamToPod, SystemEventNames } from "../../../common";
 import { StreamRepository } from "../../repositories";
 
 @Injectable()
@@ -19,7 +19,7 @@ export class StreamAssignmentService {
         if (!stream) {
             throw new NotFoundException(`Stream ${name} not found`);
         }
-        this.events.emit("stream.assigned", {
+        this.events.emit(SystemEventNames.STREAM_ASSIGNED, {
             streamName: name,
             podId,
             assignedAt: stream.assignedAt,
@@ -32,7 +32,7 @@ export class StreamAssignmentService {
         if (!stream) {
             throw new NotFoundException(`Stream ${name} not found`);
         }
-        this.events.emit("stream.unassigned", name);
+        this.events.emit(SystemEventNames.STREAM_UNASSIGNED, name);
         return stream;
     }
 

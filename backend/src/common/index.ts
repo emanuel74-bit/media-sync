@@ -4,6 +4,7 @@
 
 export * from "./alert-metric-input";
 export * from "./common-services.module";
+export * from "./event-names";
 export * from "./events";
 export * from "./stream-hash.util";
 export * from "./types";

@@ -1,13 +1,9 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { SyncContext } from "../../domain";
-import { SyncQueryAggregatorService } from "../query";
-import {
-    StreamReconcileService,
-    StreamStalenessService,
-    StreamIngestSyncService,
-} from "../workflows";
+import { SyncContext, SyncWorkflow } from "../../domain";
+import { SYNC_WORKFLOWS } from "../../sync-workflows.token";
+import { SystemEventNames } from "../../../common";
 
 @Injectable()
 export class SyncOrchestratorService {
@@ -15,10 +11,7 @@ export class SyncOrchestratorService {
 
     constructor(
         private readonly events: EventEmitter2,
-        private readonly queryAggregator: SyncQueryAggregatorService,
-        private readonly ingestSync: StreamIngestSyncService,
-        private readonly reconcile: StreamReconcileService,
-        private readonly staleness: StreamStalenessService,
+        @Inject(SYNC_WORKFLOWS) private readonly workflows: SyncWorkflow[],
     ) {}
 
     async execute(context: SyncContext): Promise<void> {
@@ -27,13 +20,11 @@ export class SyncOrchestratorService {
             return;
         }
 
-        await this.ingestSync.execute(context);
+        for (const workflow of this.workflows) {
+            await workflow.execute(context);
+        }
 
-        const contextWithStreams = await this.queryAggregator.withAllStreams(context);
-        await this.reconcile.execute(contextWithStreams);
-        await this.staleness.execute(contextWithStreams);
-
-        this.events.emit("sync.tick", {
+        this.events.emit(SystemEventNames.SYNC_TICK, {
             ingest: context.ingestList.length,
             cluster: context.clusterList.length,
         });

@@ -51,7 +51,7 @@ export class MongoPodRepository
             .select("podId")
             .lean<Array<{ podId: string }>>()
             .exec();
-        return docs.map((d) => d.podId);
+        return docs.map((pod) => pod.podId);
     }
 
     private buildFilter(since: Date, role?: PodRole): FilterQuery<PodDocument> {

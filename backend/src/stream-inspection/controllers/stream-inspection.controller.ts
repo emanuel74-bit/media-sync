@@ -1,25 +1,31 @@
 import { ApiTags } from "@nestjs/swagger";
 import { Controller, Get, Param, Query } from "@nestjs/common";
 
-import { StreamInspectionService } from "../services/inspection";
+import { StreamInspectionRecord } from "../domain";
+import { StreamInspectionQueryService } from "../services/inspection";
 
 @ApiTags("stream-inspection")
 @Controller("api/stream-inspection")
 export class StreamInspectionController {
-    constructor(private readonly streamInspection: StreamInspectionService) {}
+    constructor(private readonly streamInspection: StreamInspectionQueryService) {}
 
     @Get()
-    getAllLatestInspections() {
+    getAllLatestInspections(): Promise<StreamInspectionRecord[]> {
         return this.streamInspection.findAllLatest();
     }
 
     @Get(":streamName")
-    getLatestInspection(@Param("streamName") streamName: string) {
+    getLatestInspection(
+        @Param("streamName") streamName: string,
+    ): Promise<StreamInspectionRecord | null> {
         return this.streamInspection.findLatest(streamName);
     }
 
     @Get(":streamName/history")
-    getInspectionHistory(@Param("streamName") streamName: string, @Query("limit") limit = "10") {
+    getInspectionHistory(
+        @Param("streamName") streamName: string,
+        @Query("limit") limit = "10",
+    ): Promise<StreamInspectionRecord[]> {
         return this.streamInspection.findHistory(streamName, Number(limit));
     }
 }

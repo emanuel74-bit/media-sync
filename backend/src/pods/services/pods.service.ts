@@ -1,92 +1,44 @@
-import { Injectable, Logger } from "@nestjs/common";
-import { EventEmitter2 } from "@nestjs/event-emitter";
+/**
+ * @deprecated Use PodRegistrationService or PodQueryService directly.
+ * Thin facade kept for backward compatibility during migration.
+ */
+import { Injectable } from "@nestjs/common";
 
 import { Pod } from "../domain";
-import { ConfigService } from "../../config";
-import { PodRepository } from "../repositories";
-import { PodRole, PodStatus } from "../../common";
-
-/** Data required to register or update a pod. */
-export interface PodRegistrationRequest {
-    podId: string;
-    host?: string;
-    tags?: string[];
-    type?: PodRole;
-}
-
-export interface ActivePodRef {
-    podId: string;
-    host?: string;
-    type?: PodRole;
-}
+import { ActivePodRef } from "../domain/active-pod-ref.domain";
+import { PodRegistrationRequest } from "../dto/pod-registration-request.dto";
+import { PodRole } from "../../common";
+import { PodRegistrationService } from "./pod-registration.service";
+import { PodQueryService } from "./pod-query.service";
 
 @Injectable()
 export class PodsService {
-    private readonly logger = new Logger(PodsService.name);
-
     constructor(
-        private readonly podRepository: PodRepository,
-        private readonly config: ConfigService,
-        private readonly events: EventEmitter2,
+        private readonly registration: PodRegistrationService,
+        private readonly query: PodQueryService,
     ) {}
 
-    private activeSince(): Date {
-        return new Date(Date.now() - this.config.podHeartbeatToleranceSeconds * 1000);
-    }
-
     async registerPod(request: PodRegistrationRequest): Promise<Pod> {
-        const fields: Partial<Omit<Pod, "podId" | "createdAt" | "updatedAt">> = {
-            status: PodStatus.ACTIVE,
-            lastHeartbeatAt: new Date(),
-        };
-        if (request.host !== undefined) fields.host = request.host;
-        if (request.tags !== undefined) fields.tags = request.tags;
-        if (request.type !== undefined) fields.type = request.type;
-
-        const pod = await this.podRepository.upsertByPodId(request.podId, fields);
-        this.logger.log(`Registered/heartbeat pod: ${request.podId}`);
-        this.events.emit("pod.registered", pod);
-        return pod;
+        return this.registration.registerPod(request);
     }
 
     async heartbeat(podId: string): Promise<Pod> {
-        return this.podRepository.upsertByPodId(podId, {
-            status: PodStatus.ACTIVE,
-            lastHeartbeatAt: new Date(),
-        });
+        return this.registration.heartbeat(podId);
     }
 
     async listPods(): Promise<Pod[]> {
-        return this.podRepository.findAll();
+        return this.query.listPods();
     }
 
-    async getActivePods(): Promise<Pod[]> {
-        return this.podRepository.findActive(this.activeSince());
+    async getActivePods(role?: PodRole): Promise<Pod[]> {
+        return this.query.getActivePods(role);
     }
 
     async listActivePodRefs(role?: PodRole): Promise<ActivePodRef[]> {
-        const pods = await this.podRepository.findActive(this.activeSince(), role);
-        return pods.map((pod) => ({
-            podId: pod.podId,
-            host: pod.host ?? undefined,
-            type: pod.type,
-        }));
+        return this.query.listActivePodRefs(role);
     }
 
     async listActivePodIds(role?: PodRole): Promise<string[]> {
-        const refs = await this.listActivePodRefs(role);
-        return refs.map((pod) => pod.podId);
-    }
-
-    async getActiveIngestPods(): Promise<Pod[]> {
-        return this.podRepository.findActive(this.activeSince(), PodRole.INGEST);
-    }
-
-    async getActiveClusterPods(): Promise<Pod[]> {
-        return this.podRepository.findActive(this.activeSince(), PodRole.CLUSTER);
-    }
-
-    async getActivePodIds(): Promise<string[]> {
-        return this.listActivePodIds();
+        return this.query.listActivePodIds(role);
     }
 }

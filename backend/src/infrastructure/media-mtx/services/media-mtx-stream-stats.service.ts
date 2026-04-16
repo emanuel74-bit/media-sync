@@ -20,7 +20,7 @@ export class MediaMtxStreamStatsService {
             return (await client.getPathItem(streamName)) as unknown as StreamStats;
         } catch (error) {
             this.logger.warn(`Failed to get stream stats for ${streamName} on ${context}`, error);
-            return {};
+            throw error;
         }
     }
 
@@ -30,7 +30,7 @@ export class MediaMtxStreamStatsService {
             return await client.getPathItem(name);
         } catch (error) {
             this.logger.warn(`Failed to get stream details for ${name} on ${source}`, error);
-            return {};
+            throw error;
         }
     }
 }

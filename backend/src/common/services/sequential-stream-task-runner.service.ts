@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 
 @Injectable()
-export class ScheduledWorkCoordinatorService {
+export class SequentialStreamTaskRunner {
     async processSequential<T>(
         items: readonly T[],
         processor: (item: T) => Promise<void>,

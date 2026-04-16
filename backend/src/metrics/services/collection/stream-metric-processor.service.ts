@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { PodRole } from "../../../common";
+import { PodRole, SystemEventNames } from "../../../common";
 import { StreamFailoverService } from "../failover";
 import { MetricPersistenceService } from "../persistence";
 import { MediaMtxStreamStatsService } from "../../../infrastructure/media-mtx/services";
@@ -11,8 +11,8 @@ import { MediaMtxStreamStatsService } from "../../../infrastructure/media-mtx/se
  * Handles stats retrieval, persistence, event emission, and failover evaluation.
  */
 @Injectable()
-export class MetricProcessorService {
-    private readonly logger = new Logger(MetricProcessorService.name);
+export class StreamMetricProcessor {
+    private readonly logger = new Logger(StreamMetricProcessor.name);
 
     constructor(
         private readonly mediaMtxStats: MediaMtxStreamStatsService,
@@ -21,18 +21,15 @@ export class MetricProcessorService {
         private readonly streamFailover: StreamFailoverService,
     ) {}
 
-    /**
-     * Process a single stream's metrics: fetch, persist, emit, and conditionally evaluate failover.
-     */
     async processStreamMetric(streamName: string, context: PodRole): Promise<void> {
         try {
             const stats = await this.mediaMtxStats.getStreamStats(context, streamName);
             const metric = await this.metricPersistence.saveFromStats(streamName, context, stats);
 
-            this.events.emit("metric.collected", { streamName, metric });
+            this.events.emit(SystemEventNames.METRIC_COLLECTED, { streamName, metric });
 
             if (context === PodRole.CLUSTER) {
-                await this.streamFailover.evaluate(streamName, metric);
+                await this.streamFailover.evaluateAndReassignIfDegraded(streamName, metric);
             }
         } catch (error) {
             this.logger.error(`Failed to process metric for stream ${streamName}`, error);

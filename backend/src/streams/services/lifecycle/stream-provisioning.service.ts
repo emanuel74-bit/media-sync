@@ -2,7 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
 import { Stream } from "../../domain";
-import { StreamStatus } from "../../../common";
+import { StreamStatus, SystemEventNames } from "../../../common";
 import { StreamCrudService } from "./stream-crud.service";
 import { MediaMtxPipelineService } from "../../../infrastructure/media-mtx/services";
 
@@ -29,7 +29,7 @@ export class StreamProvisioningService {
                 lastError: null,
             });
             const result = updated ?? stream;
-            this.events.emit("stream.synced", result);
+            this.events.emit(SystemEventNames.STREAM_SYNCED, result);
             return result;
         } catch (error) {
             const message = error instanceof Error ? error.message : "Failed to sync stream";
@@ -41,7 +41,7 @@ export class StreamProvisioningService {
                 lastError: message,
             });
             const result = updated ?? stream;
-            this.events.emit("stream.sync.failure", {
+            this.events.emit(SystemEventNames.STREAM_SYNC_FAILURE, {
                 stream: stream.name,
                 error: message,
             });

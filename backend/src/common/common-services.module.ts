@@ -1,21 +1,9 @@
 import { Module } from "@nestjs/common";
 
-import {
-    AlertRuleRuntimeService,
-    RuleEvaluationCoordinatorService,
-    ScheduledWorkCoordinatorService,
-} from "./services";
+import { AlertRuleEvaluator, SequentialStreamTaskRunner } from "./services";
 
 @Module({
-    providers: [
-        AlertRuleRuntimeService,
-        RuleEvaluationCoordinatorService,
-        ScheduledWorkCoordinatorService,
-    ],
-    exports: [
-        AlertRuleRuntimeService,
-        RuleEvaluationCoordinatorService,
-        ScheduledWorkCoordinatorService,
-    ],
+    providers: [AlertRuleEvaluator, SequentialStreamTaskRunner],
+    exports: [AlertRuleEvaluator, SequentialStreamTaskRunner],
 })
 export class CommonServicesModule {}

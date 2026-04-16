@@ -5,7 +5,7 @@ import { StreamIngestDiscoveryService } from "./stream-ingest-discovery.service"
 import { StreamIngestActivationService } from "./stream-ingest-activation.service";
 
 @Injectable()
-export class StreamIngestSyncService implements SyncWorkflow {
+export class IngestStreamSynchronizerService implements SyncWorkflow {
     constructor(
         private readonly ingestDiscovery: StreamIngestDiscoveryService,
         private readonly ingestActivation: StreamIngestActivationService,
