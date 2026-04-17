@@ -6,8 +6,31 @@
 
 ### Files (kebab-case)
 
-- Use consistent suffixes to indicate role (e.g. service, controller, module, schema, dto, util, types)
 - Name files after their responsibility, not generic terms
+- Every file must have a role suffix — no unsuffixed files
+
+#### Required File Suffixes
+
+| Suffix           | Purpose                                                 |
+| ---------------- | ------------------------------------------------------- |
+| `.module.ts`     | NestJS module definition                                |
+| `.service.ts`    | Business logic                                          |
+| `.controller.ts` | HTTP entry point                                        |
+| `.repository.ts` | Data access contract (abstract) or implementation       |
+| `.domain.ts`     | Entity with identity and/or behavior                    |
+| `.types.ts`      | Plain type/interface definitions (shape only, no logic) |
+| `.enum.ts`       | Finite domain state sets                                |
+| `.const.ts`      | Fixed values, configuration data, static lookup tables  |
+| `.dto.ts`        | Data transfer objects (transport layer only)            |
+| `.schema.ts`     | Database schema definition                              |
+| `.util.ts`       | Pure stateless helper functions (including mappers)     |
+| `.strategy.ts`   | Strategy pattern implementation                         |
+| `.client.ts`     | Low-level external system communication                 |
+| `.gateway.ts`    | WebSocket or event gateway                              |
+
+#### Interfaces
+
+- Interfaces belong in `.types.ts` files, not separate `.interface.ts` files
 
 ### Classes (PascalCase)
 
@@ -37,6 +60,37 @@
 - Keep transport-layer types (DTOs) separated from domain logic
 - Do not place business logic in transport or configuration layers
 
+### Feature Module Structure
+
+No sub-folder is mandatory. Each feature includes only the folders it needs to fulfill its purpose. However, when a layer is present, it must be organized into the correct folder:
+
+| Folder          | Contents                                                           |
+| --------------- | ------------------------------------------------------------------ |
+| `domain/`       | Business entities, types, enums, constants (no framework concerns) |
+| `services/`     | Business logic services                                            |
+| `controllers/`  | HTTP entry points                                                  |
+| `repositories/` | Abstract data access contracts                                     |
+| `dto/`          | Transport-layer DTOs with validation decorators                    |
+
+- Sub-group `services/` into sub-folders when services have distinct sub-responsibilities (e.g. `services/lifecycle/`, `services/query/`)
+- Every sub-feature lives in its own sub-folder, including clients within integration modules
+
+### Domain Folder Contents
+
+- Put all business behavior and invariants in `domain/`
+- `domain/` must contain no framework or infrastructure concerns
+- `.enum.ts` — finite business states
+- `.type.ts` — shape-only definitions (including interfaces)
+- `.const.ts` — fixed values
+- `.domain.ts` — entities with identity and/or behavior
+- Never place logic in enum, type, or const files
+
+### Infrastructure Module (`infrastructure/`)
+
+- Use `infrastructure/` for anything that depends on the outside world (databases, external APIs, third-party SDKs)
+- Use `libs/` for pure, reusable, framework-agnostic code
+- Each external system gets its own sub-module within `infrastructure/`
+
 ### Sub-Feature Structure
 
 - Each distinct responsibility within a feature must be grouped into its own subfolder
@@ -58,8 +112,12 @@ Guidelines:
 - Entry layer (e.g. controllers, gateways) handles input/output only
 - Core layer (services) contains business logic
 - Data layer (repositories) handles persistence
-- Integration layer (adapters/clients) handles external systems
+- Integration layer (clients) handles external systems
 - Utilities are pure and stateless
+
+### Module Naming
+
+- Module files must match their folder name: `<folder-name>.module.ts`
 
 ### Dependencies
 
@@ -317,11 +375,16 @@ Higher-level orchestration → focused services → data access
 - Keep persistence details isolated
 - Use clear method naming for operations
 
+### Repository Naming
+
+- Abstract repository (feature layer): `<entity>.repository.ts` (e.g. `pod.repository.ts`)
+- Concrete implementation (infrastructure layer): `<technology>-<entity>.repository.ts` (e.g. `mongo-pod.repository.ts`)
+
 ### Structure per entity
 
 - Domain definition
-- Repository contract
-- Implementation
+- Repository contract (in feature module)
+- Implementation (in `infrastructure/`)
 - Schema/configuration (if applicable)
 
 ---
@@ -332,6 +395,7 @@ Higher-level orchestration → focused services → data access
 
 - All tests live in a top-level `test/` directory, mirroring the `src/` folder structure
 - Tests do not live next to source files
+- Co-located `.spec.ts` files in `src/` are legacy and should be migrated to `test/`
 
 ### Naming
 
