@@ -1,9 +1,9 @@
 import { TrackType } from "../../../common/domain";
-import { DataTrackParser } from "./data-track-parser";
-import { VideoTrackParser } from "./video-track-parser";
-import { AudioTrackParser } from "./audio-track-parser";
-import { SubtitleTrackParser } from "./subtitle-track-parser";
-import { parseTracksFromPathItem } from "./stream-track-parser";
+import { DataTrackParser } from "./data-track-parser.strategy";
+import { VideoTrackParser } from "./video-track-parser.strategy";
+import { AudioTrackParser } from "./audio-track-parser.strategy";
+import { SubtitleTrackParser } from "./subtitle-track-parser.strategy";
+import { parseTracksFromPathItem } from "./stream-track-parser.util";
 import { V3PathItem, V3TrackItem } from "../../../infrastructure/media-mtx/types";
 
 // ─── Individual parser unit tests ────────────────────────────────────────────

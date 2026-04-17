@@ -6,4 +6,4 @@ export * from "./rules";
 export * from "./domain";
 export * from "./events";
 export * from "./services";
-export * from "./common-services.module";
+export * from "./common.module";

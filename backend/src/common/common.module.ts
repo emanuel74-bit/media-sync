@@ -6,4 +6,4 @@ import { AlertRuleEvaluator, SequentialStreamTaskRunner } from "./services";
     providers: [AlertRuleEvaluator, SequentialStreamTaskRunner],
     exports: [AlertRuleEvaluator, SequentialStreamTaskRunner],
 })
-export class CommonServicesModule {}
+export class CommonModule {}

@@ -15,8 +15,8 @@ export interface StreamMetadata {
     bytesReceived?: number;
     bytesSent?: number;
     readers?: number;
-    expectedVideo?: boolean;
-    expectedAudio?: boolean;
+    hasExpectedVideo?: boolean;
+    hasExpectedAudio?: boolean;
     [key: string]: unknown;
 }
 

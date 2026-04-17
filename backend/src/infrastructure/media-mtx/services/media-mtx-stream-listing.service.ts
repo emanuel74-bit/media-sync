@@ -1,14 +1,9 @@
 import { Injectable, Logger } from "@nestjs/common";
 
-import { MediaMtxStreamInfo } from "../types";
+import { MediaMtxStreamInfo, ContextualMediaMtxStream } from "../types";
 import { PodRole } from "../../../common/domain";
 import { IngestStreamListingStrategy } from "./ingest-stream-listing.strategy";
 import { ClusterStreamListingStrategy } from "./cluster-stream-listing.strategy";
-
-export type ContextualMediaMtxStream = {
-    stream: MediaMtxStreamInfo;
-    context: PodRole;
-};
 
 /**
  * Discovers which streams are active across ingest and cluster nodes.

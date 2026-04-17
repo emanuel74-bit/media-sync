@@ -1,10 +1,10 @@
-import { StreamTrackAlertRule } from "./stream-track-alert-rule";
+import { StreamTrackAlertRule } from "./stream-track-alert-rule.type";
 import { AlertSeverity, AlertType, TrackType } from "../../../common/domain";
 
 export const STREAM_TRACK_ALERT_RULES: StreamTrackAlertRule[] = [
     {
         check: (tracks, stream) =>
-            stream.metadata?.expectedVideo !== false &&
+            stream.metadata?.hasExpectedVideo !== false &&
             !tracks.some((track) => track.type === TrackType.VIDEO),
         type: AlertType.MISSING_VIDEO_TRACK,
         severity: AlertSeverity.WARNING,
@@ -12,7 +12,7 @@ export const STREAM_TRACK_ALERT_RULES: StreamTrackAlertRule[] = [
     },
     {
         check: (tracks, stream) =>
-            stream.metadata?.expectedAudio !== false &&
+            stream.metadata?.hasExpectedAudio !== false &&
             !tracks.some((track) => track.type === TrackType.AUDIO),
         type: AlertType.MISSING_AUDIO_TRACK,
         severity: AlertSeverity.WARNING,

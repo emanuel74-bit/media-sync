@@ -18,7 +18,7 @@
 | `.controller.ts` | HTTP entry point                                        |
 | `.repository.ts` | Data access contract (abstract) or implementation       |
 | `.domain.ts`     | Entity with identity and/or behavior                    |
-| `.types.ts`      | Plain type/interface definitions (shape only, no logic) |
+| `.type.ts`       | Plain type/interface definitions (shape only, no logic) |
 | `.enum.ts`       | Finite domain state sets                                |
 | `.const.ts`      | Fixed values, configuration data, static lookup tables  |
 | `.dto.ts`        | Data transfer objects (transport layer only)            |

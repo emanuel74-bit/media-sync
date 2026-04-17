@@ -1,14 +1,10 @@
-import { Logger } from "@nestjs/common";
-
 import { StreamTrack } from "../../../common/domain";
-import { DataTrackParser } from "./data-track-parser";
-import { TrackParser } from "./track-parser.interface";
-import { VideoTrackParser } from "./video-track-parser";
-import { AudioTrackParser } from "./audio-track-parser";
-import { SubtitleTrackParser } from "./subtitle-track-parser";
+import { DataTrackParser } from "./data-track-parser.strategy";
+import { TrackParser } from "./track-parser.type";
+import { VideoTrackParser } from "./video-track-parser.strategy";
+import { AudioTrackParser } from "./audio-track-parser.strategy";
+import { SubtitleTrackParser } from "./subtitle-track-parser.strategy";
 import { V3PathItem } from "../../../infrastructure/media-mtx/types";
-
-const logger = new Logger("StreamTrackParser");
 
 const TRACK_PARSERS: TrackParser[] = [
     new VideoTrackParser(),
@@ -22,7 +18,6 @@ export function parseTracksFromPathItem(item: V3PathItem): StreamTrack[] {
         .map((track) => {
             const parser = TRACK_PARSERS.find((p) => p.canParse(track.type));
             if (!parser) {
-                logger.warn(`Unrecognized track type: ${track.type}`);
                 return null;
             }
             return parser.parse(track);

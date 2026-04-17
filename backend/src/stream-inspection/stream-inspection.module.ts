@@ -2,7 +2,7 @@ import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
 import { StreamsModule } from "../streams";
-import { CommonServicesModule } from "../common";
+import { CommonModule } from "../common";
 import { StreamInspectionController } from "./controllers";
 import { StreamTrackAlertService } from "./services/alerts";
 import { StreamInspectionRepository } from "./repositories";
@@ -26,7 +26,7 @@ import {
         ]),
         MediaMtxModule,
         StreamsModule,
-        CommonServicesModule,
+        CommonModule,
     ],
     providers: [
         StreamInspectionSchedulerService,

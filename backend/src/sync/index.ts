@@ -5,4 +5,4 @@
 export * from "./domain";
 export * from "./services";
 export * from "./sync.module";
-export * from "./sync-workflows.token";
+export * from "./sync-workflows.const";

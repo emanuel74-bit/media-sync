@@ -1,4 +1,4 @@
-import { StreamPathMetadata } from "./media-mtx.types";
+import { StreamPathMetadata } from "./media-mtx.type";
 
 export type MediaMtxStreamInfo = {
     name: string;

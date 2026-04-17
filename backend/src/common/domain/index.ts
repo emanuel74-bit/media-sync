@@ -7,6 +7,6 @@ export * from "./alert-type.enum";
 export * from "./pod-status.enum";
 export * from "./track-type.enum";
 export * from "./stream-status.enum";
-export * from "./stream-track.types";
+export * from "./stream-track.type";
 export * from "./alert-severity.enum";
-export * from "./alert-metric-input.types";
+export * from "./alert-metric-input.type";

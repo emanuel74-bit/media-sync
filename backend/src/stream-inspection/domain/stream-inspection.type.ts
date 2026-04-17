@@ -2,8 +2,8 @@ import { PodRole, StreamTrack } from "../../common/domain";
 
 export interface StreamTrackAlertContext {
     metadata?: {
-        expectedVideo?: boolean;
-        expectedAudio?: boolean;
+        hasExpectedVideo?: boolean;
+        hasExpectedAudio?: boolean;
     };
 }
 

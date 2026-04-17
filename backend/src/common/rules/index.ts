@@ -3,4 +3,5 @@
  */
 
 export * from "./runtime-alert-rule.type";
+export * from "./metric-thresholds.type";
 export * from "./metric-threshold-predicates.util";

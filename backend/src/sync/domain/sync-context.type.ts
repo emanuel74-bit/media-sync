@@ -1,5 +1,5 @@
 import { Stream } from "../../streams/domain";
-import { SyncDiscoveredStream } from "./sync-discovered-stream";
+import { SyncDiscoveredStream } from "./sync-discovered-stream.type";
 
 export interface SyncContext {
     ingestList: SyncDiscoveredStream[];

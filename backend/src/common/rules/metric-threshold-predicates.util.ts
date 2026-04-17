@@ -1,10 +1,5 @@
 import { AlertMetricInput } from "../domain";
-
-export interface MetricThresholds {
-    alertBitrateLowThreshold: number;
-    alertPacketLossThreshold: number;
-    alertLatencyHighThreshold: number;
-}
+import { MetricThresholds } from "./metric-thresholds.type";
 
 export function isBitrateLow(
     metric: Pick<AlertMetricInput, "bitrate">,

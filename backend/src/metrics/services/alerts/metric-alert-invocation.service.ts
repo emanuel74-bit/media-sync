@@ -5,7 +5,7 @@ import { ConfigService } from "../../../config";
 import { AlertMetricInput } from "../../../common/domain";
 import { AlertRuleEvaluator } from "../../../common/services";
 import { METRIC_ALERT_RULES } from "./metric-alert-rules.const";
-import { MetricAlertThresholds } from "./metric-alert-rule.types";
+import { MetricAlertThresholds } from "./metric-alert-rule.type";
 import { MetricCollectedPayload, SystemEventNames } from "../../../common/events";
 
 @Injectable()
