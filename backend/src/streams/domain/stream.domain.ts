@@ -25,7 +25,7 @@ export interface Stream {
     source: string;
     status: StreamStatus;
     metadata: StreamMetadata;
-    enabled: boolean;
+    isEnabled: boolean;
     lastSeenAt?: Date | null;
     lastSyncedAt?: Date | null;
     lastError?: string | null;

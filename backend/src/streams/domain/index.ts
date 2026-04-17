@@ -3,3 +3,5 @@
  */
 
 export * from "./stream.domain";
+export * from "./create-stream-data.types";
+export * from "./update-stream-data.types";

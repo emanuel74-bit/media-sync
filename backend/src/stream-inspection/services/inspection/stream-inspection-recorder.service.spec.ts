@@ -1,13 +1,12 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { StreamInspectionRecorderService } from "./stream-inspection-recorder.service";
-import { StreamInspectionRepository } from "../../repositories";
-import { MediaMtxStreamStatsService } from "../../../infrastructure/media-mtx/services";
 import { PodRole } from "../../../common/domain";
 import { SystemEventNames } from "../../../common/events";
-import { V3PathItem } from "../../../infrastructure/media-mtx/types";
-import { MediaMtxStreamInfo } from "../../../infrastructure/media-mtx/types";
+import { StreamInspectionRepository } from "../../repositories";
+import { StreamInspectionRecorderService } from "./stream-inspection-recorder.service";
+import { MediaMtxStreamStatsService } from "../../../infrastructure/media-mtx/services";
+import { V3PathItem, MediaMtxStreamInfo } from "../../../infrastructure/media-mtx/types";
 
 const makeStream = (name = "stream-a"): MediaMtxStreamInfo => ({
     name,

@@ -9,5 +9,5 @@ export class CreateStreamDto {
 
     @IsOptional()
     @IsBoolean()
-    enabled?: boolean;
+    isEnabled?: boolean;
 }

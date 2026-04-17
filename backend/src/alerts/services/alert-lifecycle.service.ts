@@ -3,8 +3,7 @@ import { EventEmitter2, OnEvent } from "@nestjs/event-emitter";
 
 import { AlertRepository } from "../repositories";
 import { Alert, AlertCreationData } from "../domain";
-import { AlertCreateRequestedPayload } from "../../common/events";
-import { SystemEventNames } from "../../common/events";
+import { SystemEventNames, AlertCreateRequestedPayload } from "../../common/events";
 
 @Injectable()
 export class AlertLifecycleService {

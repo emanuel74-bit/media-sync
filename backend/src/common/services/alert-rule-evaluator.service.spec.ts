@@ -1,10 +1,10 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { AlertRuleEvaluator } from "./alert-rule-evaluator.service";
-import { RuntimeAlertRule } from "../rules/runtime-alert-rule.type";
-import { AlertSeverity, AlertType } from "../domain";
+import { RuntimeAlertRule } from "../rules";
 import { SystemEventNames } from "../events";
+import { AlertSeverity, AlertType } from "../domain";
+import { AlertRuleEvaluator } from "./alert-rule-evaluator.service";
 
 describe("AlertRuleEvaluator", () => {
     let service: AlertRuleEvaluator;

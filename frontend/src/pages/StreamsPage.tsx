@@ -83,8 +83,8 @@ export default function StreamsPage() {
                 return false;
             if (statusFilter !== "all" && s.status !== statusFilter)
                 return false;
-            if (enabledFilter === "enabled" && !s.enabled) return false;
-            if (enabledFilter === "disabled" && s.enabled) return false;
+            if (enabledFilter === "enabled" && !s.isEnabled) return false;
+            if (enabledFilter === "disabled" && s.isEnabled) return false;
             return true;
         });
     }, [streams, search, statusFilter, enabledFilter]);
@@ -169,7 +169,7 @@ export default function StreamsPage() {
                                 if (s)
                                     toggleStream.mutate({
                                         name: s.name,
-                                        enabled: true,
+                                        isEnabled: true,
                                     });
                             });
                             setSelected(new Set());
@@ -186,7 +186,7 @@ export default function StreamsPage() {
                                 if (s)
                                     toggleStream.mutate({
                                         name: s.name,
-                                        enabled: false,
+                                        isEnabled: false,
                                     });
                             });
                             setSelected(new Set());
@@ -266,11 +266,11 @@ export default function StreamsPage() {
                                 </TableCell>
                                 <TableCell onClick={(e) => e.stopPropagation()}>
                                     <Switch
-                                        checked={stream.enabled}
+                                        checked={stream.isEnabled}
                                         onCheckedChange={(checked) =>
                                             toggleStream.mutate({
                                                 name: stream.name,
-                                                enabled: checked,
+                                                isEnabled: checked,
                                             })
                                         }
                                     />

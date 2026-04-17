@@ -1,5 +1,5 @@
 import { ApiTags } from "@nestjs/swagger";
-import { Controller, Get, Param, Query } from "@nestjs/common";
+import { Controller, DefaultValuePipe, Get, Param, ParseIntPipe, Query } from "@nestjs/common";
 
 import { Metric } from "../domain";
 import { MetricPersistenceService } from "../services/persistence";
@@ -12,8 +12,8 @@ export class MetricsController {
     @Get("stream/:name")
     async streamMetrics(
         @Param("name") name: string,
-        @Query("limit") limit = "50",
+        @Query("limit", new DefaultValuePipe(50), ParseIntPipe) limit: number,
     ): Promise<Metric[]> {
-        return this.metricPersistence.findRecent(name, Number(limit));
+        return this.metricPersistence.findRecent(name, limit);
     }
 }

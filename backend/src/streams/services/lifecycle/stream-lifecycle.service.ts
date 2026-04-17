@@ -1,11 +1,10 @@
 import { Injectable } from "@nestjs/common";
 
-import { Stream } from "../../domain";
-import { CreateStreamDto } from "../../dto";
-import { PodQueryService } from "../../../pods/services";
+import { Stream, CreateStreamData } from "../../domain";
 import { StreamAssignmentService } from "../assignment";
-import { PodRole, StreamStatus } from "../../../common/domain";
+import { PodQueryService } from "../../../pods/services";
 import { StreamCrudService } from "./stream-crud.service";
+import { PodRole, StreamStatus } from "../../../common/domain";
 import { StreamProvisioningService } from "./stream-provisioning.service";
 
 @Injectable()
@@ -17,8 +16,8 @@ export class StreamLifecycleService {
         private readonly streamProvisioning: StreamProvisioningService,
     ) {}
 
-    async create(createStreamDto: CreateStreamDto): Promise<Stream> {
-        const stream = await this.streamCrud.create(createStreamDto);
+    async create(data: CreateStreamData): Promise<Stream> {
+        const stream = await this.streamCrud.create(data);
         return this.assignAndProvision(stream);
     }
 

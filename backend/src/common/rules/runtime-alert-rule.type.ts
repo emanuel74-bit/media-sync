@@ -1,6 +1,4 @@
-import { AlertType } from "../domain/alert-type.enum";
-import { AlertSeverity } from "../domain/alert-severity.enum";
-
+import { AlertType, AlertSeverity } from "../domain";
 export type RuntimeAlertRule<TInput, TContext> = {
     check: (input: TInput, context: TContext) => boolean;
     type: AlertType;

@@ -9,7 +9,7 @@ export class UpdateStreamDto {
 
     @IsOptional()
     @IsBoolean()
-    enabled?: boolean;
+    isEnabled?: boolean;
 
     @IsOptional()
     @IsEnum(StreamStatus)

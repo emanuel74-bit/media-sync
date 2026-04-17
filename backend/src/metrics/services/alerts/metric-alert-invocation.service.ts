@@ -2,11 +2,11 @@ import { OnEvent } from "@nestjs/event-emitter";
 import { Injectable, Logger } from "@nestjs/common";
 
 import { ConfigService } from "../../../config";
-import { METRIC_ALERT_RULES } from "./metric-alert-rules";
-import { MetricAlertThresholds } from "./metric-alert-rule";
 import { AlertMetricInput } from "../../../common/domain";
-import { MetricCollectedPayload, SystemEventNames } from "../../../common/events";
 import { AlertRuleEvaluator } from "../../../common/services";
+import { METRIC_ALERT_RULES } from "./metric-alert-rules.const";
+import { MetricAlertThresholds } from "./metric-alert-rule.types";
+import { MetricCollectedPayload, SystemEventNames } from "../../../common/events";
 
 @Injectable()
 export class MetricAlertInvocationService {

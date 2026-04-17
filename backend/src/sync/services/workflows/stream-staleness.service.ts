@@ -3,9 +3,9 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 
 import { Stream } from "../../../streams/domain";
 import { SyncContext, SyncWorkflow } from "../../domain";
+import { SystemEventNames } from "../../../common/events";
 import { StreamStatusService } from "../../../streams/services/lifecycle";
 import { MediaMtxPipelineService } from "../../../infrastructure/media-mtx/services";
-import { SystemEventNames } from "../../../common/events";
 
 @Injectable()
 export class StreamStalenessService implements SyncWorkflow {

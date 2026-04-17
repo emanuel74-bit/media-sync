@@ -1,8 +1,8 @@
 import { ApiTags } from "@nestjs/swagger";
 import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
 
-import { Stream, StreamAssignmentInfo } from "../domain";
 import { StreamQueryService } from "../services/query";
+import { Stream, StreamAssignmentInfo } from "../domain";
 import { StreamAssignmentService } from "../services/assignment";
 import { AssignStreamDto, CreateStreamDto, UpdateStreamDto } from "../dto";
 import { StreamCrudService, StreamLifecycleService } from "../services/lifecycle";
@@ -23,8 +23,12 @@ export class StreamsController {
     }
 
     @Post()
-    create(@Body() createStreamDto: CreateStreamDto): Promise<Stream> {
-        return this.streamLifecycle.create(createStreamDto);
+    create(@Body() dto: CreateStreamDto): Promise<Stream> {
+        return this.streamLifecycle.create({
+            name: dto.name,
+            source: dto.source,
+            isEnabled: dto.isEnabled,
+        });
     }
 
     @Get("assignment")
@@ -38,8 +42,12 @@ export class StreamsController {
     }
 
     @Patch(":name")
-    update(@Param("name") name: string, @Body() updateStreamDto: UpdateStreamDto): Promise<Stream> {
-        return this.streamCrud.update(name, updateStreamDto);
+    update(@Param("name") name: string, @Body() dto: UpdateStreamDto): Promise<Stream> {
+        return this.streamCrud.update(name, {
+            source: dto.source,
+            isEnabled: dto.isEnabled,
+            status: dto.status,
+        });
     }
 
     @Delete(":name")

@@ -2,22 +2,22 @@ import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
 import { StreamsModule } from "../streams";
-import { CommonServicesModule } from "../common/common-services.module";
+import { CommonServicesModule } from "../common";
 import { StreamInspectionController } from "./controllers";
 import { StreamTrackAlertService } from "./services/alerts";
 import { StreamInspectionRepository } from "./repositories";
 import { MediaMtxModule } from "../infrastructure/media-mtx";
+import { MongoStreamInspectionRepository } from "../infrastructure/database/repositories";
+import {
+    StreamInspection,
+    StreamInspectionSchema,
+} from "../infrastructure/database/schemas/stream-inspection.schema";
 import {
     StreamInspectionService,
     StreamInspectionSchedulerService,
     StreamInspectionRecorderService,
     StreamInspectionQueryService,
 } from "./services/inspection";
-import { MongoStreamInspectionRepository } from "../infrastructure/database/repositories";
-import {
-    StreamInspection,
-    StreamInspectionSchema,
-} from "../infrastructure/database/schemas/stream-inspection.schema";
 
 @Module({
     imports: [

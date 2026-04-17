@@ -30,14 +30,14 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 export const streamsApi = {
     getAll: () => request<Stream[]>("/api/streams"),
     getByName: (name: string) => request<Stream>(`/api/streams/${name}`),
-    create: (data: { name: string; source: string; enabled?: boolean }) =>
+    create: (data: { name: string; source: string; isEnabled?: boolean }) =>
         request<Stream>("/api/streams", {
             method: "POST",
             body: JSON.stringify(data),
         }),
     update: (
         name: string,
-        data: { source?: string; enabled?: boolean; status?: string },
+        data: { source?: string; isEnabled?: boolean; status?: string },
     ) =>
         request<Stream>(`/api/streams/${name}`, {
             method: "PATCH",

@@ -4,12 +4,10 @@
  */
 import { Injectable } from "@nestjs/common";
 
-import { Pod } from "../domain";
-import { ActivePodRef } from "../domain/active-pod-ref.domain";
-import { PodRegistrationRequest } from "../dto/pod-registration-request.dto";
 import { PodRole } from "../../common/domain";
-import { PodRegistrationService } from "./pod-registration.service";
 import { PodQueryService } from "./pod-query.service";
+import { Pod, ActivePodRef, PodRegistrationData } from "../domain";
+import { PodRegistrationService } from "./pod-registration.service";
 
 @Injectable()
 export class PodsService {
@@ -18,7 +16,7 @@ export class PodsService {
         private readonly query: PodQueryService,
     ) {}
 
-    async registerPod(request: PodRegistrationRequest): Promise<Pod> {
+    async registerPod(request: PodRegistrationData): Promise<Pod> {
         return this.registration.registerPod(request);
     }
 

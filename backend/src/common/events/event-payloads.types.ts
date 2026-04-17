@@ -1,5 +1,11 @@
-import { AlertMetricInput } from "../domain/alert-metric-input.interface";
-import { AlertSeverity, AlertType, PodRole, StreamStatus, StreamTrack } from "../domain";
+import {
+    AlertMetricInput,
+    AlertSeverity,
+    AlertType,
+    PodRole,
+    StreamStatus,
+    StreamTrack,
+} from "../domain";
 
 /** Emitted when a stream has been successfully synced to the cluster. */
 export interface StreamSyncedPayload {

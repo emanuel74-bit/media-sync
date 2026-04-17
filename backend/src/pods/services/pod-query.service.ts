@@ -1,10 +1,9 @@
 import { Injectable } from "@nestjs/common";
 
-import { Pod } from "../domain";
-import { ActivePodRef } from "../domain/active-pod-ref.domain";
 import { ConfigService } from "../../config";
-import { PodRepository } from "../repositories";
+import { Pod, ActivePodRef } from "../domain";
 import { PodRole } from "../../common/domain";
+import { PodRepository } from "../repositories";
 
 @Injectable()
 export class PodQueryService {

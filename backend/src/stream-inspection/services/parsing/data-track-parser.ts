@@ -1,7 +1,6 @@
-import { StreamTrack } from "../../domain";
-import { TrackType } from "../../../common/domain";
-import { V3TrackItem } from "../../../infrastructure/media-mtx/types";
 import { TrackParser } from "./track-parser.interface";
+import { StreamTrack, TrackType } from "../../../common/domain";
+import { V3TrackItem } from "../../../infrastructure/media-mtx/types";
 
 export class DataTrackParser implements TrackParser {
     canParse(type: string): boolean {

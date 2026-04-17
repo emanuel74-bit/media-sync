@@ -1,8 +1,8 @@
-import { Inject, Injectable, Logger } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 
+import { SYNC_WORKFLOWS } from "../..";
 import { SyncContext, SyncWorkflow } from "../../domain";
-import { SYNC_WORKFLOWS } from "../../sync-workflows.token";
 import { SystemEventNames } from "../../../common/events";
 
 @Injectable()

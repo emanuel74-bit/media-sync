@@ -2,10 +2,10 @@ import { Model } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 
+import { StreamTrack } from "../../../common/domain";
 import { MongoDomainRepository } from "./mongo-domain.repository";
-import { StreamInspectionRecord, StreamTrack } from "../../../stream-inspection/domain";
-import { NewStreamInspectionData } from "../../../stream-inspection/domain";
 import { StreamInspectionRepository } from "../../../stream-inspection/repositories";
+import { StreamInspectionRecord, NewStreamInspectionData } from "../../../stream-inspection/domain";
 import {
     StreamInspection as StreamInspectionSchema,
     StreamInspectionDocument,

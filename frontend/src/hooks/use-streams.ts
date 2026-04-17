@@ -80,8 +80,13 @@ export function useStreamInspectionHistory(name: string, limit = 10) {
 export function useToggleStream() {
     const qc = useQueryClient();
     return useMutation({
-        mutationFn: ({ name, enabled }: { name: string; enabled: boolean }) =>
-            streamsApi.update(name, { enabled }),
+        mutationFn: ({
+            name,
+            isEnabled,
+        }: {
+            name: string;
+            isEnabled: boolean;
+        }) => streamsApi.update(name, { isEnabled }),
         onSuccess: (_, variables) => {
             qc.invalidateQueries({ queryKey: ["streams"] });
             qc.invalidateQueries({ queryKey: ["stream", variables.name] });
@@ -95,7 +100,7 @@ export function useCreateStream() {
         mutationFn: (data: {
             name: string;
             source: string;
-            enabled?: boolean;
+            isEnabled?: boolean;
         }) => streamsApi.create(data),
         onSuccess: () => qc.invalidateQueries({ queryKey: ["streams"] }),
     });
@@ -109,7 +114,7 @@ export function useUpdateStream() {
             data,
         }: {
             name: string;
-            data: { source?: string; enabled?: boolean; status?: string };
+            data: { source?: string; isEnabled?: boolean; status?: string };
         }) => streamsApi.update(name, data),
         onSuccess: (_, { name }) => {
             qc.invalidateQueries({ queryKey: ["streams"] });

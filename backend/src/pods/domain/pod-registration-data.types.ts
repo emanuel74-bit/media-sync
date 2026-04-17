@@ -1,6 +1,6 @@
 import { PodRole } from "../../common/domain";
 
-export interface PodRegistrationRequest {
+export interface PodRegistrationData {
     podId: string;
     host?: string;
     tags?: string[];

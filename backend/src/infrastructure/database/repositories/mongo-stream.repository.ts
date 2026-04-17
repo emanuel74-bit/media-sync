@@ -29,7 +29,7 @@ export class MongoStreamRepository
     }
 
     async create(data: Partial<Stream> & Pick<Stream, "name" | "source">): Promise<Stream> {
-        const doc = await new this.model(data).save();
+        const doc = await new this.model(this.toPersistence(data)).save();
         return this.fromDocument(doc);
     }
 
@@ -56,7 +56,7 @@ export class MongoStreamRepository
     async upsert(name: string, data: Partial<Stream>): Promise<Stream> {
         const doc = await this.model.findOneAndUpdate(
             { name },
-            { $set: { ...data, isManual: false } },
+            { $set: { ...this.toPersistence(data), isManual: false } },
             { upsert: true, new: true, setDefaultsOnInsert: true },
         );
         return this.fromDocument(doc!);
@@ -87,7 +87,11 @@ export class MongoStreamRepository
     }
 
     async update(name: string, data: Partial<Stream>): Promise<Stream | null> {
-        const doc = await this.model.findOneAndUpdate({ name }, { $set: data }, { new: true });
+        const doc = await this.model.findOneAndUpdate(
+            { name },
+            { $set: this.toPersistence(data) },
+            { new: true },
+        );
         return doc ? this.fromDocument(doc) : null;
     }
 
@@ -110,13 +114,22 @@ export class MongoStreamRepository
         }));
     }
 
+    private toPersistence(data: Partial<Stream>): Record<string, unknown> {
+        const { isEnabled, ...rest } = data;
+        const result: Record<string, unknown> = { ...rest };
+        if (isEnabled !== undefined) {
+            result.enabled = isEnabled;
+        }
+        return result;
+    }
+
     protected toDomain(raw: LeanStream): Stream {
         return {
             name: raw.name,
             source: raw.source,
             status: raw.status,
             metadata: raw.metadata,
-            enabled: raw.enabled,
+            isEnabled: raw.enabled,
             lastSeenAt: raw.lastSeenAt,
             lastSyncedAt: raw.lastSyncedAt,
             lastError: raw.lastError,

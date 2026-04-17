@@ -1,10 +1,9 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { Pod } from "../domain";
-import { PodRegistrationRequest } from "../dto/pod-registration-request.dto";
 import { PodRepository } from "../repositories";
 import { PodStatus } from "../../common/domain";
+import { Pod, PodRegistrationData } from "../domain";
 import { SystemEventNames } from "../../common/events";
 
 @Injectable()
@@ -16,7 +15,7 @@ export class PodRegistrationService {
         private readonly events: EventEmitter2,
     ) {}
 
-    async registerPod(request: PodRegistrationRequest): Promise<Pod> {
+    async registerPod(request: PodRegistrationData): Promise<Pod> {
         const fields: Partial<Omit<Pod, "podId" | "createdAt" | "updatedAt">> = {
             status: PodStatus.ACTIVE,
             lastHeartbeatAt: new Date(),

@@ -3,6 +3,6 @@
  */
 
 export * from "./stream-crud.service";
+export * from "./stream-status.service";
 export * from "./stream-lifecycle.service";
 export * from "./stream-provisioning.service";
-export * from "./stream-status.service";

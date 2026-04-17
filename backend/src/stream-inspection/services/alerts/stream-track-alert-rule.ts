@@ -1,4 +1,5 @@
+import { StreamTrack } from "../../../common/domain";
+import { StreamTrackAlertContext } from "../../domain";
 import { RuntimeAlertRule } from "../../../common/rules";
-import { StreamTrack, StreamTrackAlertContext } from "../../domain";
 
 export type StreamTrackAlertRule = RuntimeAlertRule<StreamTrack[], StreamTrackAlertContext>;

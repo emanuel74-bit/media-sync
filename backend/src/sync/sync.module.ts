@@ -2,12 +2,12 @@ import { Module } from "@nestjs/common";
 
 import { PodsModule } from "../pods";
 import { StreamsModule } from "../streams";
-import { CommonServicesModule } from "../common/common-services.module";
+import { CommonServicesModule } from "../common";
 import { SyncService } from "./services/scheduler";
+import { SYNC_WORKFLOWS } from "./sync-workflows.token";
 import { MediaMtxModule } from "../infrastructure/media-mtx";
 import { SyncQueryAggregatorService } from "./services/query";
 import { SyncOrchestratorService } from "./services/orchestration";
-import { SYNC_WORKFLOWS } from "./sync-workflows.token";
 import {
     StreamIngestActivationService,
     StreamIngestDiscoveryService,

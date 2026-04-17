@@ -1,6 +1,4 @@
-import { PodRole } from "../../common/domain";
-import { StreamInspectionRecord, StreamTrack } from "../domain";
-import { NewStreamInspectionData } from "../domain/stream-inspection-creation.domain";
+import { StreamInspectionRecord, NewStreamInspectionData } from "../domain";
 
 export abstract class StreamInspectionRepository {
     abstract save(data: NewStreamInspectionData): Promise<void>;

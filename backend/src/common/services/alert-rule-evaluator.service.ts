@@ -1,9 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { RuntimeAlertRule } from "../rules/runtime-alert-rule.type";
-import { AlertCreateRequestedPayload } from "../events/event-payloads";
-import { SystemEventNames } from "../events/system-event-names";
+import { RuntimeAlertRule } from "../rules";
+import { SystemEventNames, AlertCreateRequestedPayload } from "../events";
 
 @Injectable()
 export class AlertRuleEvaluator {

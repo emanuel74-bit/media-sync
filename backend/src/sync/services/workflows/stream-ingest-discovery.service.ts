@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 
-import { StreamStatus } from "../../../common/domain";
 import { SyncDiscoveredStream } from "../../domain";
+import { StreamStatus } from "../../../common/domain";
 import { Stream, StreamMetadata } from "../../../streams/domain";
 import { StreamStatusService } from "../../../streams/services/lifecycle";
 
@@ -20,7 +20,7 @@ export class StreamIngestDiscoveryService {
             status: (ingest.status as StreamStatus) || StreamStatus.DISCOVERED,
             metadata: buildDiscoveryMetadata(ingest),
             lastSeenAt: new Date(),
-            enabled: true,
+            isEnabled: true,
         });
     }
 }

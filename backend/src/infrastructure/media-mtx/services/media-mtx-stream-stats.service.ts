@@ -17,7 +17,8 @@ export class MediaMtxStreamStatsService {
     async getStreamStats(context: PodRole, streamName: string): Promise<StreamStats> {
         const client = this.registry.getClientForRole(context);
         try {
-            return (await client.getPathItem(streamName)) as unknown as StreamStats;
+            const pathItem = await client.getPathItem(streamName);
+            return { ...pathItem } as StreamStats;
         } catch (error) {
             this.logger.warn(`Failed to get stream stats for ${streamName} on ${context}`, error);
             throw error;

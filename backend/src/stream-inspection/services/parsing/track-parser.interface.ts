@@ -1,4 +1,4 @@
-import { StreamTrack } from "../../domain";
+import { StreamTrack } from "../../../common/domain";
 import { V3TrackItem } from "../../../infrastructure/media-mtx/types";
 
 export interface TrackParser {

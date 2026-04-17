@@ -79,17 +79,18 @@ Guidelines:
 ## Integration Pattern
 
 - Separate low-level communication from higher-level logic
+- Use two distinct layers: **Client** (low-level) and **Service** (high-level)
 
-Low-level component:
+Client:
 
-- Owns connection details
-- Performs raw operations
+- Owns connection details and transport configuration
+- Performs raw operations (HTTP calls, socket messages, SDK usage)
 - No business logic
 - No error handling beyond propagation
 
-High-level component:
+Service:
 
-- Orchestrates logic
+- Orchestrates business logic around the client
 - Handles errors and fallbacks
 - Transforms data into domain form
 
@@ -213,18 +214,76 @@ Type locations:
 - Split services when multiple roles emerge
 - Consumers should depend only on what they use
 
-### Service Roles (Generalized)
+### Service Roles (Prescriptive)
 
-- Read operations
-- State mutation
-- Lifecycle management
-- External side-effect orchestration
+Each service must fulfill exactly one role. When a service begins to cover multiple roles, split it.
+
+- **Read** — query and return data without side effects
+- **Mutation** — change domain state
+- **Lifecycle** — manage creation, teardown, and state transitions of a resource
+- **Orchestration** — coordinate external side effects and cross-service workflows
 
 ### Dependency Flow
 
 ```
 Higher-level orchestration → focused services → data access
 ```
+
+---
+
+## Barrel Exports (`index.ts`)
+
+- Every folder must have an `index.ts` that re-exports all public members from that folder, including sub-folder barrels
+- Order exports from shortest path at the top to longest at the bottom
+- All sibling files and sub-folder index files are exported — nothing is skipped unless explicitly internal
+
+---
+
+## DTO Conventions
+
+### Validation
+
+- Use `class-validator` for all DTO validation
+- Validation is required only at system boundaries:
+    - Incoming requests to controllers
+    - Incoming responses from external API clients
+
+### Separation
+
+- Transport-layer DTOs (controller DTOs, external API DTOs) must be separate from business-layer DTOs
+- Controllers and API clients define their own DTOs with validation decorators
+- Use `class-transformer` to convert transport DTOs into business-layer DTOs before passing to services
+- Services must never receive or return transport-layer DTOs
+
+### Naming
+
+- Controller DTOs: `<Action><Entity>Dto` (e.g. `CreateStreamDto`, `UpdatePodDto`)
+- Business-layer DTOs: named after domain intent, without transport prefixes
+- Response DTOs: `<Entity>ResponseDto` when a shaped response is returned from a controller
+
+---
+
+## NestJS Decorators & Middleware
+
+### Guards
+
+- Use guards exclusively for authentication and authorization
+- Guards must not contain business logic
+
+### Pipes
+
+- Use pipes for validation and data transformation
+- Apply `ValidationPipe` at the controller or route level for DTO validation
+
+### Interceptors
+
+- Use interceptors for cross-cutting concerns that wrap execution (e.g. logging, timing, response mapping)
+- Interceptors must not contain business logic
+
+### Custom Decorators
+
+- Use decorators to attach metadata and declare behavior
+- Decorators must not implement logic — they only mark intent for guards, pipes, or interceptors to act on
 
 ---
 
@@ -264,6 +323,39 @@ Higher-level orchestration → focused services → data access
 - Repository contract
 - Implementation
 - Schema/configuration (if applicable)
+
+---
+
+## Testing
+
+### File Placement
+
+- All tests live in a top-level `test/` directory, mirroring the `src/` folder structure
+- Tests do not live next to source files
+
+### Naming
+
+- Unit tests: `<name>.test.ts`
+- Integration tests: `<name>.spec.ts`
+
+### Coverage Requirements
+
+- All services must be tested for their core logic
+- Any interaction between two services that affects data shape or values must be tested
+- Any integration between two services that is part of a data flow must be tested
+
+### Mocking
+
+- Mock only at external boundaries (databases, APIs, I/O)
+- Do not mock domain logic or pure functions — test them directly
+- Use dependency injection to substitute dependencies in tests
+- Prefer minimal, focused mocks over broad mocking of entire modules
+
+### Forbidden
+
+- Tests that depend on execution order
+- Tests that rely on shared mutable state between cases
+- Skipped or commented-out tests committed to the repository
 
 ---
 

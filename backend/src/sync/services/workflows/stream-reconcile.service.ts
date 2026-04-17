@@ -20,7 +20,7 @@ export class StreamReconcileService implements SyncWorkflow {
         podIds: string[],
     ): Promise<void> {
         const manualStreams = allStreams.filter(
-            (stream) => stream.isManual && stream.enabled !== false,
+            (stream) => stream.isManual && stream.isEnabled !== false,
         );
         for (const stream of manualStreams) {
             await this.reconcileStream(stream, clusterNames, podIds);

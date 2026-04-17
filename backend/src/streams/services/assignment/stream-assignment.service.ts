@@ -3,9 +3,9 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 
 import { Stream } from "../../domain";
 import { StreamQueryService } from "../query";
-import { hashStreamToPod } from "./hash-stream-to-pod.util";
-import { SystemEventNames } from "../../../common/events";
 import { StreamRepository } from "../../repositories";
+import { SystemEventNames } from "../../../common/events";
+import { hashStreamToPod } from "./hash-stream-to-pod.util";
 
 @Injectable()
 export class StreamAssignmentService {

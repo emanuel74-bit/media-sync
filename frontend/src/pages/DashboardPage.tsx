@@ -31,7 +31,7 @@ export default function DashboardPage() {
         const active = streams.filter((s) => s.status === "active").length;
         const inactive = streams.filter((s) => s.status === "inactive").length;
         const errors = streams.filter((s) => s.status === "error").length;
-        const enabled = streams.filter((s) => s.enabled).length;
+        const enabled = streams.filter((s) => s.isEnabled).length;
         const consumers = streams.reduce(
             (sum, s) => sum + s.activeConsumers,
             0,

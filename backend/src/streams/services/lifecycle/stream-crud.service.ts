@@ -1,19 +1,18 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 
-import { Stream } from "../../domain";
 import { StreamStatus } from "../../../common/domain";
 import { StreamRepository } from "../../repositories";
-import { CreateStreamDto, UpdateStreamDto } from "../../dto";
+import { Stream, CreateStreamData, UpdateStreamData } from "../../domain";
 
 @Injectable()
 export class StreamCrudService {
     constructor(private readonly streamRepository: StreamRepository) {}
 
-    async create(dto: CreateStreamDto): Promise<Stream> {
+    async create(data: CreateStreamData): Promise<Stream> {
         return this.streamRepository.create({
-            name: dto.name,
-            source: dto.source,
-            enabled: dto.enabled ?? true,
+            name: data.name,
+            source: data.source,
+            isEnabled: data.isEnabled ?? true,
             isManual: true,
             status: StreamStatus.CREATED,
             lastError: null,
@@ -22,8 +21,8 @@ export class StreamCrudService {
         });
     }
 
-    async update(name: string, dto: UpdateStreamDto): Promise<Stream> {
-        const updated = await this.streamRepository.update(name, dto);
+    async update(name: string, data: UpdateStreamData): Promise<Stream> {
+        const updated = await this.streamRepository.update(name, data);
         if (!updated) {
             throw new NotFoundException(`Stream ${name} not found`);
         }

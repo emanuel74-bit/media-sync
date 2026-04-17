@@ -1,5 +1,4 @@
-import { PodRole } from "../../common/domain";
-import { StreamTrack } from "../../common/domain";
+import { PodRole, StreamTrack } from "../../common/domain";
 
 export interface NewStreamInspectionData {
     streamName: string;

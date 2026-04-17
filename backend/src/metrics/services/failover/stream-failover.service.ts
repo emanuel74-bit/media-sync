@@ -2,8 +2,8 @@ import { Injectable, Logger } from "@nestjs/common";
 
 import { Metric } from "../../domain";
 import { ConfigService } from "../../../config";
-import { PodQueryService } from "../../../pods/services";
 import { PodRole } from "../../../common/domain";
+import { PodQueryService } from "../../../pods/services";
 import { isMetricDegraded } from "../../../common/rules";
 import { StreamQueryService } from "../../../streams/services/query";
 import { StreamAssignmentService } from "../../../streams/services/assignment";

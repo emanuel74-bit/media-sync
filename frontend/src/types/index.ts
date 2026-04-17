@@ -11,7 +11,7 @@ export interface Stream {
     source: string;
     status: StreamStatus;
     metadata: Record<string, any>;
-    enabled: boolean;
+    isEnabled: boolean;
     lastSeenAt?: string;
     lastSyncedAt?: string;
     lastError?: string;

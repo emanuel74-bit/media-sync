@@ -1,10 +1,10 @@
 import { Injectable, Logger } from "@nestjs/common";
 
-import { PodRole } from "../../../common/domain";
-import { MediaMtxClient } from "../clients";
 import { MediaMtxStreamInfo } from "../types";
-import { PodQueryService } from "../../../pods/services";
+import { PodRole } from "../../../common/domain";
 import { MediaMtxClientRegistry } from "../registry";
+import { PodQueryService } from "../../../pods/services";
+import { collectStreamsFromClients } from "./stream-collection.util";
 
 /**
  * Strategy for listing ingest streams with primary/fallback logic.
@@ -40,38 +40,6 @@ export class IngestStreamListingStrategy {
     private async listIngestStreamsFromPods(): Promise<MediaMtxStreamInfo[]> {
         const ingestPods = await this.podsService.listActivePodRefs(PodRole.INGEST);
         const clients = this.registry.getIngestClientsFromPods(ingestPods);
-        return this.collectStreamsFromClients(clients);
-    }
-
-    /**
-     * Aggregate streams from multiple clients with per-client error isolation.
-     */
-    private async collectStreamsFromClients(
-        clients: readonly MediaMtxClient[],
-    ): Promise<MediaMtxStreamInfo[]> {
-        if (clients.length === 0) {
-            return [];
-        }
-
-        const allStreams: MediaMtxStreamInfo[] = [];
-
-        for (const client of clients) {
-            const streams = await this.listStreamsFromClient(client);
-            allStreams.push(...streams);
-        }
-
-        return allStreams;
-    }
-
-    /**
-     * List streams from a single client with error handling.
-     */
-    private async listStreamsFromClient(client: MediaMtxClient): Promise<MediaMtxStreamInfo[]> {
-        try {
-            return await client.listPaths();
-        } catch (error) {
-            this.logger.warn("Failed to list streams from an ingest pod", error);
-            return [];
-        }
+        return collectStreamsFromClients(clients);
     }
 }

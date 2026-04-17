@@ -1,13 +1,13 @@
 import { Test, TestingModule } from "@nestjs/testing";
 
-import { StreamInspectionSchedulerService } from "./stream-inspection-scheduler.service";
 import { PodRole } from "../../../common/domain";
 import { SequentialStreamTaskRunner } from "../../../common/services";
+import { StreamInspectionRecorderService } from "./stream-inspection-recorder.service";
+import { StreamInspectionSchedulerService } from "./stream-inspection-scheduler.service";
 import {
     ContextualMediaMtxStream,
     MediaMtxStreamListingService,
 } from "../../../infrastructure/media-mtx/services";
-import { StreamInspectionRecorderService } from "./stream-inspection-recorder.service";
 
 const makeContextualStream = (name: string, role: PodRole): ContextualMediaMtxStream => ({
     stream: { name, source: "rtsp://host/path", status: "ready" },
