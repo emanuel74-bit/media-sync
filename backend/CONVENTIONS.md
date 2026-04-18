@@ -18,7 +18,7 @@
 | `.controller.ts` | HTTP entry point                                        |
 | `.repository.ts` | Data access contract (abstract) or implementation       |
 | `.domain.ts`     | Entity with identity and/or behavior                    |
-| `.type.ts`       | Plain type/interface definitions (shape only, no logic) |
+| `.types.ts`      | Plain type/interface definitions (shape only, no logic) |
 | `.enum.ts`       | Finite domain state sets                                |
 | `.const.ts`      | Fixed values, configuration data, static lookup tables  |
 | `.dto.ts`        | Data transfer objects (transport layer only)            |
@@ -56,13 +56,14 @@
 
 - Organize code by feature/domain
 - Keep related files co-located
-- Separate shared logic into a common/shared directory
+- Separate shared application logic into a common/shared directory
+- Put pure, reusable, framework-agnostic code in `libs/`
 - Keep transport-layer types (DTOs) separated from domain logic
 - Do not place business logic in transport or configuration layers
 
 ### Feature Module Structure
 
-No sub-folder is mandatory. Each feature includes only the folders it needs to fulfill its purpose. However, when a layer is present, it must be organized into the correct folder:
+No sub-folder is mandatory. Each feature includes only the folders it needs to fulfill its purpose. When a layer is present, it must use the standard folder name for that layer:
 
 | Folder          | Contents                                                           |
 | --------------- | ------------------------------------------------------------------ |
@@ -72,36 +73,66 @@ No sub-folder is mandatory. Each feature includes only the folders it needs to f
 | `repositories/` | Abstract data access contracts                                     |
 | `dto/`          | Transport-layer DTOs with validation decorators                    |
 
-- Sub-group `services/` into sub-folders when services have distinct sub-responsibilities (e.g. `services/lifecycle/`, `services/query/`)
-- Every sub-feature lives in its own sub-folder, including clients within integration modules
+### Feature Root
+
+- Files placed directly under a feature root must represent the feature at its highest level or be shared across multiple sub-features
+- Root files are the feature-facing entry points, contracts, and coordination artifacts through which the rest of the system uses that feature
+- Files that belong to one narrower responsibility must move into a sub-folder
+
+### Folder Hierarchy
+
+- Every distinct responsibility inside a feature must live in its own sub-folder
+- A sub-feature folder may contain a mix of files and deeper sub-folders as long as everything in that folder serves one clear purpose
+- Nest deeper only when a sub-feature grows enough that a narrower responsibility becomes clear
+- Do not introduce extra depth unless it reduces ambiguity and improves locality
+
+### Folder Split Rule
+
+- There is no numeric file-count limit for a folder
+- Use a soft limit: when two or more files are more closely related to each other than to the rest of the folder, group them into a dedicated sub-folder
+- If a folder requires "and" to describe its purpose, split it
+
+### Folder Naming
+
+- Standard layer folders must use these exact names: `domain/`, `services/`, `controllers/`, `repositories/`, `dto/`
+- Sub-feature folders use kebab-case and are named after responsibility, behavior, or grouped concern
+- Sub-feature folders may be singular or plural depending on whether they represent one concern or a group of related concerns
+- Name folders by purpose, not by vague technical labels
 
 ### Domain Folder Contents
 
 - Put all business behavior and invariants in `domain/`
 - `domain/` must contain no framework or infrastructure concerns
-- `.enum.ts` — finite business states
-- `.type.ts` — shape-only definitions (including interfaces)
-- `.const.ts` — fixed values
-- `.domain.ts` — entities with identity and/or behavior
-- Never place logic in enum, type, or const files
+- Organize non-entity domain files into dedicated sub-folders:
+    - `domain/enums/` — finite business states
+    - `domain/types/` — shape-only definitions, including interfaces
+    - `domain/consts/` — fixed domain values
+- `.domain.ts` files contain entities with identity and/or behavior
+- Never place logic in enum, types, or const files
+
+### Standard Purpose Folders
+
+- Folders such as `utils/`, `mappers/`, `rules/`, `events/`, `registry/`, `parsers/`, `alerts/`, `query/`, and `lifecycle/` are valid when they represent a real sub-feature, a design pattern implementation, or concentrated logic
+- These folders are acceptable because they describe purpose, not because they are default folder types
+- Mapping files still use the `.util.ts` suffix even when grouped under `mappers/`
 
 ### Infrastructure Module (`infrastructure/`)
 
 - Use `infrastructure/` for anything that depends on the outside world (databases, external APIs, third-party SDKs)
 - Use `libs/` for pure, reusable, framework-agnostic code
 - Each external system gets its own sub-module within `infrastructure/`
+- Within an infrastructure sub-module, organize distinct responsibilities into purpose folders such as `clients/`, `services/`, `registry/`, `mappers/`, or other clear sub-features
 
 ### Sub-Feature Structure
 
 - Each distinct responsibility within a feature must be grouped into its own subfolder
-- Group files by behavior, not by type
+- Group files by behavior and purpose, not just by file type
 - Avoid mixing unrelated responsibilities in the same directory
 
 Guidelines:
 
 - A folder should represent a single clear purpose
-- If a folder requires "and" to describe its purpose, split it
-- Shared logic within a feature should live at the feature root only if used across multiple sub-features
+- Shared logic within a feature should live at the feature root only if used across multiple sub-features and it still represents the feature at the highest level
 
 ---
 
