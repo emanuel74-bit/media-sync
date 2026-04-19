@@ -4,8 +4,8 @@ import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "../../../config";
 import { AlertMetricInput } from "../../../common/domain";
 import { AlertRuleEvaluator } from "../../../common/services";
-import { METRIC_ALERT_RULES } from "./metric-alert-rules.const";
-import { MetricAlertThresholds } from "./metric-alert-rule.type";
+import { METRIC_ALERT_RULES } from "../../domain/consts/metric-alert-rules.const";
+import { MetricAlertThresholds } from "../../domain/types/metric-alert-rule.type";
 import { MetricCollectedPayload, SystemEventNames } from "../../../common/events";
 
 @Injectable()

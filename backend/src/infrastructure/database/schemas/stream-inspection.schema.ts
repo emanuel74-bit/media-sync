@@ -1,4 +1,4 @@
-import { Document } from "mongoose";
+import { Document, Schema as MongooseSchema } from "mongoose";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 
 import { PodRole, StreamTrack } from "../../../common/domain";
@@ -12,10 +12,10 @@ export class StreamInspection {
     @Prop({ required: true, enum: Object.values(PodRole) })
     source!: PodRole;
 
-    @Prop({ type: [Object] })
+    @Prop({ type: [MongooseSchema.Types.Mixed] })
     tracks!: StreamTrack[];
 
-    @Prop({ type: Object, default: {} })
+    @Prop({ type: MongooseSchema.Types.Mixed, default: {} })
     metadata!: Record<string, unknown>;
 
     @Prop({ type: String, default: null })

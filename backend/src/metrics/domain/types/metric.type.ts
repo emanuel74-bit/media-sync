@@ -1,6 +1,6 @@
-import { PodRole } from "../../common/domain";
+import { PodRole } from "../../../common/domain";
 
-export interface NewMetricData {
+export interface Metric {
     streamName: string;
     context: PodRole;
     bitrate: number;
@@ -9,4 +9,5 @@ export interface NewMetricData {
     jitter: number;
     packetLoss: number;
     consumers: number;
+    createdAt?: Date;
 }

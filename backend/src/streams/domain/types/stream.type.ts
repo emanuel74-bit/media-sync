@@ -1,4 +1,4 @@
-import { StreamStatus } from "../../common/domain";
+import { StreamStatus } from "../../../common/domain";
 
 /**
  * Open-ended metadata stored on a stream record.

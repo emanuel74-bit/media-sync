@@ -1,4 +1,4 @@
-import { StreamStatus } from "../../common/domain";
+import { StreamStatus } from "../../../common/domain";
 
 export interface UpdateStreamData {
     source?: string;

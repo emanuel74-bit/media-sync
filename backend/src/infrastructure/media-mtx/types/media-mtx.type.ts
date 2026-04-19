@@ -41,11 +41,9 @@ export interface StreamStats {
     jitter?: number;
     packetLoss?: number;
     consumers?: number;
-    [key: string]: unknown;
 }
 
 /** Result returned when creating a cluster pull pipeline. */
 export interface PipelineCreateResult {
     alreadyExists?: boolean;
-    [key: string]: unknown;
 }

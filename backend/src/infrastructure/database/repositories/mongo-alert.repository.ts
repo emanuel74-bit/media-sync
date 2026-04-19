@@ -31,7 +31,7 @@ export class MongoAlertRepository
         type: AlertType,
     ): Promise<Alert | null> {
         const doc = await this.model
-            .findOne({ streamName, type, resolved: false })
+            .findOne({ streamName, type, isResolved: false })
             .lean<LeanAlert>()
             .exec();
         return this.toOptionalDomain(doc);
@@ -44,7 +44,7 @@ export class MongoAlertRepository
 
     async resolveById(id: string, resolvedAt: Date): Promise<Alert | null> {
         const doc = await this.model
-            .findByIdAndUpdate(id, { resolved: true, resolvedAt }, { new: true })
+            .findByIdAndUpdate(id, { isResolved: true, resolvedAt }, { new: true })
             .exec();
         return doc ? this.fromDocument(doc) : null;
     }
@@ -61,7 +61,7 @@ export class MongoAlertRepository
             type: raw.type,
             severity: raw.severity,
             message: raw.message,
-            resolved: raw.resolved,
+            isResolved: raw.isResolved,
             resolvedAt: raw.resolvedAt,
             createdAt: raw.createdAt,
             updatedAt: raw.updatedAt,

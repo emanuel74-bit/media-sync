@@ -1,4 +1,4 @@
-import { Stream } from "../../streams/domain";
+import { Stream } from "../../../streams/domain";
 import { SyncDiscoveredStream } from "./sync-discovered-stream.type";
 
 export interface SyncContext {

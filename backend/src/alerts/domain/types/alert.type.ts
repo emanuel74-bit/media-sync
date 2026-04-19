@@ -1,4 +1,4 @@
-import { AlertSeverity, AlertType } from "../../common/domain";
+import { AlertSeverity, AlertType } from "../../../common/domain";
 
 /** Data required to create a new alert. Moved here from alert.schema to keep schema persistence-only. */
 export interface AlertCreationData {
@@ -14,7 +14,7 @@ export interface Alert {
     type: AlertType;
     severity: AlertSeverity;
     message: string;
-    resolved: boolean;
+    isResolved: boolean;
     resolvedAt?: Date | null;
     createdAt?: Date;
     updatedAt?: Date;

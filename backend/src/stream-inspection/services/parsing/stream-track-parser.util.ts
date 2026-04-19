@@ -1,6 +1,6 @@
 import { StreamTrack } from "../../../common/domain";
 import { DataTrackParser } from "./data-track-parser.strategy";
-import { TrackParser } from "./track-parser.type";
+import { TrackParser } from "../../domain/types/track-parser.type";
 import { VideoTrackParser } from "./video-track-parser.strategy";
 import { AudioTrackParser } from "./audio-track-parser.strategy";
 import { SubtitleTrackParser } from "./subtitle-track-parser.strategy";

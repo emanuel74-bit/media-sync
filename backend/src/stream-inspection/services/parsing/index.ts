@@ -7,4 +7,4 @@ export * from "./audio-track-parser.strategy";
 export * from "./video-track-parser.strategy";
 export * from "./stream-track-parser.util";
 export * from "./subtitle-track-parser.strategy";
-export * from "./track-parser.type";
+export * from "../../domain/types/track-parser.type";

@@ -115,12 +115,7 @@ export class MongoStreamRepository
     }
 
     private toPersistence(data: Partial<Stream>): Record<string, unknown> {
-        const { isEnabled, ...rest } = data;
-        const result: Record<string, unknown> = { ...rest };
-        if (isEnabled !== undefined) {
-            result.enabled = isEnabled;
-        }
-        return result;
+        return { ...data };
     }
 
     protected toDomain(raw: LeanStream): Stream {
@@ -129,7 +124,7 @@ export class MongoStreamRepository
             source: raw.source,
             status: raw.status,
             metadata: raw.metadata,
-            isEnabled: raw.enabled,
+            isEnabled: raw.isEnabled,
             lastSeenAt: raw.lastSeenAt,
             lastSyncedAt: raw.lastSyncedAt,
             lastError: raw.lastError,

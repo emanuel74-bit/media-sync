@@ -1,4 +1,4 @@
-import { TrackParser } from "./track-parser.type";
+import { TrackParser } from "../../domain/types/track-parser.type";
 import { StreamTrack, TrackType } from "../../../common/domain";
 import { V3TrackItem } from "../../../infrastructure/media-mtx/types";
 

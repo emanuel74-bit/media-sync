@@ -20,7 +20,7 @@ export class Alert {
     message!: string;
 
     @Prop({ default: false })
-    resolved!: boolean;
+    isResolved!: boolean;
 
     @Prop({ default: null })
     resolvedAt?: Date;

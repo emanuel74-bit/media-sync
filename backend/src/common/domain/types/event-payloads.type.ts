@@ -1,11 +1,9 @@
-import {
-    AlertMetricInput,
-    AlertSeverity,
-    AlertType,
-    PodRole,
-    StreamStatus,
-    StreamTrack,
-} from "../domain";
+import { AlertMetricInput } from "./alert-metric-input.type";
+import { AlertSeverity } from "../enums/alert-severity.enum";
+import { AlertType } from "../enums/alert-type.enum";
+import { PodRole } from "../enums/pod-role.enum";
+import { StreamStatus } from "../enums/stream-status.enum";
+import { StreamTrack } from "./stream-track.type";
 
 /** Emitted when a stream has been successfully synced to the cluster. */
 export interface StreamSyncedPayload {
@@ -49,7 +47,7 @@ export interface AlertCreatedPayload {
     type: string;
     severity: string;
     message: string;
-    resolved: boolean;
+    isResolved: boolean;
     resolvedAt?: Date | null;
 }
 

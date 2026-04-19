@@ -4,7 +4,7 @@ import { PodsModule } from "../pods";
 import { StreamsModule } from "../streams";
 import { CommonModule } from "../common";
 import { SyncService } from "./services/scheduler";
-import { SYNC_WORKFLOWS } from "./sync-workflows.const";
+import { SYNC_WORKFLOWS } from "./domain/consts/sync-workflows.const";
 import { MediaMtxModule } from "../infrastructure/media-mtx";
 import { SyncQueryAggregatorService } from "./services/query";
 import { SyncOrchestratorService } from "./services/orchestration";

@@ -1,4 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
+import { isAxiosError } from "axios";
 
 import { MediaMtxClient } from "../clients";
 import { ConfigService } from "../../../config";
@@ -28,6 +29,10 @@ export class MediaMtxPipelineService {
             }
             return result;
         } catch (error) {
+            if (isAxiosError(error) && error.response?.status === 409) {
+                this.logger.debug(`Cluster pull pipeline already exists for ${stream.name}`);
+                return { alreadyExists: true };
+            }
             this.logger.error(`Failed to create cluster pull pipeline for ${stream.name}`, error);
             throw error;
         }

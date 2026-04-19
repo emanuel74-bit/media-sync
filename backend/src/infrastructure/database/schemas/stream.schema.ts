@@ -1,4 +1,4 @@
-import { Document } from "mongoose";
+import { Document, Schema as MongooseSchema } from "mongoose";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 
 import { StreamStatus } from "../../../common/domain";
@@ -22,11 +22,11 @@ export class Stream {
     })
     status!: StreamStatus;
 
-    @Prop({ type: Object, default: {} })
+    @Prop({ type: MongooseSchema.Types.Mixed, default: {} })
     metadata!: StreamMetadata;
 
     @Prop({ default: false })
-    enabled!: boolean;
+    isEnabled!: boolean;
 
     @Prop({ type: Date, default: null })
     lastSeenAt?: Date;
