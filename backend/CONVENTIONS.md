@@ -63,7 +63,7 @@
 
 ### Feature Module Structure
 
-No sub-folder is mandatory. Each feature includes only the folders it needs to fulfill its purpose. When a layer is present, it must use the standard folder name for that layer:
+No standard layer folder is mandatory. Each feature includes only the layers it needs to fulfill its purpose. When a standard layer is present, it must use the exact standard folder name for that layer:
 
 | Folder          | Contents                                                           |
 | --------------- | ------------------------------------------------------------------ |
@@ -75,29 +75,39 @@ No sub-folder is mandatory. Each feature includes only the folders it needs to f
 
 ### Feature Root
 
-- Files placed directly under a feature root must represent the feature at its highest level or be shared across multiple sub-features
-- Root files are the feature-facing entry points, contracts, and coordination artifacts through which the rest of the system uses that feature
-- Files that belong to one narrower responsibility must move into a sub-folder
+- Files placed directly under a feature root must either define the public contract of the whole feature or be shared across multiple child responsibilities inside that feature
+- Root files are limited to feature-wide entry points, contracts, coordination artifacts, and other files that describe the feature as a whole
+- A file dedicated to one narrower responsibility must not remain at the feature root and must move into the child folder for that responsibility
 
 ### Folder Hierarchy
 
-- Every distinct responsibility inside a feature must live in its own sub-folder
-- A sub-feature folder may contain a mix of files and deeper sub-folders as long as everything in that folder serves one clear purpose
-- Nest deeper only when a sub-feature grows enough that a narrower responsibility becomes clear
-- Do not introduce extra depth unless it reduces ambiguity and improves locality
+- Every folder must represent exactly one scope: the whole feature, one purpose within that feature, or one leaf responsibility within that purpose
+- A purpose folder may contain a mix of root-level files and child folders only when every item serves that one purpose
+- Root-level files inside a purpose folder must either coordinate that full purpose or be shared across multiple child responsibilities inside that purpose
+- Concrete leaf implementations must not remain flat at the root of a purpose folder
+- Create deeper folders to express narrower responsibilities, not to mirror file types or add incidental depth
 
 ### Folder Split Rule
 
 - There is no numeric file-count limit for a folder
-- Use a soft limit: when two or more files are more closely related to each other than to the rest of the folder, group them into a dedicated sub-folder
+- Split a folder as soon as it contains two or more narrower concerns that can be named independently
+- When two or more files are more closely related to each other than to the rest of the folder, they must move into a dedicated child folder
 - If a folder requires "and" to describe its purpose, split it
+- A child responsibility folder owns all files dedicated only to that responsibility
+
+### Variant Families
+
+- A family of implementations under a shared contract counts as multiple concrete responsibilities
+- Each implementation variant must have its own child folder even when it currently has only one primary file
+- Shared contracts, registries, selectors, dispatchers, and cross-variant utilities may stay at the parent purpose level only when they are used across multiple variants
+- Files used by only one variant must live inside that variant's folder
 
 ### Folder Naming
 
 - Standard layer folders must use these exact names: `domain/`, `services/`, `controllers/`, `repositories/`, `dto/`
-- Sub-feature folders use kebab-case and are named after responsibility, behavior, or grouped concern
+- Sub-feature and child responsibility folders use kebab-case and are named after responsibility, behavior, or grouped concern
 - Sub-feature folders may be singular or plural depending on whether they represent one concern or a group of related concerns
-- Name folders by purpose, not by vague technical labels
+- Name folders by purpose, not by vague technical labels, temporary states, or generic implementation labels
 
 ### Domain Folder Contents
 
@@ -114,6 +124,8 @@ No sub-folder is mandatory. Each feature includes only the folders it needs to f
 
 - Folders such as `utils/`, `mappers/`, `rules/`, `events/`, `registry/`, `parsers/`, `alerts/`, `query/`, and `lifecycle/` are valid when they represent a real sub-feature, a design pattern implementation, or concentrated logic
 - These folders are acceptable because they describe purpose, not because they are default folder types
+- A purpose folder is a boundary for one concern, not a flat container for multiple unrelated leaf implementations
+- Keep only purpose-wide coordination or shared artifacts at the root of a purpose folder and move narrower responsibilities into child folders
 - Mapping files still use the `.util.ts` suffix even when grouped under `mappers/`
 
 ### Infrastructure Module (`infrastructure/`)
@@ -121,7 +133,9 @@ No sub-folder is mandatory. Each feature includes only the folders it needs to f
 - Use `infrastructure/` for anything that depends on the outside world (databases, external APIs, third-party SDKs)
 - Use `libs/` for pure, reusable, framework-agnostic code
 - Each external system gets its own sub-module within `infrastructure/`
-- Within an infrastructure sub-module, organize distinct responsibilities into purpose folders such as `clients/`, `services/`, `registry/`, `mappers/`, or other clear sub-features
+- Within an infrastructure sub-module, apply the same root, purpose, and child-responsibility rules used everywhere else in the codebase
+- Organize distinct responsibilities into purpose folders such as `clients/`, `services/`, `registry/`, `mappers/`, or other clear sub-features
+- If an integration contains multiple concrete variants under a shared contract, each variant must have its own child folder
 
 ### Sub-Feature Structure
 
@@ -132,7 +146,8 @@ No sub-folder is mandatory. Each feature includes only the folders it needs to f
 Guidelines:
 
 - A folder should represent a single clear purpose
-- Shared logic within a feature should live at the feature root only if used across multiple sub-features and it still represents the feature at the highest level
+- Shared logic may live at a feature root or purpose root only when it is used across multiple child responsibilities and still represents the full scope of that folder
+- A parent folder may keep an aggregate or facade file at its root only when that file coordinates the full purpose of the folder rather than one narrower responsibility
 
 ---
 
@@ -425,6 +440,7 @@ Higher-level orchestration → focused services → data access
 ### File Placement
 
 - All tests live in a top-level `test/` directory, mirroring the `src/` folder structure
+- The test tree must also mirror the responsibility boundaries established in `src/`; if source code splits a responsibility into a child folder, the corresponding tests must mirror that split under `test/`
 - Tests do not live next to source files
 - Co-located `.spec.ts` files in `src/` are legacy and should be migrated to `test/`
 
