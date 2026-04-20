@@ -5,7 +5,8 @@ import { StreamQueryService } from "../services/query";
 import { Stream, StreamAssignmentInfo } from "../domain";
 import { StreamAssignmentService } from "../services/assignment";
 import { AssignStreamDto, CreateStreamDto, UpdateStreamDto } from "../dto";
-import { StreamCrudService, StreamLifecycleService } from "../services/lifecycle";
+import { StreamCrudService } from "../services/mutation";
+import { StreamLifecycleService } from "../services/orchestration";
 
 @ApiTags("streams")
 @Controller("api/streams")

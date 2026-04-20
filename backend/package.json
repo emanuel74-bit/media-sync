@@ -14,7 +14,9 @@
         "imports:watch": "chokidar \"src/**/*.ts\" -i \"src/**/index.ts\" -c \"npm run imports:sync\"",
         "lint": "eslint --no-error-on-unmatched-pattern \"src/**/*.ts\" \"test/**/*.ts\" --fix",
         "test": "jest",
-        "test:watch": "jest --watch"
+        "test:watch": "jest --watch",
+        "typecheck": "tsc --noEmit",
+        "verify": "npm run typecheck && npm run lint && npm run build && npm test -- --forceExit"
     },
     "dependencies": {
         "@nestjs/axios": "^2.0.0",

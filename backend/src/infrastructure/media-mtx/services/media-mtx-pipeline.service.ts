@@ -1,5 +1,5 @@
-import { Injectable, Logger } from "@nestjs/common";
 import { isAxiosError } from "axios";
+import { Injectable, Logger } from "@nestjs/common";
 
 import { MediaMtxClient } from "../clients";
 import { ConfigService } from "../../../config";

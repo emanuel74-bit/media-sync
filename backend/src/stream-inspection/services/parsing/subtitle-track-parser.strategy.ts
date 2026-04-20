@@ -1,5 +1,5 @@
-import { TrackParser } from "../../domain/types/track-parser.type";
 import { StreamTrack, TrackType } from "../../../common/domain";
+import { TrackParser } from "../../domain/types/track-parser.types";
 import { V3TrackItem } from "../../../infrastructure/media-mtx/types";
 
 export class SubtitleTrackParser implements TrackParser {

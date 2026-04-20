@@ -1,4 +1,4 @@
-import { MetricAlertRule } from "../types/metric-alert-rule.type";
+import { MetricAlertRule } from "../types/metric-alert-rule.types";
 import { AlertSeverity, AlertType } from "../../../common/domain";
 import { isBitrateLow, isLatencyHigh, isPacketLossHigh } from "../../../common";
 

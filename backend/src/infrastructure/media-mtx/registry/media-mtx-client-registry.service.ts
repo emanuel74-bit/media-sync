@@ -3,8 +3,8 @@ import { Injectable } from "@nestjs/common";
 import { MediaMtxClient } from "../clients";
 import { ConfigService } from "../../../config";
 import { PodRole } from "../../../common/domain";
+import { IngestPodEndpoint } from "../types/ingest-pod-endpoint.types";
 import { MediaMtxClientFactory } from "./media-mtx-client-factory.service";
-import { IngestPodEndpoint } from "../types/ingest-pod-endpoint.type";
 
 /**
  * Owns and vends MediaMTX HTTP client instances.

@@ -2,7 +2,7 @@ import { ApiTags } from "@nestjs/swagger";
 import { Body, Controller, Get, Post } from "@nestjs/common";
 
 import { Pod } from "../domain";
-import { RegisterPodDto } from "../dto";
+import { RegisterPodDto, HeartbeatDto } from "../dto";
 import { PodRole } from "../../common/domain";
 import { PodRegistrationService, PodQueryService } from "../services";
 
@@ -35,7 +35,7 @@ export class PodsController {
     }
 
     @Post("heartbeat")
-    async heartbeat(@Body() dto: RegisterPodDto): Promise<Pod> {
+    async heartbeat(@Body() dto: HeartbeatDto): Promise<Pod> {
         return this.podRegistration.heartbeat(dto.podId);
     }
 }

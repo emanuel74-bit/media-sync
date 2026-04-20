@@ -3,8 +3,8 @@ import { MongooseModule } from "@nestjs/mongoose";
 
 import { PodsModule } from "../pods";
 import { ConfigModule } from "../config";
-import { StreamsModule } from "../streams";
 import { CommonModule } from "../common";
+import { StreamsModule } from "../streams";
 import { MetricRepository } from "./repositories";
 import { MetricsController } from "./controllers";
 import { StreamFailoverService } from "./services/failover";

@@ -7,6 +7,7 @@ import { MediaMtxPipelineService } from "../../../infrastructure/media-mtx/servi
 
 @Injectable()
 export class StreamReconcileService implements SyncWorkflow {
+    readonly name = "StreamReconcile";
     private readonly logger = new Logger(StreamReconcileService.name);
 
     constructor(

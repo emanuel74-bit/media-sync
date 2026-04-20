@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 
 import { Stream } from "../../../streams/domain";
 import { StreamAssignmentService } from "../../../streams/services/assignment";
-import { StreamProvisioningService } from "../../../streams/services/lifecycle";
+import { StreamProvisioningService } from "../../../streams/services/orchestration";
 
 @Injectable()
 export class StreamIngestActivationService {

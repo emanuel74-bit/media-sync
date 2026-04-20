@@ -1,8 +1,8 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
-import { StreamsModule } from "../streams";
 import { CommonModule } from "../common";
+import { StreamsModule } from "../streams";
 import { StreamInspectionController } from "./controllers";
 import { StreamTrackAlertService } from "./services/alerts";
 import { StreamInspectionRepository } from "./repositories";
@@ -12,12 +12,9 @@ import {
     StreamInspection,
     StreamInspectionSchema,
 } from "../infrastructure/database/schemas/stream-inspection.schema";
-import {
-    StreamInspectionService,
-    StreamInspectionSchedulerService,
-    StreamInspectionRecorderService,
-    StreamInspectionQueryService,
-} from "./services/inspection";
+import { StreamInspectionQueryService } from "./services/query";
+import { StreamInspectionRecorderService } from "./services/recording";
+import { StreamInspectionSchedulerService } from "./services/scheduling";
 
 @Module({
     imports: [
@@ -32,7 +29,6 @@ import {
         StreamInspectionSchedulerService,
         StreamInspectionRecorderService,
         StreamInspectionQueryService,
-        StreamInspectionService,
         StreamTrackAlertService,
         {
             provide: StreamInspectionRepository,
@@ -40,6 +36,6 @@ import {
         },
     ],
     controllers: [StreamInspectionController],
-    exports: [StreamInspectionService, StreamInspectionQueryService],
+    exports: [StreamInspectionQueryService],
 })
 export class StreamInspectionModule {}

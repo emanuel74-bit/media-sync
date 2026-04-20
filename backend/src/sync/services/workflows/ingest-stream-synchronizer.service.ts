@@ -6,6 +6,8 @@ import { StreamIngestActivationService } from "./stream-ingest-activation.servic
 
 @Injectable()
 export class IngestStreamSynchronizerService implements SyncWorkflow {
+    readonly name = "IngestStreamSynchronizer";
+
     constructor(
         private readonly ingestDiscovery: StreamIngestDiscoveryService,
         private readonly ingestActivation: StreamIngestActivationService,

@@ -20,13 +20,22 @@ export class SyncOrchestratorService {
             return;
         }
 
+        const failures: string[] = [];
+
         for (const workflow of this.workflows) {
-            await workflow.execute(context);
+            try {
+                await workflow.execute(context);
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                this.logger.error(`Workflow ${workflow.name} failed: ${message}`);
+                failures.push(workflow.name);
+            }
         }
 
         this.events.emit(SystemEventNames.SYNC_TICK, {
             ingest: context.ingestList.length,
             cluster: context.clusterList.length,
+            failures,
         });
     }
 }

@@ -5,8 +5,8 @@ import { StreamTrack } from "../../../common/domain";
 import { StreamTrackAlertContext } from "../../domain";
 import { AlertRuleEvaluator } from "../../../common/services";
 import { StreamQueryService } from "../../../streams/services/query";
-import { STREAM_TRACK_ALERT_RULES } from "../../domain/consts/stream-track-alert-rules.const";
 import { StreamInspectedPayload, SystemEventNames } from "../../../common/events";
+import { STREAM_TRACK_ALERT_RULES } from "../../domain/consts/stream-track-alert-rules.const";
 
 @Injectable()
 export class StreamTrackAlertService {

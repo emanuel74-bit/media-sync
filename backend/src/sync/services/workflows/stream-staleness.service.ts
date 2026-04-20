@@ -4,11 +4,12 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Stream } from "../../../streams/domain";
 import { SyncContext, SyncWorkflow } from "../../domain";
 import { SystemEventNames } from "../../../common/events";
-import { StreamStatusService } from "../../../streams/services/lifecycle";
+import { StreamStatusService } from "../../../streams/services/mutation";
 import { MediaMtxPipelineService } from "../../../infrastructure/media-mtx/services";
 
 @Injectable()
 export class StreamStalenessService implements SyncWorkflow {
+    readonly name = "StreamStaleness";
     private readonly logger = new Logger(StreamStalenessService.name);
 
     constructor(

@@ -23,17 +23,16 @@ export class MediaMtxClient {
     }
 
     async getPathItem(pathName: string): Promise<V3PathItem> {
-        const res = await this.http.get<V3PathItem>(`/v3/paths/get/${encodeURIComponent(pathName)}`);
+        const res = await this.http.get<V3PathItem>(
+            `/v3/paths/get/${encodeURIComponent(pathName)}`,
+        );
         return res.data;
     }
 
     async addPath(pathName: string, source: string): Promise<PipelineCreateResult> {
-        const res = await this.http.post(
-            `/v3/config/paths/add/${encodeURIComponent(pathName)}`,
-            {
-                source,
-            },
-        );
+        const res = await this.http.post(`/v3/config/paths/add/${encodeURIComponent(pathName)}`, {
+            source,
+        });
         return res.data;
     }
 

@@ -9,12 +9,8 @@ import { MediaMtxModule } from "../infrastructure/media-mtx";
 import { StreamAssignmentService } from "./services/assignment";
 import { MongoStreamRepository } from "../infrastructure/database/repositories";
 import { Stream, StreamSchema } from "../infrastructure/database/schemas/stream.schema";
-import {
-    StreamCrudService,
-    StreamProvisioningService,
-    StreamStatusService,
-    StreamLifecycleService,
-} from "./services/lifecycle";
+import { StreamCrudService, StreamStatusService } from "./services/mutation";
+import { StreamProvisioningService, StreamLifecycleService } from "./services/orchestration";
 
 @Module({
     imports: [
@@ -34,11 +30,9 @@ import {
     controllers: [StreamsController],
     exports: [
         StreamQueryService,
-        StreamCrudService,
         StreamProvisioningService,
         StreamAssignmentService,
         StreamStatusService,
-        StreamLifecycleService,
     ],
 })
 export class StreamsModule {}

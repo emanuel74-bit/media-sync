@@ -4,4 +4,6 @@
 
 export * from "./alerts";
 export * from "./parsing";
-export * from "./inspection";
+export * from "./query";
+export * from "./recording";
+export * from "./scheduling";

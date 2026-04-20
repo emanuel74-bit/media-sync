@@ -1,4 +1,4 @@
-import { StreamTrackAlertRule } from "../types/stream-track-alert-rule.type";
+import { StreamTrackAlertRule } from "../types/stream-track-alert-rule.types";
 import { AlertSeverity, AlertType, TrackType } from "../../../common/domain";
 
 export const STREAM_TRACK_ALERT_RULES: StreamTrackAlertRule[] = [
