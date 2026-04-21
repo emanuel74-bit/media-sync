@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { SYNC_WORKFLOWS } from "../..";
+import { SYNC_WORKFLOWS } from "../../domain";
 import { SyncWorkflow, SyncContext } from "../../domain";
 import { SystemEventNames } from "../../../common/events";
 import { SyncOrchestratorService } from "./sync-orchestrator.service";

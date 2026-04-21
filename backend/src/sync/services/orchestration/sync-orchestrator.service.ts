@@ -1,7 +1,7 @@
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Inject, Injectable, Logger } from "@nestjs/common";
 
-import { SYNC_WORKFLOWS } from "../..";
+import { SYNC_WORKFLOWS } from "../../domain";
 import { SyncContext, SyncWorkflow } from "../../domain";
 import { SystemEventNames } from "../../../common/events";
 

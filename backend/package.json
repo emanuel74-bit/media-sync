@@ -7,7 +7,7 @@
         "start:dev": "nest start --watch",
         "dev": "concurrently \"npm:barrels:watch\" \"nest start --watch\"",
         "build": "nest build",
-        "barrels:generate": "barrelsby --directory src --delete --location all --exclude .schema.ts$ --exclude .spec.ts$",
+        "barrels:generate": "barrelsby --directory src --location all --exclude .schema.ts$ --exclude .spec.ts$",
         "barrels:watch": "chokidar \"src/**/*.ts\" -i \"src/**/index.ts\" -c \"npm run barrels:generate\"",
         "imports:barrelize": "node scripts/barrelize-imports.cjs",
         "imports:sync": "npm run barrels:generate && npm run imports:barrelize",

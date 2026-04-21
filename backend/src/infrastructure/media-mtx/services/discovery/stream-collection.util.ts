@@ -1,5 +1,9 @@
-import { MediaMtxClient } from "../clients";
-import { MediaMtxStreamInfo } from "../types";
+import { Logger } from "@nestjs/common";
+
+import { MediaMtxClient } from "../../clients";
+import { MediaMtxStreamInfo } from "../../types";
+
+const logger = new Logger("stream-collection");
 
 export async function collectStreamsFromClients(
     clients: readonly MediaMtxClient[],
@@ -21,7 +25,8 @@ export async function collectStreamsFromClients(
 async function listStreamsFromClient(client: MediaMtxClient): Promise<MediaMtxStreamInfo[]> {
     try {
         return await client.listPaths();
-    } catch {
+    } catch (error) {
+        logger.warn(`Failed to list streams from client: ${error instanceof Error ? error.message : String(error)}`);
         return [];
     }
 }

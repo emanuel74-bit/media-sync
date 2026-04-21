@@ -1,17 +1,15 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 
 import { Stream } from "../../../streams/domain";
 import { SyncContext, SyncWorkflow } from "../../domain";
 import { StreamAssignmentService } from "../../../streams/services/assignment";
-import { MediaMtxPipelineService } from "../../../infrastructure/media-mtx/services";
+import { StreamProvisioningService } from "../../../streams/services/lifecycle";
 
 @Injectable()
 export class StreamReconcileService implements SyncWorkflow {
-    private readonly logger = new Logger(StreamReconcileService.name);
-
     constructor(
-        private readonly mediaMtxPipeline: MediaMtxPipelineService,
         private readonly streamAssignment: StreamAssignmentService,
+        private readonly streamProvisioning: StreamProvisioningService,
     ) {}
 
     async reconcileAll(
@@ -32,19 +30,9 @@ export class StreamReconcileService implements SyncWorkflow {
         clusterNames: Set<string>,
         podIds: string[],
     ): Promise<void> {
-        await this.streamAssignment.ensureAssigned(stream.name, podIds);
-
+        const assigned = await this.streamAssignment.ensureAssigned(stream.name, podIds);
         if (!clusterNames.has(stream.name)) {
-            try {
-                await this.mediaMtxPipeline.createClusterPullPipeline({
-                    name: stream.name,
-                    source: stream.source,
-                    status: stream.status,
-                });
-            } catch (err) {
-                const message = err instanceof Error ? err.message : String(err);
-                this.logger.error(`Failed manual sync create for ${stream.name}: ${message}`);
-            }
+            await this.streamProvisioning.provisionClusterPipeline(assigned);
         }
     }
 

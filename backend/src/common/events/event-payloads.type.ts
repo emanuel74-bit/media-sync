@@ -1,9 +1,9 @@
-import { AlertMetricInput } from "./alert-metric-input.type";
-import { AlertSeverity } from "../enums/alert-severity.enum";
-import { AlertType } from "../enums/alert-type.enum";
-import { PodRole } from "../enums/pod-role.enum";
-import { StreamStatus } from "../enums/stream-status.enum";
-import { StreamTrack } from "./stream-track.type";
+import { AlertMetricInput } from "../domain/types/alert-metric-input.type";
+import { AlertSeverity } from "../domain/enums/alert-severity.enum";
+import { AlertType } from "../domain/enums/alert-type.enum";
+import { PodRole } from "../domain/enums/pod-role.enum";
+import { StreamStatus } from "../domain/enums/stream-status.enum";
+import { StreamTrack } from "../domain/types/stream-track.type";
 
 /** Emitted when a stream has been successfully synced to the cluster. */
 export interface StreamSyncedPayload {

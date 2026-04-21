@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
+import { ConfigModule } from "../config";
 import { StreamsModule } from "../streams";
 import { CommonModule } from "../common";
 import { StreamInspectionController } from "./controllers";
@@ -13,7 +14,6 @@ import {
     StreamInspectionSchema,
 } from "../infrastructure/database/schemas/stream-inspection.schema";
 import {
-    StreamInspectionService,
     StreamInspectionSchedulerService,
     StreamInspectionRecorderService,
     StreamInspectionQueryService,
@@ -27,12 +27,12 @@ import {
         MediaMtxModule,
         StreamsModule,
         CommonModule,
+        ConfigModule,
     ],
     providers: [
         StreamInspectionSchedulerService,
         StreamInspectionRecorderService,
         StreamInspectionQueryService,
-        StreamInspectionService,
         StreamTrackAlertService,
         {
             provide: StreamInspectionRepository,
@@ -40,6 +40,6 @@ import {
         },
     ],
     controllers: [StreamInspectionController],
-    exports: [StreamInspectionService, StreamInspectionQueryService],
+    exports: [StreamInspectionQueryService],
 })
 export class StreamInspectionModule {}

@@ -1,6 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 
 import { PodRole } from "../../../common/domain";
+import { ConfigService } from "../../../config";
 import { SequentialStreamTaskRunner } from "../../../common/services";
 import { StreamInspectionRecorderService } from "./stream-inspection-recorder.service";
 import { StreamInspectionSchedulerService } from "./stream-inspection-scheduler.service";
@@ -37,6 +38,7 @@ describe("StreamInspectionSchedulerService", () => {
                 { provide: MediaMtxStreamListingService, useValue: listing },
                 { provide: SequentialStreamTaskRunner, useValue: taskRunner },
                 { provide: StreamInspectionRecorderService, useValue: recorder },
+                { provide: ConfigService, useValue: { inspectionInterval: 30000 } },
             ],
         }).compile();
 

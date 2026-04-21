@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 
-import { MediaMtxStreamInfo } from "../types";
-import { MediaMtxClientRegistry } from "../registry";
+import { MediaMtxStreamInfo } from "../../types";
+import { MediaMtxClientRegistry } from "../../registry";
 import { collectStreamsFromClients } from "./stream-collection.util";
 
 /**

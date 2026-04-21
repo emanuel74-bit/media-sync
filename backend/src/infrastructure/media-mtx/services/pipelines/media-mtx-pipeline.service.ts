@@ -1,10 +1,10 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { isAxiosError } from "axios";
 
-import { MediaMtxClient } from "../clients";
-import { ConfigService } from "../../../config";
-import { MediaMtxClientRegistry } from "../registry";
-import { PipelineCreateResult, MediaMtxStreamInfo } from "../types";
+import { MediaMtxClient } from "../../clients";
+import { ConfigService } from "../../../../config";
+import { MediaMtxClientRegistry } from "../../registry";
+import { PipelineCreateResult, MediaMtxStreamInfo } from "../../types";
 
 /**
  * Cluster pipeline CRUD — create and delete pull pipelines on cluster MediaMTX nodes.
