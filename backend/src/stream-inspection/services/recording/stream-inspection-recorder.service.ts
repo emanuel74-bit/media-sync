@@ -1,5 +1,5 @@
-import { Injectable, Logger } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
+import { Inject, Injectable, Logger, forwardRef } from "@nestjs/common";
 
 import { PodRole } from "@/common";
 import { SystemEventNames } from "@/common";
@@ -14,6 +14,7 @@ export class StreamInspectionRecorderService {
     private readonly logger = new Logger(StreamInspectionRecorderService.name);
 
     constructor(
+        @Inject(forwardRef(() => StreamInspectionRepository))
         private readonly streamInspectionRepository: StreamInspectionRepository,
         private readonly mediaMtxStats: MediaMtxStreamStatsService,
         private readonly events: EventEmitter2,

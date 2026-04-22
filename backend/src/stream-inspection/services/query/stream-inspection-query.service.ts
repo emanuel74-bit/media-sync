@@ -1,11 +1,14 @@
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable, forwardRef } from "@nestjs/common";
 
 import { StreamInspectionRecord } from "@/stream-inspection";
 import { StreamInspectionRepository } from "@/stream-inspection";
 
 @Injectable()
 export class StreamInspectionQueryService {
-    constructor(private readonly streamInspectionRepository: StreamInspectionRepository) {}
+    constructor(
+        @Inject(forwardRef(() => StreamInspectionRepository))
+        private readonly streamInspectionRepository: StreamInspectionRepository,
+    ) {}
 
     async findLatest(streamName: string): Promise<StreamInspectionRecord | null> {
         return this.streamInspectionRepository.findLatest(streamName);
