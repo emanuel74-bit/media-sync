@@ -1,7 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { RuntimeAlertRule } from "../rules";
+import { RuntimeAlertRule } from "@/common";
+
 import { SystemEventNames, AlertCreateRequestedPayload } from "../events";
 
 @Injectable()

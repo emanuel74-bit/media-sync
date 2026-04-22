@@ -1,4 +1,4 @@
-import { AlertSeverity, AlertType } from "../../../common/domain";
+import { AlertSeverity, AlertType } from "@/common";
 
 /** Data required to create a new alert. Moved here from alert.schema to keep schema persistence-only. */
 export interface AlertCreationData {

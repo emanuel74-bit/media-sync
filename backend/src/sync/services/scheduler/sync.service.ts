@@ -1,9 +1,10 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 
+import { SequentialStreamTaskRunner } from "@/common";
+
 import { SyncQueryAggregatorService } from "../query";
 import { SyncOrchestratorService } from "../orchestration";
-import { SequentialStreamTaskRunner } from "../../../common/services";
 
 @Injectable()
 export class SyncService {

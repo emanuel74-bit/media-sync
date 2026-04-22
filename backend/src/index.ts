@@ -12,5 +12,4 @@ export * from "./gateway";
 export * from "./metrics";
 export * from "./streams";
 export * from "./app.module";
-export * from "./infrastructure";
 export * from "./stream-inspection";

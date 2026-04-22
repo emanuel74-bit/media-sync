@@ -1,4 +1,5 @@
-import { PodRole } from "../../../common/domain";
+import { PodRole } from "@/common";
+
 import { MediaMtxStreamInfo } from "./media-mtx-stream-info.types";
 
 export type ContextualMediaMtxStream = {

@@ -1,10 +1,11 @@
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Injectable, NotFoundException } from "@nestjs/common";
 
-import { Stream } from "../../domain";
+import { Stream } from "@/streams";
+import { SystemEventNames } from "@/common";
+import { StreamRepository } from "@/streams";
+
 import { StreamQueryService } from "../query";
-import { StreamRepository } from "../../repositories";
-import { SystemEventNames } from "../../../common/events";
 import { hashStreamToPod } from "./hash-stream-to-pod.util";
 
 @Injectable()

@@ -1,4 +1,4 @@
-import { TrackType } from "../enums/track-type.enum";
+import { TrackType } from "../enums";
 
 /** Describes a single media track within a stream, used in events and inspection records. */
 export interface StreamTrack {

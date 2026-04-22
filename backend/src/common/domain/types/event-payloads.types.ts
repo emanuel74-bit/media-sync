@@ -1,9 +1,6 @@
-import { PodRole } from "../enums/pod-role.enum";
 import { StreamTrack } from "./stream-track.types";
-import { AlertType } from "../enums/alert-type.enum";
-import { StreamStatus } from "../enums/stream-status.enum";
 import { AlertMetricInput } from "./alert-metric-input.types";
-import { AlertSeverity } from "../enums/alert-severity.enum";
+import { PodRole, AlertType, StreamStatus, AlertSeverity } from "../enums";
 
 /** Emitted when a stream has been successfully synced to the cluster. */
 export interface StreamSyncedPayload {

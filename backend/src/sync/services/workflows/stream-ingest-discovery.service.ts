@@ -1,9 +1,9 @@
 import { Injectable } from "@nestjs/common";
 
-import { SyncDiscoveredStream } from "../../domain";
-import { StreamStatus } from "../../../common/domain";
-import { Stream, StreamMetadata } from "../../../streams/domain";
-import { StreamStatusService } from "../../../streams/services/mutation";
+import { StreamStatus } from "@/common";
+import { SyncDiscoveredStream } from "@/sync";
+import { StreamStatusService } from "@/streams";
+import { Stream, StreamMetadata } from "@/streams";
 
 function buildDiscoveryMetadata(ingest: SyncDiscoveredStream): StreamMetadata {
     return { ...ingest.video, ...ingest.audio, ...ingest.metadata };

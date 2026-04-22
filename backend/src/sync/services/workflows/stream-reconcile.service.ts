@@ -1,9 +1,9 @@
 import { Injectable, Logger } from "@nestjs/common";
 
-import { Stream } from "../../../streams/domain";
-import { SyncContext, SyncWorkflow } from "../../domain";
-import { StreamAssignmentService } from "../../../streams/services/assignment";
-import { MediaMtxPipelineService } from "../../../infrastructure/media-mtx/services";
+import { Stream } from "@/streams";
+import { SyncContext, SyncWorkflow } from "@/sync";
+import { StreamAssignmentService } from "@/streams";
+import { MediaMtxPipelineService } from "@/infrastructure";
 
 @Injectable()
 export class StreamReconcileService implements SyncWorkflow {

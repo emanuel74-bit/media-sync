@@ -1,20 +1,21 @@
 import { Module } from "@nestjs/common";
 
-import { PodsModule } from "../pods";
-import { CommonModule } from "../common";
-import { StreamsModule } from "../streams";
-import { SyncService } from "./services/scheduler";
-import { MediaMtxModule } from "../infrastructure/media-mtx";
-import { SyncQueryAggregatorService } from "./services/query";
-import { SyncOrchestratorService } from "./services/orchestration";
-import { SYNC_WORKFLOWS } from "./domain/consts/sync-workflows.const";
+import { PodsModule } from "@/pods";
+import { CommonModule } from "@/common";
+import { StreamsModule } from "@/streams";
+import { MediaMtxModule } from "@/infrastructure";
+
+import { SYNC_WORKFLOWS } from "./domain";
 import {
+    SyncService,
+    SyncQueryAggregatorService,
+    SyncOrchestratorService,
     StreamIngestActivationService,
     StreamIngestDiscoveryService,
     IngestStreamSynchronizerService,
     StreamReconcileService,
     StreamStalenessService,
-} from "./services/workflows";
+} from "./services";
 
 @Module({
     imports: [MediaMtxModule, StreamsModule, PodsModule, CommonModule],

@@ -1,10 +1,10 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { RuntimeAlertRule } from "../../../src/common/rules";
-import { SystemEventNames } from "../../../src/common/events";
-import { AlertSeverity, AlertType } from "../../../src/common/domain";
-import { AlertRuleEvaluator } from "../../../src/common/services/alert-rule-evaluator.service";
+import { RuntimeAlertRule } from "@/common";
+import { SystemEventNames } from "@/common";
+import { AlertRuleEvaluator } from "@/common";
+import { AlertSeverity, AlertType } from "@/common";
 
 describe("AlertRuleEvaluator", () => {
     let service: AlertRuleEvaluator;

@@ -1,19 +1,22 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
-import { PodsModule } from "../pods";
-import { ConfigModule } from "../config";
-import { CommonModule } from "../common";
-import { StreamsModule } from "../streams";
+import { PodsModule } from "@/pods";
+import { ConfigModule } from "@/config";
+import { CommonModule } from "@/common";
+import { StreamsModule } from "@/streams";
+import { MediaMtxModule } from "@/infrastructure";
+import { MongoMetricRepository, Metric, MetricSchema } from "@/infrastructure";
+
 import { MetricRepository } from "./repositories";
 import { MetricsController } from "./controllers";
-import { StreamFailoverService } from "./services/failover";
-import { MediaMtxModule } from "../infrastructure/media-mtx";
-import { MetricAlertInvocationService } from "./services/alerts";
-import { MetricPersistenceService } from "./services/persistence";
-import { MongoMetricRepository } from "../infrastructure/database/repositories";
-import { MetricCollectionService, StreamMetricProcessor } from "./services/collection";
-import { Metric, MetricSchema } from "../infrastructure/database/schemas/metric.schema";
+import {
+    StreamFailoverService,
+    MetricAlertInvocationService,
+    MetricPersistenceService,
+    MetricCollectionService,
+    StreamMetricProcessor,
+} from "./services";
 
 @Module({
     imports: [

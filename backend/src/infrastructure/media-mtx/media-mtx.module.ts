@@ -1,7 +1,8 @@
 import { Module } from "@nestjs/common";
 
-import { PodsModule } from "../../pods";
-import { ConfigModule } from "../../config";
+import { PodsModule } from "@/pods";
+import { ConfigModule } from "@/config";
+
 import { MediaMtxClientFactory, MediaMtxClientRegistry } from "./registry";
 import {
     MediaMtxPipelineService,

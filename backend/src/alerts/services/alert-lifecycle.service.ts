@@ -1,9 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import { EventEmitter2, OnEvent } from "@nestjs/event-emitter";
 
-import { AlertRepository } from "../repositories";
-import { Alert, AlertCreationData } from "../domain";
-import { SystemEventNames, AlertCreateRequestedPayload } from "../../common/events";
+import { AlertRepository } from "@/alerts";
+import { Alert, AlertCreationData } from "@/alerts";
+import { SystemEventNames, AlertCreateRequestedPayload } from "@/common";
 
 @Injectable()
 export class AlertLifecycleService {

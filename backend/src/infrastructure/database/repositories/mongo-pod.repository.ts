@@ -2,11 +2,12 @@ import { Injectable } from "@nestjs/common";
 import { FilterQuery, Model } from "mongoose";
 import { InjectModel } from "@nestjs/mongoose";
 
-import { Pod } from "../../../pods/domain";
-import { PodRepository } from "../../../pods/repositories";
-import { PodRole, PodStatus } from "../../../common/domain";
+import { Pod } from "@/pods";
+import { PodRepository } from "@/pods";
+import { PodRole, PodStatus } from "@/common";
+
+import { Pod as PodSchema, PodDocument } from "../schemas";
 import { MongoDomainRepository } from "./mongo-domain.repository";
-import { Pod as PodSchema, PodDocument } from "../schemas/pod.schema";
 
 type LeanPod = PodSchema & { createdAt: Date; updatedAt: Date };
 

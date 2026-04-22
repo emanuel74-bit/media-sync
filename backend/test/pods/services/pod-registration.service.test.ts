@@ -1,11 +1,11 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { Pod } from "../../../src/pods/domain";
-import { PodRepository } from "../../../src/pods/repositories";
-import { SystemEventNames } from "../../../src/common/events";
-import { PodRole, PodStatus } from "../../../src/common/domain";
-import { PodRegistrationService } from "../../../src/pods/services/pod-registration.service";
+import { Pod } from "@/pods";
+import { PodRepository } from "@/pods";
+import { SystemEventNames } from "@/common";
+import { PodRole, PodStatus } from "@/common";
+import { PodRegistrationService } from "@/pods";
 
 const makePod = (overrides: Partial<Pod> = {}): Pod => ({
     podId: "pod-1",

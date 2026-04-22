@@ -1,11 +1,11 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { Stream } from "../../../streams/domain";
-import { SyncContext, SyncWorkflow } from "../../domain";
-import { SystemEventNames } from "../../../common/events";
-import { StreamStatusService } from "../../../streams/services/mutation";
-import { MediaMtxPipelineService } from "../../../infrastructure/media-mtx/services";
+import { Stream } from "@/streams";
+import { SystemEventNames } from "@/common";
+import { StreamStatusService } from "@/streams";
+import { SyncContext, SyncWorkflow } from "@/sync";
+import { MediaMtxPipelineService } from "@/infrastructure";
 
 @Injectable()
 export class StreamStalenessService implements SyncWorkflow {

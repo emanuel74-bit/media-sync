@@ -1,5 +1,5 @@
-import { StreamTrack } from "../../../common/domain";
-import { V3TrackItem } from "../../../infrastructure";
+import { StreamTrack } from "@/common";
+import { V3TrackItem } from "@/infrastructure";
 
 export interface TrackParser {
     canParse(type: string): boolean;

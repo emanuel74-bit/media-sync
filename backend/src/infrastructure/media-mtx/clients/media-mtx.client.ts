@@ -1,7 +1,8 @@
 import axios, { AxiosInstance } from "axios";
 
+import { MediaMtxStreamInfo, V3PathItem, PipelineCreateResult } from "@/infrastructure";
+
 import { mapV3PathToStream } from "../mappers";
-import { MediaMtxStreamInfo, V3PathItem, PipelineCreateResult } from "../types";
 
 /**
  * Thin HTTP adapter for a single MediaMTX node.

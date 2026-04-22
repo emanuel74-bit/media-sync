@@ -1,5 +1,5 @@
-import { MediaMtxClient } from "../clients";
-import { MediaMtxStreamInfo } from "../types";
+import { MediaMtxClient } from "@/infrastructure";
+import { MediaMtxStreamInfo } from "@/infrastructure";
 
 export async function collectStreamsFromClients(
     clients: readonly MediaMtxClient[],

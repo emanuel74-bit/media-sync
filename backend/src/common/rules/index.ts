@@ -3,5 +3,3 @@
  */
 
 export * from "./metric-threshold-predicates.util";
-export * from "../domain/types/metric-thresholds.types";
-export * from "../domain/types/runtime-alert-rule.types";

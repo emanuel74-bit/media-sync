@@ -1,12 +1,13 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { PodRole } from "../../../common/domain";
-import { SystemEventNames } from "../../../common/events";
-import { StreamInspectionRepository } from "../../repositories";
+import { PodRole } from "@/common";
+import { SystemEventNames } from "@/common";
+import { MediaMtxStreamInfo } from "@/infrastructure";
+import { MediaMtxStreamStatsService } from "@/infrastructure";
+import { StreamInspectionRepository } from "@/stream-inspection";
+
 import { buildInspectionRecord } from "./build-inspection-record.util";
-import { MediaMtxStreamStatsService } from "../../../infrastructure/media-mtx/services";
-import { MediaMtxStreamInfo } from "../../../infrastructure/media-mtx/types";
 
 @Injectable()
 export class StreamInspectionRecorderService {

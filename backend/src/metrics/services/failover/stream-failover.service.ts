@@ -1,12 +1,12 @@
 import { Injectable, Logger } from "@nestjs/common";
 
-import { Metric } from "../../domain";
-import { ConfigService } from "../../../config";
-import { PodRole } from "../../../common/domain";
-import { PodQueryService } from "../../../pods/services";
-import { isMetricDegraded } from "../../../common/rules";
-import { StreamQueryService } from "../../../streams/services/query";
-import { StreamAssignmentService } from "../../../streams/services/assignment";
+import { PodRole } from "@/common";
+import { Metric } from "@/metrics";
+import { ConfigService } from "@/config";
+import { PodQueryService } from "@/pods";
+import { isMetricDegraded } from "@/common";
+import { StreamQueryService } from "@/streams";
+import { StreamAssignmentService } from "@/streams";
 
 @Injectable()
 export class StreamFailoverService {

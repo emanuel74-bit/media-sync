@@ -1,7 +1,8 @@
-import { PodRole } from "../../../common/domain";
+import { PodRole } from "@/common";
+import { V3PathItem } from "@/infrastructure";
+import { NewStreamInspectionData } from "@/stream-inspection";
+
 import { parseTracksFromPathItem } from "../parsing";
-import { NewStreamInspectionData } from "../../domain";
-import { V3PathItem } from "../../../infrastructure/media-mtx/types";
 
 export function buildInspectionRecord(
     streamName: string,

@@ -1,10 +1,11 @@
 import { Injectable, Logger } from "@nestjs/common";
 
-import { MediaMtxStreamInfo } from "../types";
-import { PodRole } from "../../../common/domain";
-import { MediaMtxClientRegistry } from "../registry";
-import { PodQueryService } from "../../../pods/services";
-import { collectStreamsFromClients } from "./stream-collection.util";
+import { PodRole } from "@/common";
+import { PodQueryService } from "@/pods";
+import { MediaMtxStreamInfo } from "@/infrastructure";
+import { MediaMtxClientRegistry } from "@/infrastructure";
+
+import { collectStreamsFromClients } from "../stream-collection.util";
 
 /**
  * Strategy for listing ingest streams with primary/fallback logic.

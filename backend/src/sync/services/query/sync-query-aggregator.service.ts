@@ -1,10 +1,10 @@
 import { Injectable } from "@nestjs/common";
 
-import { SyncContext } from "../../domain";
-import { PodRole } from "../../../common/domain";
-import { PodQueryService } from "../../../pods/services";
-import { StreamQueryService } from "../../../streams/services/query";
-import { MediaMtxStreamListingService } from "../../../infrastructure/media-mtx/services";
+import { PodRole } from "@/common";
+import { SyncContext } from "@/sync";
+import { PodQueryService } from "@/pods";
+import { StreamQueryService } from "@/streams";
+import { MediaMtxStreamListingService } from "@/infrastructure";
 
 @Injectable()
 export class SyncQueryAggregatorService {

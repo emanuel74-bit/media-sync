@@ -1,10 +1,10 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { PodRepository } from "../repositories";
-import { PodStatus } from "../../common/domain";
-import { Pod, PodRegistrationData } from "../domain";
-import { SystemEventNames } from "../../common/events";
+import { PodStatus } from "@/common";
+import { PodRepository } from "@/pods";
+import { SystemEventNames } from "@/common";
+import { Pod, PodRegistrationData } from "@/pods";
 
 @Injectable()
 export class PodRegistrationService {

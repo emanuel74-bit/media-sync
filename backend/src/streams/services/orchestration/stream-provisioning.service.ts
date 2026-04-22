@@ -1,11 +1,12 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { Stream } from "../../domain";
-import { StreamStatus } from "../../../common/domain";
-import { SystemEventNames } from "../../../common/events";
-import { StreamCrudService } from "../mutation/stream-crud.service";
-import { MediaMtxPipelineService } from "../../../infrastructure/media-mtx/services";
+import { Stream } from "@/streams";
+import { StreamStatus } from "@/common";
+import { SystemEventNames } from "@/common";
+import { MediaMtxPipelineService } from "@/infrastructure";
+
+import { StreamCrudService } from "../mutation";
 
 @Injectable()
 export class StreamProvisioningService {

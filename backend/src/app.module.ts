@@ -10,7 +10,7 @@ import { ConfigModule } from "./config";
 import { GatewayModule } from "./gateway";
 import { MetricsModule } from "./metrics";
 import { StreamsModule } from "./streams";
-import { MediaMtxModule } from "./infrastructure/media-mtx";
+import { MediaMtxModule } from "./infrastructure";
 import { StreamInspectionModule } from "./stream-inspection";
 
 @Module({

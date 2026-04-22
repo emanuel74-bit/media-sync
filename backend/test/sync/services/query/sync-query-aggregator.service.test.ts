@@ -1,12 +1,12 @@
 import { Test, TestingModule } from "@nestjs/testing";
 
-import { PodRole } from "../../../../src/common/domain";
-import { Stream } from "../../../../src/streams/domain";
-import { PodQueryService } from "../../../../src/pods/services";
-import { StreamQueryService } from "../../../../src/streams/services/query";
-import { SyncQueryAggregatorService } from "../../../../src/sync/services/query/sync-query-aggregator.service";
-import { MediaMtxStreamInfo } from "../../../../src/infrastructure/media-mtx/types";
-import { MediaMtxStreamListingService } from "../../../../src/infrastructure/media-mtx/services";
+import { PodRole } from "@/common";
+import { Stream } from "@/streams";
+import { PodQueryService } from "@/pods";
+import { StreamQueryService } from "@/streams";
+import { SyncQueryAggregatorService } from "@/sync";
+import { MediaMtxStreamInfo } from "@/infrastructure";
+import { MediaMtxStreamListingService } from "@/infrastructure";
 
 const makeStream = (name: string): MediaMtxStreamInfo => ({
     name,

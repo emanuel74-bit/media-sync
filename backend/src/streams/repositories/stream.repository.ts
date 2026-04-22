@@ -1,4 +1,4 @@
-import { Stream, StreamAssignmentInfo } from "../domain";
+import { Stream, StreamAssignmentInfo } from "@/streams";
 
 export abstract class StreamRepository {
     abstract create(data: Partial<Stream> & Pick<Stream, "name" | "source">): Promise<Stream>;

@@ -1,9 +1,10 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 
-import { SequentialStreamTaskRunner } from "../../../common/services";
+import { SequentialStreamTaskRunner } from "@/common";
+import { MediaMtxStreamListingService } from "@/infrastructure";
+
 import { StreamMetricProcessor } from "./stream-metric-processor.service";
-import { MediaMtxStreamListingService } from "../../../infrastructure/media-mtx/services";
 
 @Injectable()
 export class MetricCollectionService {

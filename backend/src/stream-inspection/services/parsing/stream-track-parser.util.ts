@@ -1,10 +1,11 @@
-import { StreamTrack } from "../../../common/domain";
-import { DataTrackParser } from "./data-track-parser.strategy";
-import { VideoTrackParser } from "./video-track-parser.strategy";
-import { AudioTrackParser } from "./audio-track-parser.strategy";
-import { TrackParser } from "../../domain/types/track-parser.types";
-import { V3PathItem } from "../../../infrastructure/media-mtx/types";
-import { SubtitleTrackParser } from "./subtitle-track-parser.strategy";
+import { StreamTrack } from "@/common";
+import { V3PathItem } from "@/infrastructure";
+
+import { DataTrackParser } from "./data";
+import { VideoTrackParser } from "./video";
+import { AudioTrackParser } from "./audio";
+import { SubtitleTrackParser } from "./subtitle";
+import { TrackParser } from "./track-parser.types";
 
 const TRACK_PARSERS: TrackParser[] = [
     new VideoTrackParser(),

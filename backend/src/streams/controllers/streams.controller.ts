@@ -1,12 +1,13 @@
 import { ApiTags } from "@nestjs/swagger";
 import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
 
-import { StreamQueryService } from "../services/query";
-import { Stream, StreamAssignmentInfo } from "../domain";
-import { StreamAssignmentService } from "../services/assignment";
+import { StreamCrudService } from "@/streams";
+import { StreamQueryService } from "@/streams";
+import { StreamLifecycleService } from "@/streams";
+import { StreamAssignmentService } from "@/streams";
+import { Stream, StreamAssignmentInfo } from "@/streams";
+
 import { AssignStreamDto, CreateStreamDto, UpdateStreamDto } from "../dto";
-import { StreamCrudService } from "../services/mutation";
-import { StreamLifecycleService } from "../services/orchestration";
 
 @ApiTags("streams")
 @Controller("api/streams")

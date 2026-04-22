@@ -1,6 +1,7 @@
-import { StreamTrack, TrackType } from "../../../common/domain";
-import { TrackParser } from "../../domain/types/track-parser.types";
-import { V3TrackItem } from "../../../infrastructure/media-mtx/types";
+import { V3TrackItem } from "@/infrastructure";
+import { StreamTrack, TrackType } from "@/common";
+
+import { TrackParser } from "../track-parser.types";
 
 export class SubtitleTrackParser implements TrackParser {
     canParse(type: string): boolean {

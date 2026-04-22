@@ -3,5 +3,3 @@
  */
 
 export * from "./stream-track-alert.service";
-export * from "../../domain/types/stream-track-alert-rule.types";
-export * from "../../domain/consts/stream-track-alert-rules.const";

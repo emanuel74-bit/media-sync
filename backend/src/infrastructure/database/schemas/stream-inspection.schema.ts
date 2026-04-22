@@ -1,7 +1,7 @@
 import { Document, Schema as MongooseSchema } from "mongoose";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 
-import { PodRole, StreamTrack } from "../../../common/domain";
+import { PodRole, StreamTrack } from "@/common";
 export type StreamInspectionDocument = StreamInspection & Document;
 
 @Schema({ timestamps: true })

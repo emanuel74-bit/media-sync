@@ -1,9 +1,10 @@
 import { Injectable } from "@nestjs/common";
 
-import { MediaMtxClient } from "../clients";
-import { ConfigService } from "../../../config";
-import { PodRole } from "../../../common/domain";
-import { IngestPodEndpoint } from "../types/ingest-pod-endpoint.types";
+import { PodRole } from "@/common";
+import { ConfigService } from "@/config";
+import { MediaMtxClient } from "@/infrastructure";
+import { IngestPodEndpoint } from "@/infrastructure";
+
 import { MediaMtxClientFactory } from "./media-mtx-client-factory.service";
 
 /**

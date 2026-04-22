@@ -1,4 +1,4 @@
-import { PodRole, PodStatus } from "../../../common/domain";
+import { PodRole, PodStatus } from "@/common";
 
 export interface Pod {
     podId: string;

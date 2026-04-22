@@ -1,8 +1,8 @@
 import { Injectable } from "@nestjs/common";
 
-import { Stream } from "../../domain";
-import { StreamStatus } from "../../../common/domain";
-import { StreamRepository } from "../../repositories";
+import { Stream } from "@/streams";
+import { StreamStatus } from "@/common";
+import { StreamRepository } from "@/streams";
 
 @Injectable()
 export class StreamStatusService {

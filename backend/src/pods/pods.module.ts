@@ -1,11 +1,11 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
-import { ConfigModule } from "../config";
+import { ConfigModule } from "@/config";
+import { MongoPodRepository, Pod, PodSchema } from "@/infrastructure";
+
 import { PodRepository } from "./repositories";
 import { PodsController } from "./controllers";
-import { MongoPodRepository } from "../infrastructure/database/repositories";
-import { Pod, PodSchema } from "../infrastructure/database/schemas/pod.schema";
 import { PodRegistrationService, PodQueryService } from "./services";
 
 @Module({

@@ -1,12 +1,12 @@
 import { Injectable } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";
 
-import { StreamTrack } from "../../../common/domain";
-import { StreamTrackAlertContext } from "../../domain";
-import { AlertRuleEvaluator } from "../../../common/services";
-import { StreamQueryService } from "../../../streams/services/query";
-import { StreamInspectedPayload, SystemEventNames } from "../../../common/events";
-import { STREAM_TRACK_ALERT_RULES } from "../../domain/consts/stream-track-alert-rules.const";
+import { StreamTrack } from "@/common";
+import { AlertRuleEvaluator } from "@/common";
+import { StreamQueryService } from "@/streams";
+import { StreamTrackAlertContext } from "@/stream-inspection";
+import { STREAM_TRACK_ALERT_RULES } from "@/stream-inspection";
+import { StreamInspectedPayload, SystemEventNames } from "@/common";
 
 @Injectable()
 export class StreamTrackAlertService {

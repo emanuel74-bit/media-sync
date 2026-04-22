@@ -1,11 +1,11 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
+import { MongoAlertRepository, Alert, AlertSchema } from "@/infrastructure";
+
 import { AlertRepository } from "./repositories";
 import { AlertsController } from "./controllers";
 import { AlertLifecycleService } from "./services";
-import { MongoAlertRepository } from "../infrastructure/database/repositories";
-import { Alert, AlertSchema } from "../infrastructure/database/schemas/alert.schema";
 
 @Module({
     imports: [MongooseModule.forFeature([{ name: Alert.name, schema: AlertSchema }])],

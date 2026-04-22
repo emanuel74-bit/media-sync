@@ -1,8 +1,8 @@
 import { Document, Schema as MongooseSchema } from "mongoose";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 
-import { StreamStatus } from "../../../common/domain";
-import { StreamMetadata } from "../../../streams/domain";
+import { StreamStatus } from "@/common";
+import { StreamMetadata } from "@/streams";
 
 export type StreamDocument = Stream & Document;
 

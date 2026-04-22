@@ -3,5 +3,3 @@
  */
 
 export * from "./metric-alert-invocation.service";
-export * from "../../domain/types/metric-alert-rule.types";
-export * from "../../domain/consts/metric-alert-rules.const";

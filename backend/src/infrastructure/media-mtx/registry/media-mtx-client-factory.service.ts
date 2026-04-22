@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 
-import { MediaMtxClient } from "../clients";
+import { MediaMtxClient } from "@/infrastructure";
 
 /**
  * Creates and caches MediaMtxClient instances by base URL.

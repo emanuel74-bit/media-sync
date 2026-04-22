@@ -1,6 +1,6 @@
 import { IsBoolean, IsEnum, IsOptional, IsString } from "class-validator";
 
-import { StreamStatus } from "../../common/domain";
+import { StreamStatus } from "@/common";
 
 export class UpdateStreamDto {
     @IsOptional()

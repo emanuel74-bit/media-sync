@@ -1,16 +1,20 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
-import { PodsModule } from "../pods";
+import { PodsModule } from "@/pods";
+import { MediaMtxModule } from "@/infrastructure";
+import { MongoStreamRepository, Stream, StreamSchema } from "@/infrastructure";
+
 import { StreamRepository } from "./repositories";
 import { StreamsController } from "./controllers";
-import { StreamQueryService } from "./services/query";
-import { MediaMtxModule } from "../infrastructure/media-mtx";
-import { StreamAssignmentService } from "./services/assignment";
-import { MongoStreamRepository } from "../infrastructure/database/repositories";
-import { Stream, StreamSchema } from "../infrastructure/database/schemas/stream.schema";
-import { StreamCrudService, StreamStatusService } from "./services/mutation";
-import { StreamProvisioningService, StreamLifecycleService } from "./services/orchestration";
+import {
+    StreamQueryService,
+    StreamAssignmentService,
+    StreamCrudService,
+    StreamStatusService,
+    StreamProvisioningService,
+    StreamLifecycleService,
+} from "./services";
 
 @Module({
     imports: [
