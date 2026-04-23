@@ -15,8 +15,8 @@ import {
     StreamProvisioningService,
     StreamLifecycleService,
     StreamAssignmentPolicy,
-    HashStreamAssignmentPolicy,
 } from "./services";
+import { HashStreamAssignmentPolicy } from "./services/assignment/hash-stream-assignment.policy";
 
 @Module({
     imports: [

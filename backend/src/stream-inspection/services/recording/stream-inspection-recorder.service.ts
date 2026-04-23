@@ -21,6 +21,7 @@ export class StreamInspectionRecorderService {
     ) {}
 
     async inspectAndRecord(stream: MediaMtxStreamInfo, source: PodRole): Promise<void> {
+        const inspectedAt = new Date();
         let details = null;
         let lastError: string | null = null;
 
@@ -36,7 +37,7 @@ export class StreamInspectionRecorderService {
             source,
             details,
             lastError,
-            new Date(),
+            inspectedAt,
         );
         await this.streamInspectionRepository.save(record);
 

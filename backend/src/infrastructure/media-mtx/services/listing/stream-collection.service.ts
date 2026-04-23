@@ -1,6 +1,7 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 
-import { MediaMtxClient, MediaMtxStreamInfo } from "@/infrastructure";
+import { MediaMtxClient } from "../../clients";
+import { MediaMtxStreamInfo } from "../../types";
 
 /**
  * Fans out stream listing across a set of MediaMTX clients.
@@ -9,6 +10,8 @@ import { MediaMtxClient, MediaMtxStreamInfo } from "@/infrastructure";
  */
 @Injectable()
 export class StreamCollectionService {
+    private readonly logger = new Logger(StreamCollectionService.name);
+
     async collectFromClients(clients: readonly MediaMtxClient[]): Promise<MediaMtxStreamInfo[]> {
         if (clients.length === 0) {
             return [];
@@ -27,7 +30,8 @@ export class StreamCollectionService {
     private async listFromClient(client: MediaMtxClient): Promise<MediaMtxStreamInfo[]> {
         try {
             return await client.listPaths();
-        } catch {
+        } catch (error) {
+            this.logger.warn(`Failed to list paths from client: ${error instanceof Error ? error.message : String(error)}`);
             return [];
         }
     }

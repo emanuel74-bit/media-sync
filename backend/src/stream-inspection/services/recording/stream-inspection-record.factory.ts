@@ -1,6 +1,6 @@
 import { PodRole } from "@/common";
 import { V3PathItem } from "@/infrastructure";
-import { NewStreamInspectionData } from "@/stream-inspection";
+import { NewStreamInspectionData } from "../../domain";
 
 import { parseTracksFromPathItem } from "../parsing";
 
