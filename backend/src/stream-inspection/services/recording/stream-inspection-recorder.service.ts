@@ -7,7 +7,7 @@ import { MediaMtxStreamInfo } from "@/infrastructure";
 import { MediaMtxStreamStatsService } from "@/infrastructure";
 import { StreamInspectionRepository } from "@/stream-inspection";
 
-import { buildInspectionRecord } from "./build-inspection-record.util";
+import { StreamInspectionRecordFactory } from "./stream-inspection-record.factory";
 
 @Injectable()
 export class StreamInspectionRecorderService {
@@ -31,7 +31,13 @@ export class StreamInspectionRecorderService {
             this.logger.error(`Failed to inspect stream ${stream.name}`, error);
         }
 
-        const record = buildInspectionRecord(stream.name, source, details, lastError);
+        const record = StreamInspectionRecordFactory.build(
+            stream.name,
+            source,
+            details,
+            lastError,
+            new Date(),
+        );
         await this.streamInspectionRepository.save(record);
 
         if (details) {

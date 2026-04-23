@@ -5,7 +5,7 @@ import { PodQueryService } from "@/pods";
 import { MediaMtxStreamInfo } from "@/infrastructure";
 import { MediaMtxClientRegistry } from "@/infrastructure";
 
-import { collectStreamsFromClients } from "../stream-collection.util";
+import { StreamCollectionService } from "../stream-collection.service";
 
 /**
  * Strategy for listing ingest streams with primary/fallback logic.
@@ -18,6 +18,7 @@ export class IngestStreamListingStrategy {
     constructor(
         private readonly registry: MediaMtxClientRegistry,
         private readonly podsService: PodQueryService,
+        private readonly streamCollection: StreamCollectionService,
     ) {}
 
     /**
@@ -41,6 +42,6 @@ export class IngestStreamListingStrategy {
     private async listIngestStreamsFromPods(): Promise<MediaMtxStreamInfo[]> {
         const ingestPods = await this.podsService.listActivePodRefs(PodRole.INGEST);
         const clients = this.registry.getIngestClientsFromPods(ingestPods);
-        return collectStreamsFromClients(clients);
+        return this.streamCollection.collectFromClients(clients);
     }
 }

@@ -4,5 +4,5 @@
 
 export * from "./ingest";
 export * from "./cluster";
-export * from "./stream-collection.util";
+export * from "./stream-collection.service";
 export * from "./media-mtx-stream-listing.service";

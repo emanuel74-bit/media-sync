@@ -3,7 +3,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { MediaMtxStreamInfo } from "@/infrastructure";
 import { MediaMtxClientRegistry } from "@/infrastructure";
 
-import { collectStreamsFromClients } from "../stream-collection.util";
+import { StreamCollectionService } from "../stream-collection.service";
 
 /**
  * Strategy for listing cluster streams.
@@ -13,13 +13,16 @@ import { collectStreamsFromClients } from "../stream-collection.util";
 export class ClusterStreamListingStrategy {
     private readonly logger = new Logger(ClusterStreamListingStrategy.name);
 
-    constructor(private readonly registry: MediaMtxClientRegistry) {}
+    constructor(
+        private readonly registry: MediaMtxClientRegistry,
+        private readonly streamCollection: StreamCollectionService,
+    ) {}
 
     /**
      * List cluster streams by fan-out across all cluster nodes.
      */
     async listClusterStreams(): Promise<MediaMtxStreamInfo[]> {
         const clients = this.registry.getClusterClients();
-        return collectStreamsFromClients(clients);
+        return this.streamCollection.collectFromClients(clients);
     }
 }

@@ -6,7 +6,7 @@ import { SystemEventNames } from "@/common";
 import { StreamRepository } from "@/streams";
 
 import { StreamQueryService } from "../query";
-import { hashStreamToPod } from "./hash-stream-to-pod.util";
+import { StreamAssignmentPolicy } from "./stream-assignment.policy";
 
 @Injectable()
 export class StreamAssignmentService {
@@ -14,6 +14,7 @@ export class StreamAssignmentService {
         private readonly streamRepository: StreamRepository,
         private readonly streamQuery: StreamQueryService,
         private readonly events: EventEmitter2,
+        private readonly assignmentPolicy: StreamAssignmentPolicy,
     ) {}
 
     async assignToPod(name: string, podId: string): Promise<Stream> {
@@ -44,7 +45,7 @@ export class StreamAssignmentService {
             return stream;
         }
 
-        return this.assignToPod(name, hashStreamToPod(name, candidatePods));
+        return this.assignToPod(name, this.assignmentPolicy.selectPod(name, candidatePods));
     }
 
     async reassign(name: string, candidatePods: string[]): Promise<Stream> {
@@ -53,6 +54,6 @@ export class StreamAssignmentService {
         if (!available.length) {
             return stream;
         }
-        return this.assignToPod(name, hashStreamToPod(name, available));
+        return this.assignToPod(name, this.assignmentPolicy.selectPod(name, available));
     }
 }

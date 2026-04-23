@@ -10,6 +10,7 @@ import {
     MediaMtxStreamListingService,
     IngestStreamListingStrategy,
     ClusterStreamListingStrategy,
+    StreamCollectionService,
 } from "./services";
 
 @Module({
@@ -19,6 +20,7 @@ import {
         MediaMtxClientRegistry,
         IngestStreamListingStrategy,
         ClusterStreamListingStrategy,
+        StreamCollectionService,
         MediaMtxStreamListingService,
         MediaMtxStreamStatsService,
         MediaMtxPipelineService,

@@ -11,22 +11,40 @@
 
 #### Required File Suffixes
 
-| Suffix           | Purpose                                                 |
-| ---------------- | ------------------------------------------------------- |
-| `.module.ts`     | NestJS module definition                                |
-| `.service.ts`    | Business logic                                          |
-| `.controller.ts` | HTTP entry point                                        |
-| `.repository.ts` | Data access contract (abstract) or implementation       |
-| `.domain.ts`     | Entity with identity and/or behavior                    |
-| `.types.ts`      | Plain type/interface definitions (shape only, no logic) |
-| `.enum.ts`       | Finite domain state sets                                |
-| `.const.ts`      | Fixed values, configuration data, static lookup tables  |
-| `.dto.ts`        | Data transfer objects (transport layer only)            |
-| `.schema.ts`     | Database schema definition                              |
-| `.util.ts`       | Pure stateless helper functions (including mappers)     |
-| `.strategy.ts`   | Strategy pattern implementation                         |
-| `.client.ts`     | Low-level external system communication                 |
-| `.gateway.ts`    | WebSocket or event gateway                              |
+| Suffix           | Purpose                                                                                                    |
+| ---------------- | ---------------------------------------------------------------------------------------------------------- |
+| `.module.ts`     | NestJS module definition                                                                                   |
+| `.service.ts`    | Business logic, orchestration, side-effect ownership                                                       |
+| `.controller.ts` | HTTP entry point                                                                                           |
+| `.repository.ts` | Data access contract (abstract) or implementation                                                          |
+| `.domain.ts`     | Entity with identity and/or behavior                                                                       |
+| `.types.ts`      | Plain type/interface definitions (shape only, no logic)                                                    |
+| `.enum.ts`       | Finite domain state sets                                                                                   |
+| `.const.ts`      | Fixed values, configuration data, static lookup tables                                                     |
+| `.dto.ts`        | Data transfer objects (transport layer only)                                                               |
+| `.schema.ts`     | Database schema definition                                                                                 |
+| `.mapper.ts`     | One-way or two-way shape transformation between layers or models; always pure, no side effects             |
+| `.policy.ts`     | Decision logic that selects, ranks, filters, or evaluates candidates against business or operational rules |
+| `.factory.ts`    | Controlled object construction from inputs; makes all defaults and assembly rules explicit at the boundary |
+| `.util.ts`       | Pure stateless helpers that do not represent a primary architectural role (predicates, formatting, math)   |
+| `.strategy.ts`   | Strategy pattern implementation                                                                            |
+| `.client.ts`     | Low-level external system communication                                                                    |
+| `.gateway.ts`    | WebSocket or event gateway                                                                                 |
+
+#### Suffix Selection Rules
+
+- A file that transforms a shape between two layers or models must use `.mapper.ts`, not `.util.ts`
+- A file that selects among candidates or evaluates whether a business rule holds must use `.policy.ts`, not `.util.ts`
+- A file that constructs a higher-level object from inputs (especially when defaults, timestamps, or identifiers are involved) must use `.factory.ts`, not `.util.ts`
+- A file that is pure, stateless, and does not represent one of the above primary roles may use `.util.ts`
+- Adding a new suffix requires a definition row in this table, a placement rule, a DI expectation, and at least one example
+
+#### DI Expectations by Suffix
+
+- `.mapper.ts` — pure functions or classes; provider registration is not required unless the mapper has injected dependencies
+- `.policy.ts` — may be a pure class or injectable; must be injectable when multiple implementations exist and selection is via DI
+- `.factory.ts` — may be a pure class with static methods or injectable; must be injectable only when the factory has injected dependencies
+- `.util.ts` — never injectable; always called directly as a pure function
 
 #### Interfaces
 
@@ -126,7 +144,7 @@ No standard layer folder is mandatory. Each feature includes only the layers it 
 - These folders are acceptable because they describe purpose, not because they are default folder types
 - A purpose folder is a boundary for one concern, not a flat container for multiple unrelated leaf implementations
 - Keep only purpose-wide coordination or shared artifacts at the root of a purpose folder and move narrower responsibilities into child folders
-- Mapping files still use the `.util.ts` suffix even when grouped under `mappers/`
+- Mapping files must use the `.mapper.ts` suffix; placement under a `mappers/` folder is recommended but not required
 
 ### Infrastructure Module (`infrastructure/`)
 

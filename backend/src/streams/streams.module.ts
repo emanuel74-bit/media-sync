@@ -14,6 +14,8 @@ import {
     StreamStatusService,
     StreamProvisioningService,
     StreamLifecycleService,
+    StreamAssignmentPolicy,
+    HashStreamAssignmentPolicy,
 } from "./services";
 
 @Module({
@@ -30,6 +32,7 @@ import {
         StreamStatusService,
         StreamLifecycleService,
         { provide: StreamRepository, useClass: MongoStreamRepository },
+        { provide: StreamAssignmentPolicy, useClass: HashStreamAssignmentPolicy },
     ],
     controllers: [StreamsController],
     exports: [
