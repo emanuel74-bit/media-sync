@@ -37,7 +37,6 @@
 - A file that selects among candidates or evaluates whether a business rule holds must use `.policy.ts`, not `.util.ts`
 - A file that constructs a higher-level object from inputs (especially when defaults, timestamps, or identifiers are involved) must use `.factory.ts`, not `.util.ts`
 - A file that is pure, stateless, and does not represent one of the above primary roles may use `.util.ts`
-- A file that routes to multiple type-specific implementations via a `switch` or equivalent construct is a **dispatcher**; dispatchers must use `.service.ts` and be registered in the DI container — never `.util.ts`
 - Adding a new suffix requires a definition row in this table, a placement rule, a DI expectation, and at least one example
 
 #### DI Expectations by Suffix
@@ -45,7 +44,7 @@
 - `.mapper.ts` — pure functions or classes; provider registration is not required unless the mapper has injected dependencies
 - `.policy.ts` — may be a pure class or injectable; must be injectable when multiple implementations exist and selection is via DI
 - `.factory.ts` — may be a pure class with static methods or injectable; must be injectable only when the factory has injected dependencies
-- `.util.ts` — never injectable; always called directly as a pure function; must contain no dispatch logic, no `switch` over a type discriminant, and no module-level class instantiation
+- `.util.ts` — never injectable; always called directly as a pure function
 
 #### Interfaces
 
@@ -196,9 +195,6 @@ Guidelines:
 - Circular dependencies
 - Hidden or implicit dependencies
 - Global mutable state
-- Module-level class instantiation outside the DI container; any object that coordinates multiple sub-implementations must be an injectable service
-- Dispatch logic (type-based routing to multiple implementations via `switch` or equivalent) inside a `.util.ts` file
-- Two files that construct the same output type from the same inputs; when a factory and a util both build the same record, the util must be deleted and all callers must use the factory
 
 ---
 
@@ -299,7 +295,6 @@ Type locations:
 - Do not duplicate logic
 - Extract shared behavior into named units
 - Prefer pure, reusable functions
-- Null/default guards for optional inputs must be owned once, at the point closest to the domain boundary; when multiple callers repeat the same guard before delegating to a shared function, that guard must be absorbed into the function or its owning service — not duplicated at call sites
 
 ---
 
