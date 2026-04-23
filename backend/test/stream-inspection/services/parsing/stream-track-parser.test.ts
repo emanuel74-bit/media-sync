@@ -11,15 +11,6 @@ import { parseTracksFromPathItem } from "@/stream-inspection";
 describe("VideoTrackParser", () => {
     const parser = new VideoTrackParser();
 
-    it("recognises the 'video' type", () => {
-        expect(parser.canParse("video")).toBe(true);
-    });
-
-    it("rejects non-video types", () => {
-        expect(parser.canParse("audio")).toBe(false);
-        expect(parser.canParse("data")).toBe(false);
-    });
-
     it("parses a video track into a StreamTrack", () => {
         const track: V3TrackItem = {
             type: "video",
@@ -48,14 +39,6 @@ describe("VideoTrackParser", () => {
 describe("AudioTrackParser", () => {
     const parser = new AudioTrackParser();
 
-    it("recognises the 'audio' type", () => {
-        expect(parser.canParse("audio")).toBe(true);
-    });
-
-    it("rejects non-audio types", () => {
-        expect(parser.canParse("video")).toBe(false);
-    });
-
     it("parses an audio track", () => {
         const track: V3TrackItem = {
             type: "audio",
@@ -78,10 +61,6 @@ describe("AudioTrackParser", () => {
 describe("DataTrackParser", () => {
     const parser = new DataTrackParser();
 
-    it("recognises the 'data' type", () => {
-        expect(parser.canParse("data")).toBe(true);
-    });
-
     it("parses a data track", () => {
         const track: V3TrackItem = { type: "data", codec: "SCTE35" };
         const result = parser.parse(track);
@@ -91,10 +70,6 @@ describe("DataTrackParser", () => {
 
 describe("SubtitleTrackParser", () => {
     const parser = new SubtitleTrackParser();
-
-    it("recognises the 'subtitle' type", () => {
-        expect(parser.canParse("subtitle")).toBe(true);
-    });
 
     it("parses a subtitle track", () => {
         const track: V3TrackItem = { type: "subtitle", codec: "SRT", language: "fr" };

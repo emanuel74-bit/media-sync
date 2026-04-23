@@ -1,27 +1,31 @@
-import { StreamTrack } from "@/common";
+import { StreamTrack, TrackType } from "@/common";
 import { V3PathItem } from "@/infrastructure";
 
 import { DataTrackParser } from "./data";
 import { VideoTrackParser } from "./video";
 import { AudioTrackParser } from "./audio";
 import { SubtitleTrackParser } from "./subtitle";
-import { TrackParser } from "./track-parser.types";
 
-const TRACK_PARSERS: TrackParser[] = [
-    new VideoTrackParser(),
-    new AudioTrackParser(),
-    new DataTrackParser(),
-    new SubtitleTrackParser(),
-];
+const videoParser = new VideoTrackParser();
+const audioParser = new AudioTrackParser();
+const dataParser = new DataTrackParser();
+const subtitleParser = new SubtitleTrackParser();
 
 export function parseTracksFromPathItem(item: V3PathItem): StreamTrack[] {
     return (item.tracks ?? [])
         .map((track) => {
-            const parser = TRACK_PARSERS.find((p) => p.canParse(track.type));
-            if (!parser) {
-                return null;
+            switch (track.type) {
+                case TrackType.VIDEO:
+                    return videoParser.parse(track);
+                case TrackType.AUDIO:
+                    return audioParser.parse(track);
+                case TrackType.DATA:
+                    return dataParser.parse(track);
+                case TrackType.SUBTITLE:
+                    return subtitleParser.parse(track);
+                default:
+                    return null;
             }
-            return parser.parse(track);
         })
         .filter((t): t is StreamTrack => t !== null);
 }

@@ -6,5 +6,4 @@ export * from "./data";
 export * from "./audio";
 export * from "./video";
 export * from "./subtitle";
-export * from "./track-parser.types";
 export * from "./stream-track-parser.util";

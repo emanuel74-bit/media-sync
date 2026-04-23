@@ -1,13 +1,7 @@
 import { V3TrackItem } from "@/infrastructure";
 import { StreamTrack, TrackType } from "@/common";
 
-import { TrackParser } from "../track-parser.types";
-
-export class AudioTrackParser implements TrackParser {
-    canParse(type: string): boolean {
-        return type === TrackType.AUDIO;
-    }
-
+export class AudioTrackParser {
     parse(track: V3TrackItem): StreamTrack {
         return {
             type: TrackType.AUDIO,
