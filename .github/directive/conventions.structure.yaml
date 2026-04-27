@@ -1,165 +1,341 @@
-evaluation_order:
-    - classify_folder_by_depth
-    - classify_domain_or_usecase_or_variant
-    - validate_absolute_rules
-    - validate_execution_constraints
-    - validate_structure_hierarchy
-    - validate_folder_purity
-    - validate_public_api_exposure
-    - validate_barrel_exports
-    - validate_heuristics
+architecture_contract_v3:
+    meta:
+        intent:
+            - maximize_readability
+            - maximize_discoverability
+            - maximize_maintainability
+            - enforce_strict_separation_of_concerns
 
-hierarchy_model:
-    depth_rules:
-        depth_1:
-            name: root_feature
-            definition: "single domain concept"
-        depth_2:
-            name: use_case_flow
-            definition: "single use-case execution flow under domain"
-        depth_3_plus:
-            name: sub_use_case_flow
-            definition: "decomposition of a use-case flow"
+        enforcement_mode: "strict"
+        ambiguity_policy: "fail_closed"
 
-classification_rules:
-    root_feature:
-        condition: "path_depth == 1"
+    evaluation_order:
+        - classify_folder_by_depth
+        - classify_domain_or_usecase_or_variant
+        - validate_absolute_rules
+        - validate_execution_constraints
+        - validate_structure_hierarchy
+        - validate_folder_purity
+        - validate_public_api_exposure
+        - validate_barrel_exports
+        - validate_naming_and_discoverability
+        - validate_module_isolation
+        - validate_layer_responsibility
+        - validate_heuristics
 
-    use_case:
-        condition: "path_depth == 2"
+    # ----------------------------------------
+    # HIERARCHY MODEL (PRIMARY STRUCTURE)
+    # ----------------------------------------
 
-    sub_use_case:
-        condition: "path_depth >= 3"
+    hierarchy_model:
+        depth_rules:
+            depth_1:
+                name: root_feature
+                definition: "single domain concept (business capability)"
 
-variant_model:
-    definition: "execution-path divergence within same use-case flow"
+            depth_2:
+                name: use_case_flow
+                definition: "single use-case execution flow under a domain"
 
-    detection:
-        positive_signals:
-            - "same use-case parent folder"
-            - "different execution implementation path"
-        negative_signals:
-            - "different domain concept"
-            - "different use-case intent"
+            depth_3_plus:
+                name: sub_use_case_flow
+                definition: "decomposition of a use-case or internal flow segmentation"
 
-execution_constraints:
-    infrastructure_logic:
-        definition: "any runtime IO or side-effect execution"
-        detects:
-            - "database operations"
-            - "http requests"
-            - "filesystem access"
-            - "message broker interaction"
-            - "external sdk execution"
+    classification_rules:
+        root_feature:
+            condition: "path_depth == 1"
 
-    domain_rules:
+        use_case:
+            condition: "path_depth == 2"
+
+        sub_use_case:
+            condition: "path_depth >= 3"
+
+    # ----------------------------------------
+    # VARIANT MODEL
+    # ----------------------------------------
+
+    variant_model:
+        definition: "execution-path divergence within same use-case"
+
+        detection:
+            positive_signals:
+                - "same use-case parent folder"
+                - "different execution implementation path"
+
+            negative_signals:
+                - "different domain concept"
+                - "different use-case intent"
+
+    variant_rules:
+        placement:
+            rule: "variants MUST exist only under use-case folders"
+
+        constraint:
+            must:
+                - "share same use-case intent"
+                - "differ only in execution-path implementation"
+
+    # ----------------------------------------
+    # EXECUTION CONSTRAINTS (CLEAN ARCHITECTURE CORE)
+    # ----------------------------------------
+
+    execution_constraints:
+        infrastructure_logic:
+            definition: "any runtime IO or side-effect execution"
+
+            detects:
+                - "database operations"
+                - "http requests"
+                - "filesystem access"
+                - "message broker interaction"
+                - "external sdk execution"
+
+        domain_rules:
+            must_not:
+                - "contain infrastructure_logic"
+                - "perform side effects"
+                - "depend on infrastructure modules"
+                - "import frameworks"
+
+    # ----------------------------------------
+    # FEATURE MODULE MODEL (MD MERGE)
+    # ----------------------------------------
+
+    feature_module_model:
+        applies_to: "root_feature"
+
+        required_subfolders:
+            - "controllers"
+            - "services"
+            - "domain"
+            - "repositories"
+            - "dto"
+            - "mappers"
+
+        rules:
+            - "structure MUST reflect business capability, not technical grouping"
+            - "each module MUST be independently understandable"
+            - "modules MUST scale linearly without coupling"
+
+    # ----------------------------------------
+    # LAYER RULES (INTERNAL MODULE STRUCTURE)
+    # ----------------------------------------
+
+    layer_rules:
+        controllers:
+            responsibility: "transport layer (http, rpc, etc)"
+            must_not:
+                - "contain business logic"
+                - "access repositories directly"
+
+        services:
+            responsibility: "use-case orchestration"
+            constraints:
+                - "must be small and composable"
+                - "single use-case per service preferred"
+
+            must_not:
+                - "contain infrastructure implementation details"
+
+        repositories:
+            responsibility: "persistence abstraction"
+
+            must:
+                - "encapsulate all database logic"
+                - "hide ORM or DB details"
+
+            must_not:
+                - "contain business logic"
+                - "be used outside services"
+
+        domain:
+            responsibility: "pure business logic"
+
+            allowed_content:
+                - "entities"
+                - "value objects"
+                - "enums"
+                - "types"
+                - "pure functions"
+
+            forbidden:
+                - "side effects"
+                - "framework imports"
+                - "infrastructure access"
+
+        dto:
+            responsibility: "external data contracts"
+
+        mappers:
+            responsibility: "data transformation between layers"
+
+    # ----------------------------------------
+    # INFRASTRUCTURE LAYER (GLOBAL)
+    # ----------------------------------------
+
+    infrastructure_rules:
+        location: "infrastructure/"
+
+        rule: "ALL IO and side effects MUST be implemented here"
+
         must_not:
-            - "contain execution_constraints.infra_logic"
-            - "perform side effects"
-            - "depend on infrastructure modules"
+            - "contain business logic"
+            - "leak into domain or use-case layers"
 
-folder_rules:
-    single_purpose:
-        rule: "each folder MUST resolve to exactly one classification result"
-        violation: "multiple classification matches"
+    # ----------------------------------------
+    # FOLDER RULES
+    # ----------------------------------------
 
-    naming_alignment:
-        rule: "folder name MUST reflect responsibility inferred from structure"
+    folder_rules:
+        single_purpose:
+            rule: "each folder MUST resolve to exactly one classification"
+            violation: "multiple classification matches"
 
-feature_root_rules:
-    definition: "depth_1 folder"
+        naming_alignment:
+            rule: "folder and file names MUST reflect exact responsibility"
 
-    must:
-        - "act as hybrid facade + orchestrator"
-        - "expose full feature API"
-        - "compose submodules only"
+        no_generic_names:
+            forbidden:
+                - "utils"
+                - "helpers"
+                - "common"
 
-    must_not:
-        - "implement domain logic"
-        - "implement use-case logic"
-        - "implement variant logic"
+    purpose_folders:
+        allowed:
+            - "mappers"
+            - "policies"
+            - "registry"
+            - "events"
+            - "lifecycle"
 
-variant_rules:
-    placement:
-        rule: "variant folders MUST exist only under use-case folders"
+        rule: "each MUST represent exactly one concern"
 
-    constraint:
+        must_not:
+            - "contain mixed responsibilities"
+            - "act as dumping ground"
+
+    # ----------------------------------------
+    # FILE RULES
+    # ----------------------------------------
+
+    file_rules:
+        single_responsibility:
+            rule: "one file MUST have one responsibility"
+
+        single_export:
+            rule: "one primary export per file"
+
+        naming:
+            rule: "file name MUST describe exact behavior"
+
+        size_constraint:
+            rule: "files MUST remain small and focused"
+
+    # ----------------------------------------
+    # PUBLIC API + EXPORT SYSTEM
+    # ----------------------------------------
+
+    public_api_model:
+        rule: "ONLY index.ts defines public API"
+
+        model:
+            type: "hybrid"
+
+            behavior:
+                - "explicit exports define public surface"
+                - "re-exports allowed"
+                - "no implicit exports"
+
+    barrel_exports:
+        required: true
+
+        rules:
+            - "every folder MUST contain index.ts"
+            - "index.ts MUST export all public members"
+            - "export order MUST be shortest-path to longest-path"
+
+    # ----------------------------------------
+    # MODULE ISOLATION (CROSS-MODULE RULES)
+    # ----------------------------------------
+
+    module_isolation:
+        communication:
+            allowed:
+                - "services"
+                - "interfaces"
+
+            forbidden:
+                - "direct internal file imports across modules"
+                - "bypassing service boundaries"
+
+    # ----------------------------------------
+    # ROOT FEATURE RULES
+    # ----------------------------------------
+
+    feature_root_rules:
+        definition: "depth_1 folder"
+
         must:
-            - "share same use-case intent"
-            - "differ only in execution-path implementation"
+            - "act as facade"
+            - "compose submodules"
+            - "expose full feature API"
 
-domain_rules:
-    location:
-        rule: "must reside in domain/ at any depth_1 or depth_2 feature scope"
+        must_not:
+            - "implement domain logic"
+            - "implement use-case logic"
+            - "implement variant logic"
 
-    allowed_content:
-        - "enums"
-        - "types"
-        - "consts"
-        - "entity definitions (.domain.ts)"
+    # ----------------------------------------
+    # TYPE ORGANIZATION
+    # ----------------------------------------
 
-    forbidden:
-        - "execution logic"
-        - "framework imports"
-        - "infrastructure access"
+    type_rules:
+        location:
+            allowed:
+                - "types/"
+                - "dto/"
 
-infrastructure_rules:
-    location: "infrastructure/"
-    rule: "all IO and side-effect execution must be here"
+        rule: "no inline or scattered type definitions"
 
-    must_not:
-        - "contain business logic"
-        - "leak into domain or use-case folders"
+    # ----------------------------------------
+    # SHARED CODE RULES
+    # ----------------------------------------
 
-purpose_folders:
-    allowed:
-        - "mappers"
-        - "policies"
-        - "registry"
-        - "events"
-        - "lifecycle"
+    shared_code_rules:
+        allowed:
+            - "cross-cutting concerns"
+            - "truly generic utilities"
 
-    rule: "must represent exactly one concern"
+        must_not:
+            - "become dumping ground"
+            - "contain mixed domain logic"
 
-    must_not:
-        - "contain mixed responsibilities"
-        - "act as generic containers"
+    # ----------------------------------------
+    # VIOLATION ENGINE
+    # ----------------------------------------
 
-public_api_model:
-    rule: "ONLY index.ts defines public API"
+    violation_engine:
+        output_schema:
+            must_include:
+                - "rule_id"
+                - "path"
+                - "detected_signal"
+                - "expected_state"
+                - "actual_state"
+                - "explanation"
 
-    model:
-        type: "hybrid"
-        behavior:
-            - "explicit exports define public surface"
-            - "re-exports allowed for composition"
-            - "no implicit exports exist"
+        failure_mode:
+            ambiguity: "fail_closed"
+            multiple_matches: "violation"
 
-barrel_exports:
-    required: true
+    # ----------------------------------------
+    # HEURISTICS
+    # ----------------------------------------
 
-    rules:
-        - "every folder MUST contain index.ts"
-        - "index.ts MUST export all public members"
-        - "export ordering MUST be shortest-path to longest-path"
+    heuristic_rules:
+        stopping_condition:
+            definition: "structure is valid when no file fits better elsewhere"
 
-violation_engine:
-    output_schema:
-        must_include:
-            - "rule_id"
-            - "path"
-            - "detected_signal"
-            - "expected_state"
-            - "actual_state"
-            - "explanation"
-
-    failure_mode:
-        ambiguity: "fail closed"
-        multiple_matches: "violation"
-
-heuristic_rules:
-    stopping_condition:
-        definition: "structure is valid when no file fits better elsewhere"
-
-    warning_only:
-        - "further splitting not required if single responsibility is clear"
+        warnings:
+            - "no further splitting required if SRP is satisfied"
