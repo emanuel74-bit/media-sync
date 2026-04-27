@@ -1,0 +1,165 @@
+evaluation_order:
+    - classify_folder_by_depth
+    - classify_domain_or_usecase_or_variant
+    - validate_absolute_rules
+    - validate_execution_constraints
+    - validate_structure_hierarchy
+    - validate_folder_purity
+    - validate_public_api_exposure
+    - validate_barrel_exports
+    - validate_heuristics
+
+hierarchy_model:
+    depth_rules:
+        depth_1:
+            name: root_feature
+            definition: "single domain concept"
+        depth_2:
+            name: use_case_flow
+            definition: "single use-case execution flow under domain"
+        depth_3_plus:
+            name: sub_use_case_flow
+            definition: "decomposition of a use-case flow"
+
+classification_rules:
+    root_feature:
+        condition: "path_depth == 1"
+
+    use_case:
+        condition: "path_depth == 2"
+
+    sub_use_case:
+        condition: "path_depth >= 3"
+
+variant_model:
+    definition: "execution-path divergence within same use-case flow"
+
+    detection:
+        positive_signals:
+            - "same use-case parent folder"
+            - "different execution implementation path"
+        negative_signals:
+            - "different domain concept"
+            - "different use-case intent"
+
+execution_constraints:
+    infrastructure_logic:
+        definition: "any runtime IO or side-effect execution"
+        detects:
+            - "database operations"
+            - "http requests"
+            - "filesystem access"
+            - "message broker interaction"
+            - "external sdk execution"
+
+    domain_rules:
+        must_not:
+            - "contain execution_constraints.infra_logic"
+            - "perform side effects"
+            - "depend on infrastructure modules"
+
+folder_rules:
+    single_purpose:
+        rule: "each folder MUST resolve to exactly one classification result"
+        violation: "multiple classification matches"
+
+    naming_alignment:
+        rule: "folder name MUST reflect responsibility inferred from structure"
+
+feature_root_rules:
+    definition: "depth_1 folder"
+
+    must:
+        - "act as hybrid facade + orchestrator"
+        - "expose full feature API"
+        - "compose submodules only"
+
+    must_not:
+        - "implement domain logic"
+        - "implement use-case logic"
+        - "implement variant logic"
+
+variant_rules:
+    placement:
+        rule: "variant folders MUST exist only under use-case folders"
+
+    constraint:
+        must:
+            - "share same use-case intent"
+            - "differ only in execution-path implementation"
+
+domain_rules:
+    location:
+        rule: "must reside in domain/ at any depth_1 or depth_2 feature scope"
+
+    allowed_content:
+        - "enums"
+        - "types"
+        - "consts"
+        - "entity definitions (.domain.ts)"
+
+    forbidden:
+        - "execution logic"
+        - "framework imports"
+        - "infrastructure access"
+
+infrastructure_rules:
+    location: "infrastructure/"
+    rule: "all IO and side-effect execution must be here"
+
+    must_not:
+        - "contain business logic"
+        - "leak into domain or use-case folders"
+
+purpose_folders:
+    allowed:
+        - "mappers"
+        - "policies"
+        - "registry"
+        - "events"
+        - "lifecycle"
+
+    rule: "must represent exactly one concern"
+
+    must_not:
+        - "contain mixed responsibilities"
+        - "act as generic containers"
+
+public_api_model:
+    rule: "ONLY index.ts defines public API"
+
+    model:
+        type: "hybrid"
+        behavior:
+            - "explicit exports define public surface"
+            - "re-exports allowed for composition"
+            - "no implicit exports exist"
+
+barrel_exports:
+    required: true
+
+    rules:
+        - "every folder MUST contain index.ts"
+        - "index.ts MUST export all public members"
+        - "export ordering MUST be shortest-path to longest-path"
+
+violation_engine:
+    output_schema:
+        must_include:
+            - "rule_id"
+            - "path"
+            - "detected_signal"
+            - "expected_state"
+            - "actual_state"
+            - "explanation"
+
+    failure_mode:
+        ambiguity: "fail closed"
+        multiple_matches: "violation"
+
+heuristic_rules:
+    stopping_condition:
+        definition: "structure is valid when no file fits better elsewhere"
+
+    warning_only:
+        - "further splitting not required if single responsibility is clear"

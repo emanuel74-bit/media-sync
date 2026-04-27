@@ -1,0 +1,568 @@
+version: 1.0
+
+evaluation_order:
+    - determine_responsibility
+    - classify_file_role
+    - assign_suffix
+    - enforce_rules
+    - apply_di_rules
+
+determine_responsibility:
+    description: >
+        Infer responsibility using observable signals in code structure,
+        imports, decorators, naming patterns, and side-effect presence.
+
+    signals:
+        side_effects:
+            indicators:
+                - network_calls
+                - database_calls
+                - file_system_access
+                - external_api_usage
+
+        pure_function:
+            indicators:
+                - deterministic_output
+                - no_external_mutation
+                - no_io_operations
+
+        transformation:
+            indicators:
+                - maps_input_to_different_output_shape
+                - naming_pattern: ["to*", "from*", "map*"]
+
+        normalization:
+            indicators:
+                - same_shape_output
+                - value_cleanup_only
+
+        decision_logic:
+            indicators:
+                - returns_boolean_or_score
+                - naming_pattern: ["is*", "has*", "should*", "can*"]
+
+        object_construction:
+            indicators:
+                - creates_new_instances
+                - applies_defaults_or_invariants
+                - naming_pattern: ["create*", "build*"]
+
+        orchestration:
+            indicators:
+                - calls_multiple_dependencies
+                - contains_flow_control
+                - sequences_operations
+
+        external_communication:
+            indicators:
+                - http_client_usage
+                - sdk_calls
+                - third_party_integration
+
+        persistence:
+            indicators:
+                - orm_usage
+                - query_builder
+                - database_schema_definition
+
+        http_layer:
+            indicators:
+                - controller_decorators
+                - route_handlers
+
+        module_definition:
+            indicators:
+                - module_decorator
+                - providers_controllers_exports
+
+        event_handling:
+            indicators:
+                - event_subscription
+                - event_emission
+
+        type_only:
+            indicators:
+                - typescript_types_only
+                - no_runtime_code
+
+        static_values:
+            indicators:
+                - constants_only
+                - no_functions
+
+        enum_definition:
+            indicators:
+                - finite_named_values
+
+        class_behavior:
+            indicators:
+                - entity_identity
+                - internal_state_methods
+
+---
+classify_file_role:
+    strategy: first_match_wins
+
+    rules:
+        # --- Framework / Structural (highest certainty) ---
+
+        - match:
+              module_definition: true
+          suffix: ".module.ts"
+
+        - match:
+              http_layer: true
+          suffix: ".controller.ts"
+
+        - match:
+              persistence: true
+              subtype: schema
+          suffix: ".schema.ts"
+
+        - match:
+              persistence: true
+              subtype: repository
+          suffix: ".repository.ts"
+
+        # --- External Systems ---
+
+        - match:
+              external_communication: true
+          suffix: ".client.ts"
+
+        # --- Events ---
+
+        - match:
+              event_handling: emit
+          suffix: ".publisher.ts"
+
+        - match:
+              event_handling: listen
+          suffix: ".listener.ts"
+
+        - match:
+              event_handling: definition
+          suffix: ".event.ts"
+
+        # --- Domain & Structure ---
+
+        - match:
+              class_behavior: true
+          suffix: ".domain.ts"
+
+        - match:
+              type_only: true
+          suffix: ".types.ts"
+
+        - match:
+              enum_definition: true
+          suffix: ".enum.ts"
+
+        - match:
+              static_values: true
+          suffix: ".const.ts"
+
+        - match:
+              http_layer: dto
+          suffix: ".dto.ts"
+
+        - match:
+              configuration: true
+          suffix: ".config.ts"
+
+        - match:
+              error_definition: true
+          suffix: ".error.ts"
+
+        # --- Transformation Layer ---
+
+        - match:
+              transformation: true
+              pure_function: true
+          suffix: ".mapper.ts"
+
+        - match:
+              normalization: true
+          suffix: ".normalizer.ts"
+
+        - match:
+              formatting: true
+          suffix: ".formatter.ts"
+
+        # --- Decision Layer ---
+
+        - match:
+              decision_logic: true
+              composable: true
+          suffix: ".specification.ts"
+
+        - match:
+              decision_logic: true
+              selection: true
+          suffix: ".selector.ts"
+
+        - match:
+              decision_logic: true
+          suffix: ".policy.ts"
+
+        - match:
+              authorization: true
+          suffix: ".guard.ts"
+
+        - match:
+              validation: true
+          suffix: ".validator.ts"
+
+        # --- Construction Layer ---
+
+        - match:
+              object_construction: true
+              staged: true
+          suffix: ".builder.ts"
+
+        - match:
+              object_construction: true
+          suffix: ".factory.ts"
+
+        # --- Strategy / Resolution ---
+
+        - match:
+              strategy_pattern: true
+          suffix: ".strategy.ts"
+
+        - match:
+              dynamic_resolution: true
+          suffix: ".resolver.ts"
+
+        - match:
+              interface_adaptation: true
+          suffix: ".adapter.ts"
+
+        # --- Application Flow ---
+
+        - match:
+              orchestration: true
+              single_action: true
+          suffix: ".use-case.ts"
+
+        - match:
+              orchestration: true
+          suffix: ".orchestrator.ts"
+
+        # --- Core Business Logic ---
+
+        - match:
+              side_effects: true
+          suffix: ".service.ts"
+
+        # --- Final Fallback ---
+
+        - match:
+              pure_function: true
+          suffix: ".util.ts"
+---
+assign_suffix:
+    rule: >
+        Assign the suffix from the first matched classification rule.
+        Do not evaluate further rules after a match.
+
+    constraints:
+        - exactly_one_suffix_required
+        - no_multiple_matches_allowed
+---
+enforce_rules:
+    mapper:
+        must:
+            - pure_function
+            - no_side_effects
+            - deterministic_output
+            - no_dependency_on_external_state
+
+    policy:
+        must:
+            - no_external_mutation
+            - pure_evaluation_logic
+            - returns_decision_only
+
+    specification:
+        must:
+            - pure_evaluation_logic
+            - composable
+            - no_side_effects
+
+    selector:
+        must:
+            - returns_single_choice
+            - no_side_effects
+            - minimal_logic_complexity
+
+    factory:
+        must:
+            - explicit_defaults
+            - explicit_construction_rules
+            - no_hidden_state
+
+    builder:
+        must:
+            - supports_incremental_construction
+            - exposes_build_method
+            - maintains_internal_state_only_until_build
+
+    util:
+        must:
+            - no_business_logic
+            - no_side_effects
+            - no_dependency_injection
+            - generic_reusability
+
+    service:
+        must:
+            - owns_side_effects
+            - handles_orchestration
+            - may_coordinate_multiple_dependencies
+        must_not:
+            - act_as_mapper
+            - act_as_policy
+            - act_as_factory
+
+    use-case:
+        must:
+            - represent_single_action
+            - have_single_entrypoint_method
+            - orchestrate_dependencies_for_one_outcome
+        must_not:
+            - expose_multiple_unrelated_methods
+            - contain_low_level_util_logic
+
+    orchestrator:
+        must:
+            - coordinate_multiple_steps
+            - manage_execution_flow
+        must_not:
+            - contain_core_business_rules
+            - perform_direct_data_transformation
+
+    validator:
+        must:
+            - validate_input_or_state
+            - return_validation_result_or_errors
+            - no_side_effects
+        must_not:
+            - mutate_input
+            - construct_objects
+
+    guard:
+        must:
+            - evaluate_authorization
+            - depend_on_context_or_identity
+            - return_allow_or_deny
+        must_not:
+            - execute_business_logic
+            - perform_side_effects
+
+    adapter:
+        must:
+            - translate_interfaces
+            - wrap_underlying_dependency
+        must_not:
+            - introduce_business_logic
+            - change_domain_meaning
+
+    resolver:
+        must:
+            - resolve_correct_implementation_or_value
+            - be_deterministic_for_same_input
+        must_not:
+            - perform_side_effects
+
+    strategy:
+        must:
+            - implement_shared_contract
+            - provide_interchangeable_behavior
+        must_not:
+            - depend_on_concrete_strategy_selection_logic
+
+    normalizer:
+        must:
+            - preserve_shape
+            - clean_or_standardize_values
+            - no_side_effects
+
+    formatter:
+        must:
+            - prepare_data_for_output
+            - not alter_domain_meaning
+            - no_side_effects
+
+    client:
+        must:
+            - encapsulate_external_calls
+            - handle_request_and_response_mapping
+        must_not:
+            - contain_business_logic
+
+    repository:
+        must:
+            - encapsulate_data_access
+            - expose_persistence_operations
+        must_not:
+            - contain_business_logic
+
+    schema:
+        must:
+            - define_data_structure
+            - include_constraints_and_fields
+        must_not:
+            - contain_runtime_logic
+
+    controller:
+        must:
+            - handle_transport_layer
+            - delegate_to_application_layer
+        must_not:
+            - contain_business_logic
+
+    module:
+        must:
+            - define_dependency_graph
+            - register_providers_and_controllers
+        must_not:
+            - contain_runtime_logic
+
+    dto:
+        must:
+            - define_transport_shape
+            - include_validation_rules_if_applicable
+        must_not:
+            - contain_business_logic
+
+    domain:
+        must:
+            - encapsulate_identity
+            - enforce_invariants
+            - contain_behavior_related_to_entity
+        must_not:
+            - depend_on_infrastructure
+
+    event:
+        must:
+            - be_immutable
+            - represent_past_occurrence
+        must_not:
+            - contain_behavior
+
+    listener:
+        must:
+            - react_to_event
+            - trigger_side_effects_or_use_cases
+        must_not:
+            - define_event_structure
+
+    publisher:
+        must:
+            - emit_events
+            - abstract_event_dispatching
+        must_not:
+            - contain_business_logic
+
+    config:
+        must:
+            - define_configuration_values
+            - be_environment_resolvable
+        must_not:
+            - contain_behavior
+
+    error:
+        must:
+            - extend_error_type
+            - define_error_context
+        must_not:
+            - contain_business_logic
+---
+dependency_injection:
+    util:
+        injectable: false
+
+    mapper:
+        injectable_if:
+            - has_dependencies
+
+    policy:
+        injectable_if:
+            - multiple_implementations
+
+    specification:
+        injectable: false
+
+    selector:
+        injectable: false
+
+    factory:
+        injectable_if:
+            - has_dependencies
+
+    builder:
+        injectable: false
+
+    validator:
+        injectable: false
+
+    guard:
+        injectable: true
+
+    adapter:
+        injectable: true
+
+    resolver:
+        injectable: true
+
+    strategy:
+        injectable: true
+
+    normalizer:
+        injectable: false
+
+    formatter:
+        injectable: false
+
+    use-case:
+        injectable: true
+
+    orchestrator:
+        injectable: true
+
+    service:
+        injectable: true
+
+    client:
+        injectable: true
+
+    repository:
+        injectable: true
+
+    listener:
+        injectable: true
+
+    publisher:
+        injectable: true
+
+    controller:
+        injectable: true
+
+    module:
+        injectable: false
+
+    dto:
+        injectable: false
+
+    domain:
+        injectable: false
+
+    event:
+        injectable: false
+
+    config:
+        injectable: true
+
+    error:
+        injectable: false
