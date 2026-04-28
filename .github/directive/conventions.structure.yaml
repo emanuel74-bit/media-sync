@@ -1,341 +1,367 @@
-architecture_contract_v3:
+architecture_contract_v5:
     meta:
-        intent:
-            - maximize_readability
-            - maximize_discoverability
-            - maximize_maintainability
-            - enforce_strict_separation_of_concerns
+        role: "senior_software_architect"
+        objective: >
+            Deterministically design and enforce a production-grade codebase
+            using strict layering, intent-driven decomposition, and enforceable constraints.
+
+        philosophy:
+            - "Decomposition precedes structure"
+            - "Intent defines artifact"
+            - "No ambiguity allowed"
+            - "Consistency over convenience"
+            - "Design must be derivable, not guessed"
+            - "structure reflects business capabilities"
+            - "strict separation of concerns"
+            - "small, focused, composable units only"
 
         enforcement_mode: "strict"
         ambiguity_policy: "fail_closed"
 
+    # =========================================================
+    # GLOBAL PRINCIPLES
+    # =========================================================
+
+    global_principles:
+        must:
+            - "single_responsibility_principle"
+            - "high_cohesion"
+            - "low_coupling"
+            - "feature_based_structure"
+            - "strict_module_boundaries"
+            - "explicit_naming"
+            - "independent_modules"
+
+        guarantees:
+            - "developer_can_locate_any_feature_in_seconds"
+            - "no_prior_knowledge_required_to_navigate"
+            - "linear_scalability_of_structure"
+
+    # =========================================================
+    # EVALUATION PIPELINE
+    # =========================================================
+
     evaluation_order:
+        - classify_feature_modules
+        - validate_feature_based_structure
         - classify_folder_by_depth
-        - classify_domain_or_usecase_or_variant
-        - validate_absolute_rules
+        - validate_layer_assignment
+        - validate_internal_module_structure
+        - validate_dependency_graph
+        - validate_data_flow
         - validate_execution_constraints
-        - validate_structure_hierarchy
-        - validate_folder_purity
-        - validate_public_api_exposure
-        - validate_barrel_exports
-        - validate_naming_and_discoverability
-        - validate_module_isolation
-        - validate_layer_responsibility
+        - validate_cross_module_rules
+        - validate_file_rules
+        - validate_naming
+        - validate_shared_code
+        - validate_scalability
+        - detect_anti_patterns
         - validate_heuristics
 
-    # ----------------------------------------
-    # HIERARCHY MODEL (PRIMARY STRUCTURE)
-    # ----------------------------------------
+    # =========================================================
+    # FEATURE-BASED ORGANIZATION
+    # =========================================================
 
-    hierarchy_model:
-        depth_rules:
-            depth_1:
-                name: root_feature
-                definition: "single domain concept (business capability)"
+    feature_structure:
+        rule: "Each module represents a distinct business capability"
 
-            depth_2:
-                name: use_case_flow
-                definition: "single use-case execution flow under a domain"
-
-            depth_3_plus:
-                name: sub_use_case_flow
-                definition: "decomposition of a use-case or internal flow segmentation"
-
-    classification_rules:
-        root_feature:
-            condition: "path_depth == 1"
-
-        use_case:
-            condition: "path_depth == 2"
-
-        sub_use_case:
-            condition: "path_depth >= 3"
-
-    # ----------------------------------------
-    # VARIANT MODEL
-    # ----------------------------------------
-
-    variant_model:
-        definition: "execution-path divergence within same use-case"
+        constraints:
+            - "Modules MUST be independently understandable"
+            - "Modules MUST be independently testable"
+            - "No implicit cross-module coupling"
 
         detection:
-            positive_signals:
-                - "same use-case parent folder"
-                - "different execution implementation path"
+            positive:
+                - "top-level folders represent domains"
+            negative:
+                - "top-level folders named by technical type"
 
-            negative_signals:
-                - "different domain concept"
-                - "different use-case intent"
+        violation:
+            - "structure organized by technical type"
 
-    variant_rules:
-        placement:
-            rule: "variants MUST exist only under use-case folders"
+    # =========================================================
+    # MODULE STRUCTURE
+    # =========================================================
 
-        constraint:
-            must:
-                - "share same use-case intent"
-                - "differ only in execution-path implementation"
-
-    # ----------------------------------------
-    # EXECUTION CONSTRAINTS (CLEAN ARCHITECTURE CORE)
-    # ----------------------------------------
-
-    execution_constraints:
-        infrastructure_logic:
-            definition: "any runtime IO or side-effect execution"
-
-            detects:
-                - "database operations"
-                - "http requests"
-                - "filesystem access"
-                - "message broker interaction"
-                - "external sdk execution"
-
-        domain_rules:
-            must_not:
-                - "contain infrastructure_logic"
-                - "perform side effects"
-                - "depend on infrastructure modules"
-                - "import frameworks"
-
-    # ----------------------------------------
-    # FEATURE MODULE MODEL (MD MERGE)
-    # ----------------------------------------
-
-    feature_module_model:
-        applies_to: "root_feature"
-
-        required_subfolders:
+    module_structure:
+        required_folders:
             - "controllers"
             - "services"
             - "domain"
             - "repositories"
+
+        optional_folders:
             - "dto"
             - "mappers"
+            - "types"
+            - "policies"
+            - "validators"
+            - "events"
+            - "interfaces"
 
-        rules:
-            - "structure MUST reflect business capability, not technical grouping"
-            - "each module MUST be independently understandable"
-            - "modules MUST scale linearly without coupling"
+        constraints:
+            - "each folder MUST have a single responsibility"
+            - "no cross-folder leakage"
+            - "files MUST belong to exactly one layer"
 
-    # ----------------------------------------
-    # LAYER RULES (INTERNAL MODULE STRUCTURE)
-    # ----------------------------------------
+    # =========================================================
+    # LAYER MODEL
+    # =========================================================
 
-    layer_rules:
+    architecture_layers:
+        layers:
+            - transport
+            - application
+            - domain
+            - infrastructure
+
+        mapping:
+            controllers: transport
+            services: application
+            domain: domain
+            repositories: infrastructure
+
+        dependency_direction:
+            rule: "dependencies MUST be unidirectional and inward"
+
+            constraints:
+                - "no reverse dependencies"
+                - "no circular dependencies"
+
+            allowed:
+                transport: ["application"]
+                application: ["domain", "interfaces"]
+                domain: []
+                infrastructure: ["domain", "interfaces"]
+
+    # =========================================================
+    # INTERNAL MODULE RULES
+    # =========================================================
+
+    internal_rules:
         controllers:
-            responsibility: "transport layer (http, rpc, etc)"
             must_not:
                 - "contain business logic"
-                - "access repositories directly"
+                - "call repositories"
 
         services:
-            responsibility: "use-case orchestration"
-            constraints:
-                - "must be small and composable"
-                - "single use-case per service preferred"
-
-            must_not:
-                - "contain infrastructure implementation details"
-
-        repositories:
-            responsibility: "persistence abstraction"
-
             must:
-                - "encapsulate all database logic"
-                - "hide ORM or DB details"
-
+                - "represent single intent"
+                - "be composable"
+                - "be stateless"
             must_not:
-                - "contain business logic"
-                - "be used outside services"
+                - "contain infrastructure logic"
+                - "use raw persistence models"
 
         domain:
-            responsibility: "pure business logic"
+            must:
+                - "be pure"
+                - "contain core business rules"
+            must_not:
+                - "depend on frameworks"
+                - "perform IO"
 
-            allowed_content:
-                - "entities"
-                - "value objects"
-                - "enums"
-                - "types"
-                - "pure functions"
+        repositories:
+            must:
+                - "encapsulate persistence"
+                - "hide database/ORM"
+            must_not:
+                - "leak internal models"
 
-            forbidden:
-                - "side effects"
-                - "framework imports"
-                - "infrastructure access"
-
-        dto:
-            responsibility: "external data contracts"
-
-        mappers:
-            responsibility: "data transformation between layers"
-
-    # ----------------------------------------
-    # INFRASTRUCTURE LAYER (GLOBAL)
-    # ----------------------------------------
-
-    infrastructure_rules:
-        location: "infrastructure/"
-
-        rule: "ALL IO and side effects MUST be implemented here"
-
-        must_not:
-            - "contain business logic"
-            - "leak into domain or use-case layers"
-
-    # ----------------------------------------
-    # FOLDER RULES
-    # ----------------------------------------
-
-    folder_rules:
-        single_purpose:
-            rule: "each folder MUST resolve to exactly one classification"
-            violation: "multiple classification matches"
-
-        naming_alignment:
-            rule: "folder and file names MUST reflect exact responsibility"
-
-        no_generic_names:
-            forbidden:
-                - "utils"
-                - "helpers"
-                - "common"
-
-    purpose_folders:
-        allowed:
-            - "mappers"
-            - "policies"
-            - "registry"
-            - "events"
-            - "lifecycle"
-
-        rule: "each MUST represent exactly one concern"
-
-        must_not:
-            - "contain mixed responsibilities"
-            - "act as dumping ground"
-
-    # ----------------------------------------
+    # =========================================================
     # FILE RULES
-    # ----------------------------------------
+    # =========================================================
 
     file_rules:
         single_responsibility:
-            rule: "one file MUST have one responsibility"
+            rule: "each file MUST represent exactly one intent"
 
         single_export:
             rule: "one primary export per file"
 
         naming:
-            rule: "file name MUST describe exact behavior"
+            must:
+                - "reflect exact behavior"
 
-        size_constraint:
-            rule: "files MUST remain small and focused"
+            forbidden:
+                - "utils"
+                - "helpers"
+                - "common"
 
-    # ----------------------------------------
-    # PUBLIC API + EXPORT SYSTEM
-    # ----------------------------------------
+        size:
+            max_lines: 200
 
-    public_api_model:
-        rule: "ONLY index.ts defines public API"
+    # =========================================================
+    # SERVICE DESIGN RULES
+    # =========================================================
 
-        model:
-            type: "hybrid"
+    service_rules:
+        constraints:
+            - "services MUST be stateless"
+            - "services MUST be small and composable"
+            - "services MUST implement one intent only"
 
-            behavior:
-                - "explicit exports define public surface"
-                - "re-exports allowed"
-                - "no implicit exports"
+        split_conditions:
+            - "multiple responsibilities"
+            - "growing orchestration complexity"
 
-    barrel_exports:
-        required: true
+    # =========================================================
+    # DOMAIN ISOLATION
+    # =========================================================
 
-        rules:
-            - "every folder MUST contain index.ts"
-            - "index.ts MUST export all public members"
-            - "export order MUST be shortest-path to longest-path"
+    domain_rules:
+        location: "domain/"
 
-    # ----------------------------------------
-    # MODULE ISOLATION (CROSS-MODULE RULES)
-    # ----------------------------------------
+        must:
+            - "contain core business rules"
+            - "be pure"
 
-    module_isolation:
+        must_not:
+            - "import frameworks"
+            - "import infrastructure"
+            - "perform IO"
+
+    # =========================================================
+    # REPOSITORY RULES
+    # =========================================================
+
+    repository_rules:
+        location: "repositories/"
+
+        constraints:
+            - "ALL persistence logic MUST live here"
+            - "no repository usage outside services"
+
+    # =========================================================
+    # DATA TRANSFORMATION
+    # =========================================================
+
+    data_transformation:
+        dto:
+            role: "external contracts"
+
+        mappers:
+            role: "boundary isolation"
+
+        constraints:
+            - "no raw persistence models outside repositories"
+            - "mapping layer MUST isolate transformations"
+            - "domain must not depend on DTOs"
+
+    # =========================================================
+    # CROSS-MODULE RULES
+    # =========================================================
+
+    cross_module_rules:
         communication:
             allowed:
                 - "services"
                 - "interfaces"
 
             forbidden:
-                - "direct internal file imports across modules"
-                - "bypassing service boundaries"
+                - "deep imports"
+                - "bypassing module boundaries"
+                - "cross_module_internal_access"
 
-    # ----------------------------------------
-    # ROOT FEATURE RULES
-    # ----------------------------------------
-
-    feature_root_rules:
-        definition: "depth_1 folder"
-
-        must:
-            - "act as facade"
-            - "compose submodules"
-            - "expose full feature API"
-
-        must_not:
-            - "implement domain logic"
-            - "implement use-case logic"
-            - "implement variant logic"
-
-    # ----------------------------------------
-    # TYPE ORGANIZATION
-    # ----------------------------------------
-
-    type_rules:
-        location:
-            allowed:
-                - "types/"
-                - "dto/"
-
-        rule: "no inline or scattered type definitions"
-
-    # ----------------------------------------
+    # =========================================================
     # SHARED CODE RULES
-    # ----------------------------------------
+    # =========================================================
 
-    shared_code_rules:
+    shared_code:
         allowed:
             - "cross-cutting concerns"
             - "truly generic utilities"
 
-        must_not:
-            - "become dumping ground"
-            - "contain mixed domain logic"
+        forbidden:
+            - "mixed domain logic"
+            - "dumping folders"
 
-    # ----------------------------------------
-    # VIOLATION ENGINE
-    # ----------------------------------------
+    # =========================================================
+    # TYPE ORGANIZATION
+    # =========================================================
 
-    violation_engine:
-        output_schema:
-            must_include:
-                - "rule_id"
-                - "path"
-                - "detected_signal"
-                - "expected_state"
-                - "actual_state"
-                - "explanation"
+    type_rules:
+        allowed_locations:
+            - "types/"
+            - "dto/"
 
-        failure_mode:
-            ambiguity: "fail_closed"
-            multiple_matches: "violation"
+        forbidden:
+            - "inline scattered types"
 
-    # ----------------------------------------
+    # =========================================================
+    # SCALABILITY RULES
+    # =========================================================
+
+    scalability:
+        rules:
+            - "design for change"
+            - "prefer extensibility over shortcuts"
+            - "avoid tight coupling"
+
+        guarantees:
+            - "new features added without modifying existing modules"
+            - "no cross-module coupling introduced"
+
+    # =========================================================
+    # DATA FLOW
+    # =========================================================
+
+    data_flow:
+        canonical:
+            - "ENTRY -> APPLICATION -> DECISION -> DOMAIN -> INFRASTRUCTURE"
+
+        rules:
+            - "flow MUST be unidirectional"
+            - "APPLICATION orchestrates but does not persist"
+            - "INFRASTRUCTURE handles all IO"
+
+    # =========================================================
+    # ANTI-PATTERN DETECTION
+    # =========================================================
+
+    anti_patterns:
+        folder_by_type:
+            signal:
+                - "global technical folders"
+
+        god_module:
+            signal:
+                - "multiple domains in one module"
+
+        god_service:
+            signal:
+                - "multiple intents in one service"
+
+        scattered_logic:
+            signal:
+                - "related logic across unrelated folders"
+
+        deep_nesting:
+            signal:
+                - "unclear nested structure"
+
+    # =========================================================
+    # REFACTORING ENGINE
+    # =========================================================
+
+    refactoring:
+        steps:
+            - "identify capabilities"
+            - "decompose to atomic units"
+            - "classify intents"
+            - "assign layers"
+            - "split responsibilities"
+            - "rename for clarity"
+            - "remove duplication"
+            - "enforce boundaries"
+
+    # =========================================================
     # HEURISTICS
-    # ----------------------------------------
+    # =========================================================
 
-    heuristic_rules:
-        stopping_condition:
-            definition: "structure is valid when no file fits better elsewhere"
-
-        warnings:
-            - "no further splitting required if SRP is satisfied"
+    heuristics:
+        completion_condition:
+            - "no rule violations"
+            - "all units single intent"
+            - "all dependencies valid"
+            - "structure is derivable and unambiguous"

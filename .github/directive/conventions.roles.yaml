@@ -1,368 +1,413 @@
 version: "1.0"
 
 system:
-    name: "class-role-classification-system"
-    goal: >
+    name: "class-role-classifier"
+    purpose: >
         Determine the correct architectural role (file suffix) for a class
-        based on its responsibilities, behavior, dependencies, and constraints.
+        based on its responsibilities, behavior, and constraints.
 
-    principle:
-        - "Each class has exactly one primary role"
-        - "Role is determined by behavior, not intent or naming"
-        - "Side effects dominate classification"
-        - "Single responsibility is mandatory"
-        - "If multiple roles match, choose highest precedence violation role"
+    philosophy:
+        - "Every class has exactly one role"
+        - "Roles are defined by responsibility, not naming"
+        - "If multiple roles apply → decomposition required"
+        - "If unclear → fail_closed"
+        - "Behavior defines placement, not intention"
 
-# ------------------------------------------------------------
-# INPUT MODEL
-# ------------------------------------------------------------
+    enforcement:
+        mode: "strict"
+        ambiguity_policy: "fail_closed"
+        multi_role_policy: "reject_and_decompose"
 
-input_schema:
-    required_fields:
-        - has_side_effects
-        - handles_http
-        - handles_realtime
-        - accesses_database
-        - performs_transformation_only
-        - performs_decision_logic
-        - creates_objects
-        - orchestrates_multiple_dependencies
-        - defines_domain_state
-        - emits_or_handles_events
-        - validates_input
-        - resolves_dependencies
-        - configuration_only
-        - type_only
+# =========================================================
+# CLASS INPUT CONTRACT
+# =========================================================
 
-    optional_fields:
-        - description
-        - dependencies
-        - outputs
-        - mutability
-        - external_calls
+input:
+    class_description:
+        responsibilities: []
+        has_side_effects: boolean
+        mutates_state: boolean
+        depends_on_external_systems: boolean
+        contains_business_rules: boolean
+        is_pure_functional: boolean
+        scope: "single_action | multi_step | utility | structural | data | decision"
+        input_output_shape: "none | transforms | validates | constructs"
+        interacts_with:
+            - "http"
+            - "websocket"
+            - "database"
+            - "external_api"
+            - "event_system"
+            - "none"
 
-# ------------------------------------------------------------
-# ROLE CLASSIFICATION RULES (HIGHEST PRIORITY FIRST)
-# ------------------------------------------------------------
+# =========================================================
+# EVALUATION ORDER
+# =========================================================
+
+evaluation_order:
+    - detect_transport_layer
+    - detect_execution_layer
+    - detect_decision_layer
+    - detect_transformation_layer
+    - detect_domain_layer
+    - detect_data_layer
+    - detect_integration_layer
+    - detect_construction_layer
+    - detect_validation_layer
+    - detect_resolution_layer
+    - detect_structure_layer
+    - detect_config_layer
+    - detect_error_layer
+    - detect_type_layer
+    - detect_constants_layer
+    - fallback
+
+# =========================================================
+# ROLE DEFINITIONS
+# =========================================================
 
 roles:
+    # =========================================================
+    # TRANSPORT LAYER
+    # =========================================================
+
     controller:
+        suffix: ".controller.ts"
         match:
-            - handles_http == true
-            - OR transport_layer_entry == true
-        constraints:
-            - no_business_logic: true
-            - must_delegate_all_work: true
-        output: ".controller.ts"
+            interacts_with: ["http"]
+        rules:
+            - "handles incoming requests"
+            - "delegates logic outward"
+        forbidden:
+            - contains_business_rules
+            - has_side_effects
+        output: "controller"
 
     gateway:
+        suffix: ".gateway.ts"
         match:
-            - handles_realtime == true
-        constraints:
-            - no_business_logic: true
-            - manages_connections_only: true
-        output: ".gateway.ts"
+            interacts_with: ["websocket"]
+        rules:
+            - "manages connections"
+            - "handles real-time messaging"
+        forbidden:
+            - contains_business_rules
+        output: "gateway"
+
+    # =========================================================
+    # EXECUTION LAYER
+    # =========================================================
 
     use_case:
+        suffix: ".use-case.ts"
         match:
-            - single_business_action == true
-            - orchestrates_workflow == true
-        constraints:
-            - one_input_one_outcome: true
-            - may_call_services: true
-        output: ".use-case.ts"
+            scope: "single_action"
+            contains_business_rules: true
+        rules:
+            - "one input → one outcome"
+            - "encapsulates full action"
+        output: "use_case"
 
     service:
+        suffix: ".service.ts"
         match:
-            - orchestrates_multiple_dependencies == true
-            - has_side_effects == true
-        constraints:
-            - owns_workflow_logic: true
-            - no_transport_logic: true
-        output: ".service.ts"
+            has_side_effects: true
+            scope: "multi_step"
+        rules:
+            - "coordinates dependencies"
+            - "owns side effects"
+        output: "service"
 
     orchestrator:
+        suffix: ".orchestrator.ts"
         match:
-            - multi_step_process_control == true
-            - primarily_controls_flow == true
-        constraints:
-            - no_core_business_rules: true
-            - sequencing_only: true
-        output: ".orchestrator.ts"
+            scope: "multi_step"
+            contains_business_rules: false
+        rules:
+            - "controls execution flow"
+        forbidden:
+            - contains_business_rules
+        output: "orchestrator"
 
-    repository:
-        match:
-            - accesses_database == true
-        constraints:
-            - no_business_logic: true
-            - crud_only: true
-        output: ".repository.ts"
-
-    client:
-        match:
-            - external_api_calls == true
-        constraints:
-            - translates_external_formats: true
-            - no_domain_logic: true
-        output: ".client.ts"
-
-    adapter:
-        match:
-            - interface_conversion_between_systems == true
-        constraints:
-            - no_business_logic: true
-        output: ".adapter.ts"
-
-    domain:
-        match:
-            - defines_domain_state == true
-            - contains_behavior_and_invariants == true
-        constraints:
-            - independent_of_infrastructure: true
-            - enforces_invariants: true
-        output: ".domain.ts"
-
-    event:
-        match:
-            - is_immutable_event == true
-        constraints:
-            - data_only: true
-        output: ".event.ts"
-
-    listener:
-        match:
-            - reacts_to_events == true
-        constraints:
-            - triggers_side_effects: true
-        output: ".listener.ts"
-
-    publisher:
-        match:
-            - emits_events == true
-        constraints:
-            - no_business_logic: true
-        output: ".publisher.ts"
-
-    mapper:
-        match:
-            - performs_transformation_only == true
-            - no_side_effects == true
-        constraints:
-            - deterministic: true
-        output: ".mapper.ts"
-
-    normalizer:
-        match:
-            - standardizes_data_shape == true
-        constraints:
-            - preserves_structure: true
-        output: ".normalizer.ts"
-
-    formatter:
-        match:
-            - formats_output_only == true
-        constraints:
-            - presentation_only: true
-        output: ".formatter.ts"
+    # =========================================================
+    # DECISION LAYER
+    # =========================================================
 
     policy:
+        suffix: ".policy.ts"
         match:
-            - performs_decision_logic == true
-            - returns_boolean_or_score == true
-        constraints:
-            - no_mutation: true
-        output: ".policy.ts"
+            contains_business_rules: true
+            mutates_state: false
+            has_side_effects: false
+        rules:
+            - "returns decision"
+        output: "policy"
 
     specification:
+        suffix: ".specification.ts"
         match:
-            - composes_business_rules == true
-        constraints:
-            - composable_logic: true
-        output: ".specification.ts"
+            contains_business_rules: true
+            is_composable: true
+        rules:
+            - "composable logic"
+        output: "specification"
 
     selector:
+        suffix: ".selector.ts"
         match:
-            - selects_single_option == true
-        constraints:
-            - minimal_logic: true
-        output: ".selector.ts"
+            scope: "decision"
+        rules:
+            - "chooses one option"
+        output: "selector"
 
     guard:
+        suffix: ".guard.ts"
         match:
-            - handles_authorization == true
-        constraints:
-            - context_based_decision_only: true
-        output: ".guard.ts"
+            scope: "decision"
+            context_based: true
+        rules:
+            - "authorization logic"
+        output: "guard"
+
+    # =========================================================
+    # TRANSFORMATION LAYER
+    # =========================================================
+
+    mapper:
+        suffix: ".mapper.ts"
+        match:
+            input_output_shape: "transforms"
+            is_pure_functional: true
+        rules:
+            - "shape transformation"
+        output: "mapper"
+
+    normalizer:
+        suffix: ".normalizer.ts"
+        match:
+            scope: "utility"
+        rules:
+            - "standardizes values"
+        output: "normalizer"
+
+    formatter:
+        suffix: ".formatter.ts"
+        match:
+            scope: "utility"
+            output_formatting: true
+        rules:
+            - "presentation transformation"
+        output: "formatter"
+
+    # =========================================================
+    # DOMAIN LAYER
+    # =========================================================
+
+    domain:
+        suffix: ".domain.ts"
+        match:
+            contains_business_rules: true
+            mutates_state: true
+            depends_on_external_systems: false
+        rules:
+            - "encapsulates core business logic"
+        output: "domain"
+
+    event:
+        suffix: ".event.ts"
+        match:
+            is_immutable: true
+        rules:
+            - "represents something that happened"
+        output: "event"
+
+    listener:
+        suffix: ".listener.ts"
+        match:
+            interacts_with: ["event_system"]
+        rules:
+            - "reacts to events"
+        output: "listener"
+
+    publisher:
+        suffix: ".publisher.ts"
+        match:
+            interacts_with: ["event_system"]
+            has_side_effects: true
+        rules:
+            - "emits events"
+        output: "publisher"
+
+    # =========================================================
+    # DATA LAYER
+    # =========================================================
+
+    repository:
+        suffix: ".repository.ts"
+        match:
+            interacts_with: ["database"]
+        rules:
+            - "data access abstraction"
+        forbidden:
+            - contains_business_rules
+        output: "repository"
+
+    schema:
+        suffix: ".schema.ts"
+        match:
+            scope: "data"
+        rules:
+            - "defines structure only"
+        output: "schema"
+
+    # =========================================================
+    # INTEGRATION LAYER
+    # =========================================================
+
+    client:
+        suffix: ".client.ts"
+        match:
+            interacts_with: ["external_api"]
+        rules:
+            - "external communication"
+        output: "client"
+
+    adapter:
+        suffix: ".adapter.ts"
+        match:
+            transforms_interfaces: true
+        rules:
+            - "bridges systems"
+        output: "adapter"
+
+    # =========================================================
+    # CONSTRUCTION LAYER
+    # =========================================================
 
     factory:
+        suffix: ".factory.ts"
         match:
-            - creates_objects == true
-            - encapsulates_construction_logic == true
-        constraints:
-            - may_apply_defaults: true
-        output: ".factory.ts"
+            input_output_shape: "constructs"
+        rules:
+            - "creates objects"
+        output: "factory"
 
     builder:
+        suffix: ".builder.ts"
         match:
-            - step_by_step_construction == true
-        constraints:
-            - final_build_required: true
-        output: ".builder.ts"
+            step_by_step_construction: true
+        rules:
+            - "incremental build"
+        output: "builder"
 
-    util:
-        match:
-            - generic_helpers_only == true
-        constraints:
-            - stateless: true
-            - no_domain_meaning: true
-        output: ".util.ts"
-
-    resolver:
-        match:
-            - resolves_dependency_or_value == true
-        constraints:
-            - runtime_selection: true
-        output: ".resolver.ts"
-
-    strategy:
-        match:
-            - interchangeable_algorithm == true
-        constraints:
-            - runtime_swappable: true
-        output: ".strategy.ts"
+    # =========================================================
+    # VALIDATION
+    # =========================================================
 
     validator:
+        suffix: ".validator.ts"
         match:
-            - validates_input_or_state == true
-        constraints:
-            - no_mutation: true
-        output: ".validator.ts"
+            input_output_shape: "validates"
+        rules:
+            - "validation only"
+        output: "validator"
 
-    config:
-        match:
-            - configuration_only == true
-        constraints:
-            - static_values_only: true
-        output: ".config.ts"
+    # =========================================================
+    # RESOLUTION
+    # =========================================================
 
-    error:
+    resolver:
+        suffix: ".resolver.ts"
         match:
-            - defines_error_types == true
-        constraints:
-            - no_logic: true
-        output: ".error.ts"
+            dynamic_resolution: true
+        rules:
+            - "resolves implementation"
+        output: "resolver"
 
-    types:
+    strategy:
+        suffix: ".strategy.ts"
         match:
-            - type_only == true
-        constraints:
-            - no_runtime_code: true
-        output: ".types.ts"
+            interchangeable_algorithms: true
+        rules:
+            - "multiple implementations"
+        output: "strategy"
 
-    const:
-        match:
-            - static_constants_only == true
-        constraints:
-            - no_behavior: true
-        output: ".const.ts"
+    # =========================================================
+    # STRUCTURE
+    # =========================================================
 
-    enum:
+    module:
+        suffix: ".module.ts"
         match:
-            - finite_value_set == true
-        constraints:
-            - controlled_values_only: true
-        output: ".enum.ts"
+            scope: "structural"
+        rules:
+            - "wires dependencies"
+        forbidden:
+            - contains_business_rules
+        output: "module"
 
     dto:
+        suffix: ".dto.ts"
         match:
-            - transport_data_shape == true
-        constraints:
-            - no_business_logic: true
-        output: ".dto.ts"
+            scope: "data"
+            transport_related: true
+        rules:
+            - "transport shape"
+        output: "dto"
 
-# ------------------------------------------------------------
-# PRIORITY RULES (CRITICAL FOR CONFLICT RESOLUTION)
-# ------------------------------------------------------------
+    # =========================================================
+    # CONFIG / ERROR / TYPES / CONSTANTS
+    # =========================================================
 
-precedence:
-    highest_to_lowest:
-        - controller
-        - gateway
-        - use_case
-        - service
-        - orchestrator
-        - repository
-        - client
-        - adapter
-        - domain
-        - listener
-        - publisher
-        - policy
-        - specification
-        - guard
-        - resolver
-        - strategy
-        - factory
-        - builder
-        - validator
-        - mapper
-        - normalizer
-        - formatter
-        - dto
-        - config
-        - error
-        - const
-        - enum
-        - types
-        - util
+    config:
+        suffix: ".config.ts"
+        match:
+            scope: "configuration"
+        rules:
+            - "static values"
+        output: "config"
 
-# ------------------------------------------------------------
-# CONFLICT RESOLUTION RULES
-# ------------------------------------------------------------
+    error:
+        suffix: ".error.ts"
+        match:
+            represents_error: true
+        rules:
+            - "error definition"
+        output: "error"
 
-conflict_resolution:
-    rule: "first_violation_wins"
+    types:
+        suffix: ".types.ts"
+        match:
+            type_only: true
+        rules:
+            - "no runtime code"
+        output: "types"
 
-    logic:
-        - if has_side_effects and performs_transformation_only:
-              choose: service
-        - if handles_http and orchestrates_logic:
-              choose: controller
-        - if creates_objects and has_business_rules:
-              choose: factory
-        - if validates_input and has_side_effects:
-              override_to: validator_error (invalid_design)
+    constants:
+        suffix: ".const.ts"
+        match:
+            scope: "constants"
+        rules:
+            - "static values"
+        output: "constants"
 
-# ------------------------------------------------------------
-# HARD CONSTRAINTS (INVALID STATES)
-# ------------------------------------------------------------
+    enum:
+        suffix: ".enum.ts"
+        match:
+            finite_set: true
+        rules:
+            - "controlled values"
+        output: "enum"
 
-invalid_class_patterns:
-    - name: "business_logic_in_controller"
-      condition:
-          - handles_http == true
-          - has_business_logic == true
-      action: "reject"
+    # =========================================================
+    # FALLBACK
+    # =========================================================
 
-    - name: "database_logic_in_service_bypass_repository"
-      condition:
-          - accesses_database == true
-          - repository_not_used == true
-      action: "warn_or_reclassify"
-
-    - name: "domain_with_external_dependency"
-      condition:
-          - defines_domain_state == true
-          - external_api_calls == true
-      action: "reject"
-
-# ------------------------------------------------------------
-# OUTPUT FORMAT
-# ------------------------------------------------------------
-
-output:
-    format: "single_role"
-    fields:
-        - role_suffix
-        - justification_rule
-        - violations_detected
+    util:
+        suffix: ".util.ts"
+        match:
+            scope: "utility"
+        rules:
+            - "stateless helper"
+        warning: "last resort role"
+        output: "util"

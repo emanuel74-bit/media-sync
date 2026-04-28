@@ -1,418 +1,331 @@
 architecture_rules:
-    version: "2.0"
-    purpose: "Strict, agent-enforceable layered architecture with intent-based decomposition and deterministic dependency rules"
+    version: "3.1"
+    mode: "agent_driven_design_system"
 
-    rule_priority:
-        ABSOLUTE:
-            description: "Hard constraints. Must never be violated."
-        STRUCTURAL:
-            description: "Defines system boundaries, layers, and dependency topology."
-        ENFORCEMENT:
-            description: "Runtime/static validation rules and checkpoints."
+    role: "senior_software_architect"
+
+    purpose: >
+        Deterministically transform a feature prompt into a clean,
+        scalable, production-grade architecture using strict layering,
+        intent decomposition, and enforceable design constraints.
+
+    philosophy:
+        - "Decomposition precedes structure"
+        - "Intent defines artifact"
+        - "No ambiguity allowed"
+        - "Consistency over convenience"
+        - "Design must be derivable, not guessed"
+
+    execution_policy:
+        ambiguity: "fail_closed"
+        missing_information: "ask_or_abort"
+        default_behavior: "forbidden"
 
     # =========================================================
-    # 1. LOGIC DECOMPOSITION SYSTEM (PRE-LAYER ASSIGNMENT RULE)
+    # 0. INPUT / OUTPUT CONTRACT
+    # =========================================================
+
+    contract:
+        input:
+            type: "feature_prompt"
+
+        output:
+            type: "architecture_blueprint"
+            must_include:
+                - capabilities
+                - atomic_units
+                - intents
+                - artifacts
+                - layers
+                - dependencies
+                - file_structure
+                - validation_report
+
+    # =========================================================
+    # 1. DESIGN PIPELINE
+    # =========================================================
+
+    pipeline:
+        steps:
+            - extract_capabilities
+            - decompose_to_atomic_units
+            - classify_intents
+            - map_to_artifacts
+            - assign_layers
+            - infer_dependencies
+            - generate_file_structure
+            - validate_system
+
+    # =========================================================
+    # 2. STRUCTURAL ARCHITECTURE RULES (FROM PROMPT)
+    # =========================================================
+
+    structure:
+        module_definition:
+            rule: "Each module represents a distinct business capability"
+            constraints:
+                - "Modules MUST be independently understandable"
+                - "Modules MUST be independently testable"
+                - "No implicit cross-module coupling"
+
+        organization:
+            strategy: "feature_first"
+            fallback: "layer_within_feature"
+
+        layer_boundaries:
+            enforced: true
+            rule: "Strict separation between layers"
+
+    # =========================================================
+    # 3. DATA FLOW (MERGED + ALIGNED)
+    # =========================================================
+
+    data_flow:
+        direction:
+            canonical:
+                - ENTRY
+                - APPLICATION
+                - DECISION
+                - DOMAIN
+                - INFRASTRUCTURE
+
+        rules:
+            - "Flow MUST be unidirectional"
+            - "No reverse dependencies"
+            - "No circular dependencies"
+
+            - "APPLICATION orchestrates but does not persist"
+            - "INFRASTRUCTURE handles all IO"
+
+            - "Raw persistence models MUST NOT cross boundaries"
+            - "Mapping layer MUST isolate transformations"
+
+    # =========================================================
+    # 4. INTENT + COHESION SYSTEM
     # =========================================================
 
     logic_decomposition:
-        description: "All business logic MUST be decomposed into intent-based units BEFORE assigning files or layers"
+        core_rules:
+            - "Each unit MUST have exactly one intent"
+            - "If multiple reasons to change → MUST split"
+            - "No god classes"
+            - "No fat services"
 
-        stages:
-            - name: intent_classification
-              rule: "Every logic block MUST be classified into exactly one intent type"
-
-            - name: intent_to_artifact_mapping
-              rule: "Each intent MUST map to exactly one artifact type"
-
-            - name: layer_assignment
-              rule: "Layer is assigned only after decomposition"
-
-        intents:
-            EXECUTE_ACTION:
-                maps_to:
-                    - use_case
-                definition: "Single business action: one input → one outcome"
-
-            COORDINATE_WORKFLOW:
-                maps_to:
-                    - service
-                    - orchestrator
-                definition: "Multi-step coordination across components"
-
-            DECIDE:
-                maps_to:
-                    - policy
-                    - specification
-                    - guard
-                    - selector
-                definition: "Pure decision logic without side effects"
-
-            TRANSFORM_DATA:
-                maps_to:
-                    - mapper
-                    - formatter
-                    - normalizer
-                definition: "Pure deterministic transformation"
-
-            ACCESS_DATA:
-                maps_to:
-                    - repository
-                    - client
-                definition: "Data retrieval or persistence or external IO"
-
-            CONSTRUCT_OBJECT:
-                maps_to:
-                    - factory
-                    - builder
-                definition: "Controlled object creation"
-
-            VALIDATE:
-                maps_to:
-                    - validator
-                definition: "Validation only, no mutation"
-
-            RESOLVE:
-                maps_to:
-                    - resolver
-                    - strategy
-                definition: "Runtime selection of implementation"
-
-        decomposition_constraints:
-            - "A single unit MUST NOT implement multiple intents"
-            - "If multiple intents exist → MUST split into separate artifacts"
-            - "Decision logic MUST NOT exist inside execution units"
-            - "Transformation logic MUST NOT exist inside services or use-cases"
+        cohesion:
+            rule: "Single responsibility is mandatory"
+            enforcement:
+                - "multi_intent_unit → invalid"
+                - "multi_reason_to_change → split_required"
 
     # =========================================================
-    # 2. LAYERS (STRUCTURAL ONLY - NO ROLE MIXING)
+    # 5. COUPLING CONTROL (ENFORCED)
     # =========================================================
 
-    layers:
-        ENTRY:
-            components:
-                - controller
-                - gateway
-            responsibility: "External input boundary"
-            constraints:
-                - "MUST NOT contain business logic"
-                - "MUST only delegate to APPLICATION layer"
-                - "MUST NOT access DOMAIN or INFRASTRUCTURE directly"
-
-        APPLICATION:
-            components:
-                - service
-                - use_case
-                - orchestrator
-            responsibility: "Business execution and workflow coordination"
-            constraints:
-                - "MUST orchestrate but NOT define domain rules"
-                - "MUST use DECISION + DOMAIN + INFRASTRUCTURE via DI"
-                - "MUST respect ERROR_STRATEGY per unit"
-
-        DOMAIN:
-            components:
-                - domain
-                - event
-                - listener
-                - publisher
-            responsibility: "Core business model and invariants"
-            constraints:
-                - "MUST be pure and infrastructure-free"
-                - "MUST NOT depend on APPLICATION or INFRASTRUCTURE"
-                - "MUST enforce invariants internally"
-
-        DECISION:
-            components:
-                - policy
-                - specification
-                - guard
-                - selector
-            responsibility: "Pure decision evaluation"
-            constraints:
-                - "MUST NOT mutate state"
-                - "MUST NOT perform IO"
-                - "MUST depend only on DOMAIN types"
-
-        INFRASTRUCTURE:
-            components:
-                - client
-                - repository
-                - adapter
-                - logger_module
-            responsibility: "External systems and persistence"
-            constraints:
-                - "MUST NOT contain business logic"
-                - "MUST only implement interfaces defined above"
-                - "MUST NOT influence domain rules"
-
-        SUPPORT:
-            TRANSFORMATION:
-                - mapper
-                - formatter
-                - normalizer
-
-            CONSTRUCTION:
-                - factory
-                - builder
-
-            VALIDATION:
-                - validator
-
-            RESOLUTION:
-                - resolver
-                - strategy
-
-            TYPES:
-                - types
-                - dto
-
-            CONFIG:
-                - config
-                - const
-                - enum
-
-            constraints:
-                - "MUST be stateless unless explicitly defined"
-                - "MUST NOT contain orchestration logic"
-
-    # =========================================================
-    # 3. DEPENDENCY FLOW (STRICT DAG)
-    # =========================================================
-
-    dependency_flow:
-        type: strict_dag
-
-        order:
-            - ENTRY
-            - APPLICATION
-            - DECISION
-            - DOMAIN
-            - INFRASTRUCTURE
-
-        rules:
-            - "Dependencies MUST only point downward"
-            - "No upward dependency allowed"
-            - "No skipping layers"
-            - "No circular dependencies"
-
-        allowed_access:
-            ENTRY:
-                can_access:
-                    - APPLICATION
-
-            APPLICATION:
-                can_access:
-                    - DOMAIN
-                    - DECISION
-                    - INFRASTRUCTURE (via interfaces)
-
-            DECISION:
-                can_access:
-                    - DOMAIN
-
-            DOMAIN:
-                can_access: []
-
-            INFRASTRUCTURE:
-                can_access: []
-
-    # =========================================================
-    # 4. DEPENDENCY INJECTION (DI RULES)
-    # =========================================================
-
-    dependency_injection:
-        model: "application_boundary_di"
-
-        rules:
-            - "APPLICATION layer MUST define interfaces for external dependencies"
-            - "INFRASTRUCTURE MUST implement APPLICATION-defined interfaces"
-            - "DOMAIN MUST NOT receive infrastructure dependencies"
-            - "ENTRY layer acts as composition root"
+    coupling:
+        principles:
+            - "Depend on abstractions only"
+            - "All external dependencies via DI"
+            - "No global state"
 
         forbidden:
-            - "direct infrastructure imports in DOMAIN"
-            - "direct infrastructure imports in DECISION"
-            - "service instantiating concrete clients/repositories directly"
+            - "domain_importing_infrastructure"
+            - "service_importing_db_models"
+            - "cross_module_internal_access"
+
+        required:
+            - "interfaces_at_boundaries"
+            - "inversion_of_control"
 
     # =========================================================
-    # 5. SEPARATION RULES (ANTI-MIXING CONSTRAINTS)
-    # =========================================================
-
-    separation_rules:
-        ABSOLUTE:
-            - rule: "ENTRY layer MUST NOT contain business logic"
-              detect:
-                  forbidden:
-                      - business_logic_in_controller
-                      - business_logic_in_gateway
-
-            - rule: "DOMAIN MUST NOT contain infrastructure logic"
-              detect:
-                  forbidden:
-                      - http_calls
-                      - db_queries
-                      - sdk_usage
-
-            - rule: "DECISION layer MUST NOT mutate state"
-              detect:
-                  forbidden:
-                      - assignments
-                      - persistence_calls
-
-            - rule: "APPLICATION layer MUST NOT embed decision logic"
-              detect:
-                  forbidden:
-                      - inline_business_rules
-                      - duplicated_policy_logic
-
-            - rule: "No intent mixing inside a single artifact"
-              detect:
-                  forbidden_combinations:
-                      - execution + decision
-                      - transformation + business_logic
-                      - validation + mutation
-                      - orchestration + domain_rules
-
-    # =========================================================
-    # 6. SERVICE BEHAVIOR MODEL (NO ROLE ASSIGNMENT INSIDE SERVICES)
+    # 6. SERVICE DESIGN (ALIGNED WITH INTENT SYSTEM)
     # =========================================================
 
     service_model:
-        principle: "Services are outputs of decomposition, not role containers"
+        constraints:
+            - "Services MUST be stateless"
+            - "Services MUST be small and composable"
+            - "Services MUST implement ONE intent only"
 
+        forbidden:
+            - "transport_logic_in_service"
+            - "direct_repository_models"
+            - "infrastructure_logic"
+
+        split_conditions:
+            - "multiple responsibilities"
+            - "growing orchestration complexity"
+
+    # =========================================================
+    # 7. SERVICE USAGE CONSISTENCY (NEW - STRICT)
+    # =========================================================
+
+    service_usage:
         rules:
-            - "A service MUST implement only ONE intent type"
-            - "Intent mixing requires splitting into multiple artifacts"
-            - "Services are classified by behavior, not declared role metadata"
+            - "Same service MUST have ONE canonical interface"
+            - "All usages MUST match same input/output structure"
+            - "No alternative invocation patterns"
+
+        forbidden:
+            - "duplicate_service_logic"
+            - "bypassing_service_layer"
+            - "multiple_entrypoints_same_action"
+
+        resolution:
+            - "standardize_interface"
+            - "refactor_all_call_sites"
+            - "introduce_adapter_only_if_external"
 
     # =========================================================
-    # 7. ERROR HANDLING SYSTEM
+    # 8. DESIGN PATTERN GOVERNANCE
     # =========================================================
 
-    error_handling:
-        required_on:
-            - service
-            - use_case
-            - orchestrator
+    patterns:
+        allowed:
+            repository:
+                purpose: "persistence abstraction"
 
-        strategy_field: "ERROR_STRATEGY"
+            factory:
+                purpose: "controlled object creation"
 
-        strategies:
-            HANDLE:
-                behavior:
-                    - catch_known_errors
-                    - transform_to_domain_errors
-                    - optional_recovery
-                forbidden:
-                    - raw_infrastructure_error_leak
+            strategy:
+                purpose: "replace conditional logic"
 
-            PROPAGATE:
-                behavior:
-                    - no_catch
-                    - bubble_up
+            adapter:
+                purpose: "external isolation"
 
-            HYBRID:
-                behavior:
-                    - catch_expected_only
-                    - propagate_unexpected
+        usage_rules:
+            - "Pattern MUST reduce complexity"
+            - "Pattern MUST improve clarity"
+            - "No speculative patterns"
 
-        constraints:
-            - "ERROR_STRATEGY MUST be explicitly declared"
-            - "No implicit default allowed"
-            - "No retry logic in APPLICATION layer"
+        forbidden:
+            - "pattern_without_reason"
+            - "over_engineering"
 
     # =========================================================
-    # 8. LOGGING SYSTEM (INJECTABLE CENTRAL LOGGER)
+    # 9. DOMAIN INTEGRITY
     # =========================================================
 
-    logging:
-        model: "dependency_injected_central_logger"
-
-        logger_module:
-            type: "shared_injected_service"
-            rule: "Logger is defined in a module and injected everywhere"
-
-        constraints:
-            - "console.log is forbidden"
-            - "logging MUST use injected logger only"
-            - "logging allowed in all layers via DI"
-
-        log_schema:
-            model: "hybrid"
-
-            mandatory_fields:
-                traceability:
-                    - traceId
-
-                origin:
-                    - serviceName OR moduleName
-                    - layer
-                    - operationName
-
-                event:
-                    - logLevel
-                    - eventType
-
-                temporal:
-                    - timestamp
-
-            optional_fields:
-                identity:
-                    - userId
-                    - systemActor
-                    - tenantId
-
-                observability:
-                    - requestId
-                    - correlationId
-                    - sessionId
-
-                analytics:
-                    - durationMs
-                    - payloadSummary
-                    - errorCode
-
-            validation_rules:
-                invalid_if_missing_any:
-                    - traceId
-                    - logLevel
-                    - eventType
-                    - timestamp
-                    - operationName
-                    - layer
-                    - (serviceName AND moduleName both missing)
+    domain:
+        rules:
+            - "Must contain core business rules"
+            - "Must be pure"
+            - "Must not depend on frameworks"
 
     # =========================================================
-    # 9. VALIDATION CHECKPOINTS
+    # 10. CONSISTENCY SYSTEM
     # =========================================================
 
-    validation_checkpoints:
-        after_logic_decomposition:
-            - verify_single_intent_per_unit
-            - verify_correct_artifact_mapping
-
-        after_service_creation:
-            - verify_layer_assignment
-            - verify_error_strategy_declared
-
-        after_dependency_changes:
-            - verify_dependency_flow
-            - verify_no_layer_skipping
-
-        after_integration:
-            - verify_di_compliance
-            - verify_infrastructure_boundary
+    consistency:
+        rules:
+            - "Similar problems MUST use same patterns"
+            - "Naming MUST follow conventions"
+            - "No parallel implementations of same logic"
 
     # =========================================================
-    # 10. FORBIDDEN SYSTEM STATES
+    # 11. SCALABILITY RULES
+    # =========================================================
+
+    scalability:
+        rules:
+            - "Design for change"
+            - "Prefer extensibility over shortcuts"
+            - "Avoid tight coupling"
+
+    # =========================================================
+    # 12. FILE STRUCTURE GENERATION
+    # =========================================================
+
+    file_structure:
+        strategy:
+            - "feature_first"
+            - "layer_within_feature"
+
+        template:
+            feature:
+                entry:
+                    - "*.controller.ts"
+
+                application:
+                    - "*use-case.ts"
+                    - "*service.ts"
+
+                decision:
+                    - "*policy.ts"
+
+                domain:
+                    - "*.entity.ts"
+
+                infrastructure:
+                    - "*.repository.ts"
+
+                support:
+                    - "*.mapper.ts"
+                    - "*.validator.ts"
+
+    # =========================================================
+    # 13. VALIDATION SYSTEM (EXTENDED)
+    # =========================================================
+
+    validation:
+        fail_conditions:
+            - "multi_intent_unit"
+            - "layer_violation"
+            - "circular_dependency"
+            - "service_interface_inconsistency"
+            - "business_logic_in_wrong_layer"
+            - "duplicate_logic_paths"
+
+        must_verify:
+            - "all_services_consistent"
+            - "all_dependencies_valid"
+            - "all_layers_respected"
+            - "all_units_single_responsibility"
+
+    # =========================================================
+    # 14. ANTI-PATTERN ELIMINATION (DIRECT FROM PROMPT)
     # =========================================================
 
     forbidden:
         ABSOLUTE:
             - circular_dependencies
             - layer_skipping
-            - global_mutable_state
+            - global_state
+
             - business_logic_in_infrastructure
-            - decision_logic_in_infrastructure
-            - infrastructure_logic_in_domain
-            - untyped_business_boundaries
+            - infrastructure_in_domain
+
+            - direct_db_access_from_services
+            - mixed_responsibilities
+            - god_classes
+
+            - conditional_heavy_logic_without_strategy
+            - duplicated_service_logic
+            - inconsistent_service_usage
+
+    # =========================================================
+    # 15. AGENT EXECUTION RULES
+    # =========================================================
+
+    agent_execution:
+        behavior:
+            - "MUST follow pipeline strictly"
+            - "MUST NOT skip steps"
+            - "MUST NOT guess missing structure"
+            - "MUST derive everything from intent"
+
+        output_format:
+            sections:
+                - capabilities
+                - atomic_units
+                - intents
+                - artifacts
+                - layers
+                - dependencies
+                - file_structure
+                - validation
+
+        output_constraints:
+            - "production_grade_only"
+            - "no_pseudo_code"
+            - "no_explanations"
