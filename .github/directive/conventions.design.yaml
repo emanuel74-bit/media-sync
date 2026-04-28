@@ -1,0 +1,223 @@
+version: "1.0"
+
+system:
+    name: "feature-to-architecture-compiler"
+    purpose: >
+        Convert a raw feature/system prompt into a fully decomposed,
+        role-assigned, pattern-aware architecture blueprint.
+
+    philosophy:
+        - "No structure before decomposition"
+        - "No pattern before roles are validated"
+        - "No file assignment before intent is stable"
+        - "Architecture emerges, it is not chosen prematurely"
+
+# =========================================================
+# 1. EXTERNAL SYSTEM DEPENDENCIES (NO MERGING)
+# =========================================================
+
+dependencies:
+    architecture_rules:
+        file: "conventions.architecture.yaml"
+        role: "primary structural and decomposition system"
+        usage: "defines intents, layers, dependency rules"
+
+    role_classifier:
+        file: "conventions.roles.yaml"
+        role: "class-level responsibility validator"
+        usage: "assign file suffixes and enforce single responsibility"
+
+    design_patterns:
+        file: "conventions.design.patterns.yaml"
+        role: "interaction + structural pattern selector"
+        usage: "chooses coordination patterns between classes"
+
+# =========================================================
+# 2. PIPELINE (STRICT ORDER - NO SKIPPING)
+# =========================================================
+
+execution_pipeline:
+    - stage: 1_raw_intent_extraction
+      description: >
+          Parse feature prompt into atomic functional intents.
+      uses:
+          - architecture_rules.logic_decomposition.intents
+
+    - stage: 2_system_decomposition
+      description: >
+          Break feature into independent logic units BEFORE any design decisions.
+      rules:
+          - "no role assignment yet"
+          - "no patterns yet"
+          - "only intent units allowed"
+
+    - stage: 3_layer_assignment
+      description: >
+          Assign each unit to architecture layer (ENTRY/APPLICATION/DOMAIN/etc).
+      uses:
+          - architecture_rules.layers
+
+    - stage: 4_class_role_assignment
+      description: >
+          Convert each unit into a class-level role using role classifier.
+      uses:
+          - conventions.roles
+      constraints:
+          - "each unit MUST map to exactly one role"
+          - "role conflicts trigger mandatory split"
+
+    - stage: 5_pattern_selection
+      description: >
+          Select design patterns ONLY after roles are stable.
+      uses:
+          - design_patterns.design_pattern_decision_engine
+
+      constraints:
+          - "patterns must respect role constraints"
+          - "invalid role + pattern combination = rejection"
+
+    - stage: 6_architecture_binding
+      description: >
+          Bind:
+            - roles
+            - layers
+            - patterns
+          into final structure graph.
+
+    - stage: 7_validation
+      description: >
+          Run all architectural rules as final gate check.
+      uses:
+          - architecture_rules.validation_checkpoints
+          - architecture_rules.forbidden
+
+# =========================================================
+# 3. CORE DECOMPOSITION RULES (NON-NEGOTIABLE)
+# =========================================================
+
+decomposition_rules:
+    atomicity:
+        rule: "Every unit must represent exactly one intent"
+
+    no_mixing:
+        rule: >
+            A unit cannot contain:
+              - execution + decision
+              - transformation + IO
+              - validation + mutation
+              - orchestration + domain rules
+
+    split_condition:
+        trigger: "any mixed intent detected"
+        action: "force decomposition before proceeding"
+
+# =========================================================
+# 4. ROLE-FIRST BINDING STRATEGY
+# =========================================================
+
+role_binding_strategy:
+    rule: "roles are assigned BEFORE patterns"
+
+    validation_order:
+        - "intent → role"
+        - "role → layer"
+        - "role + layer → allowed patterns"
+
+    forbidden:
+        - "pattern influencing role selection"
+        - "layer determined after pattern choice"
+
+# =========================================================
+# 5. DESIGN PATTERN GATE (ROLE-AWARE FILTERING)
+# =========================================================
+
+pattern_gate:
+    rule: "patterns are constrained by role system"
+
+    process:
+        - step: fetch_candidate_patterns
+          source: design_patterns.intent_classification
+
+        - step: filter_by_role_constraints
+          source: design_patterns.role_aware_constraints
+
+        - step: validate_against_role_system
+          source: class_role_classification_system
+
+        - step: reject_invalid_pairs
+
+    rejection_conditions:
+        - "pattern requires forbidden role behavior"
+        - "role violates single responsibility"
+        - "pattern introduces cross-layer contamination"
+
+# =========================================================
+# 6. ARCHITECTURE OUTPUT MODEL
+# =========================================================
+
+output:
+    structure:
+        - feature_summary
+        - decomposed_units
+        - layer_mapping
+        - role_assignment_map
+        - pattern_application_map
+        - dependency_graph
+        - validation_report
+
+    graph_model:
+        type: "directed_acyclic_graph"
+
+        nodes:
+            - class_roles
+            - layers
+            - patterns
+
+        edges:
+            - dependency_flow
+            - interaction_flow
+            - composition_flow
+
+# =========================================================
+# 7. ANTI-PREMATURE DESIGN RULES
+# =========================================================
+
+anti_premature_design:
+    rules:
+        - rule: "NO pattern selection before decomposition"
+          enforcement: "hard stop"
+
+        - rule: "NO class naming before role assignment"
+          enforcement: "reject"
+
+        - rule: "NO layer assumption before intent classification"
+          enforcement: "recompute"
+
+        - rule: "NO architecture decisions during parsing phase"
+          enforcement: "invalidate stage"
+
+# =========================================================
+# 8. FINAL VALIDATION GATE (HARD STOP SYSTEM)
+# =========================================================
+
+final_validation:
+    must_pass:
+        - no_role_violations
+        - no_layer_violations
+        - no_pattern_role_conflicts
+        - single_intent_per_class
+        - no_cross_layer_dependency_violation
+
+    failure_action:
+        - "regenerate architecture from decomposition stage"
+
+# =========================================================
+# 9. OUTPUT GUARANTEE
+# =========================================================
+
+guarantees:
+    - "Every class has exactly one role"
+    - "Every role belongs to exactly one layer"
+    - "Every pattern respects role constraints"
+    - "No business logic leakage into infrastructure"
+    - "No premature structural decisions allowed"
