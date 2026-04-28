@@ -1,16 +1,18 @@
-version: "1.0"
+version: "1.1"
 
 system:
     name: "feature-to-architecture-compiler"
     purpose: >
         Convert a raw feature/system prompt into a fully decomposed,
-        role-assigned, pattern-aware architecture blueprint.
+        role-assigned, structure-validated architecture blueprint.
 
     philosophy:
         - "No structure before decomposition"
         - "No pattern before roles are validated"
         - "No file assignment before intent is stable"
         - "Architecture emerges, it is not chosen prematurely"
+        - "Folder structure and runtime architecture must converge"
+        - "Fail closed on ambiguity at every stage"
 
 # =========================================================
 # 1. EXTERNAL SYSTEM DEPENDENCIES (NO MERGING)
@@ -20,17 +22,19 @@ dependencies:
     architecture_rules:
         file: "conventions.architecture.yaml"
         role: "primary structural and decomposition system"
-        usage: "defines intents, layers, dependency rules"
 
     role_classifier:
         file: "conventions.roles.yaml"
         role: "class-level responsibility validator"
-        usage: "assign file suffixes and enforce single responsibility"
 
     design_patterns:
         file: "conventions.design.patterns.yaml"
         role: "interaction + structural pattern selector"
-        usage: "chooses coordination patterns between classes"
+
+    architecture_contract_v3:
+        file: "conventions.structure.yaml"
+        role: "structural hierarchy + folder + module enforcement system"
+        usage: "validates folder structure, isolation, and execution constraints"
 
 # =========================================================
 # 2. PIPELINE (STRICT ORDER - NO SKIPPING)
@@ -38,186 +42,207 @@ dependencies:
 
 execution_pipeline:
     - stage: 1_raw_intent_extraction
-      description: >
-          Parse feature prompt into atomic functional intents.
+      description: "Extract atomic functional intents from feature prompt"
       uses:
           - architecture_rules.logic_decomposition.intents
 
     - stage: 2_system_decomposition
       description: >
-          Break feature into independent logic units BEFORE any design decisions.
+          Break feature into atomic units before any structural assumptions
       rules:
-          - "no role assignment yet"
-          - "no patterns yet"
-          - "only intent units allowed"
+          - "no roles"
+          - "no patterns"
+          - "no folder structure"
 
-    - stage: 3_layer_assignment
+    - stage: 3_layer_and_hierarchy_classification
       description: >
-          Assign each unit to architecture layer (ENTRY/APPLICATION/DOMAIN/etc).
+          Assign architectural depth + layer based on contract v3
       uses:
+          - architecture_contract_v3.hierarchy_model
+          - architecture_contract_v3.classification_rules
           - architecture_rules.layers
 
     - stage: 4_class_role_assignment
-      description: >
-          Convert each unit into a class-level role using role classifier.
+      description: "Assign strict single responsibility roles"
       uses:
-          - conventions.roles
+          - role_classifier
       constraints:
-          - "each unit MUST map to exactly one role"
-          - "role conflicts trigger mandatory split"
+          - "1 unit → 1 role only"
 
     - stage: 5_pattern_selection
-      description: >
-          Select design patterns ONLY after roles are stable.
+      description: "Select patterns ONLY after role stability"
       uses:
           - design_patterns.design_pattern_decision_engine
-
       constraints:
-          - "patterns must respect role constraints"
-          - "invalid role + pattern combination = rejection"
+          - "pattern must not violate role constraints"
 
-    - stage: 6_architecture_binding
+    - stage: 6_folder_and_module_binding
       description: >
-          Bind:
-            - roles
-            - layers
-            - patterns
-          into final structure graph.
+          Map architecture into folder structure using contract v3 rules
+      uses:
+          - architecture_contract_v3.feature_module_model
+          - architecture_contract_v3.folder_rules
+          - architecture_contract_v3.file_rules
+          - architecture_contract_v3.barrel_exports
+          - architecture_contract_v3.public_api_model
 
-    - stage: 7_validation
+    - stage: 7_architecture_binding
       description: >
-          Run all architectural rules as final gate check.
+          Bind roles, layers, patterns, and folder structure into DAG
+      output: "architecture graph (DAG)"
+
+    - stage: 8_validation
+      description: >
+          Full validation across BOTH systems (logic + structure)
       uses:
           - architecture_rules.validation_checkpoints
           - architecture_rules.forbidden
+          - architecture_contract_v3.evaluation_order
+          - architecture_contract_v3.violation_engine
 
 # =========================================================
-# 3. CORE DECOMPOSITION RULES (NON-NEGOTIABLE)
+# 3. STRUCTURE + HIERARCHY RULES (NEW CORE INTEGRATION)
+# =========================================================
+
+structure_model:
+    hierarchy_model:
+        depth_1: "root_feature"
+        depth_2: "use_case_flow"
+        depth_3_plus: "sub_use_case_flow"
+
+    variant_model:
+        definition: "execution-path divergence under same use-case"
+        rule: "variants must not change domain intent"
+
+# =========================================================
+# 4. DECOMPOSITION RULES (ENHANCED)
 # =========================================================
 
 decomposition_rules:
     atomicity:
-        rule: "Every unit must represent exactly one intent"
+        rule: "one intent per unit"
 
     no_mixing:
-        rule: >
-            A unit cannot contain:
-              - execution + decision
-              - transformation + IO
-              - validation + mutation
-              - orchestration + domain rules
+        forbidden:
+            - execution + decision
+            - domain + infrastructure
+            - validation + mutation
+            - orchestration + IO
 
     split_condition:
-        trigger: "any mixed intent detected"
-        action: "force decomposition before proceeding"
+        trigger: "any ambiguity or mixed responsibility"
+        action: "force decomposition restart"
 
 # =========================================================
-# 4. ROLE-FIRST BINDING STRATEGY
+# 5. LAYER + DOMAIN CONSTRAINTS (CONTRACT V3 INTEGRATION)
 # =========================================================
 
-role_binding_strategy:
-    rule: "roles are assigned BEFORE patterns"
+layer_constraints:
+    domain:
+        must_not:
+            - infrastructure_logic
+            - framework imports
+            - side effects
 
-    validation_order:
-        - "intent → role"
-        - "role → layer"
-        - "role + layer → allowed patterns"
+    services:
+        rule: "use-case orchestration only"
+        must_not:
+            - infrastructure logic leakage
+
+    repositories:
+        rule: "pure persistence abstraction"
+
+    controllers:
+        rule: "transport only"
+
+    infrastructure:
+        rule: "ALL IO isolated here"
+        enforcement: "hard boundary"
+
+# =========================================================
+# 6. FOLDER + FILE SYSTEM RULES (STRICT MERGE)
+# =========================================================
+
+folder_system:
+    rules:
+        single_purpose: true
+        no_generic_names: ["utils", "helpers", "common"]
+
+    required_structure_for_root_feature:
+        - controllers
+        - services
+        - domain
+        - repositories
+        - dto
+        - mappers
+
+file_rules:
+    single_responsibility: true
+    single_export: true
+    naming: "behavior-based naming required"
+    size_constraint: "small + focused only"
+
+barrel_exports:
+    required: true
+    rule: "index.ts defines public API only"
+
+# =========================================================
+# 7. PUBLIC API + ISOLATION MODEL
+# =========================================================
+
+public_api_model:
+    rule: "ONLY index.ts exposes module surface"
+
+module_isolation:
+    allowed:
+        - service-to-service via interfaces
 
     forbidden:
-        - "pattern influencing role selection"
-        - "layer determined after pattern choice"
+        - cross-module internal imports
 
 # =========================================================
-# 5. DESIGN PATTERN GATE (ROLE-AWARE FILTERING)
+# 8. VALIDATION SYSTEM (COMBINED ENGINE)
 # =========================================================
 
-pattern_gate:
-    rule: "patterns are constrained by role system"
+final_validation:
+    must_pass:
+        - architecture_rules.validation_checkpoints
+        - architecture_contract_v3.validation
+        - no_cross_layer_dependency_violation
+        - single_intent_per_class
+        - folder_purity
+        - module_isolation
 
-    process:
-        - step: fetch_candidate_patterns
-          source: design_patterns.intent_classification
-
-        - step: filter_by_role_constraints
-          source: design_patterns.role_aware_constraints
-
-        - step: validate_against_role_system
-          source: class_role_classification_system
-
-        - step: reject_invalid_pairs
-
-    rejection_conditions:
-        - "pattern requires forbidden role behavior"
-        - "role violates single responsibility"
-        - "pattern introduces cross-layer contamination"
+    failure_mode:
+        - "fail_closed"
+        - "regenerate from decomposition stage"
 
 # =========================================================
-# 6. ARCHITECTURE OUTPUT MODEL
+# 9. HEURISTICS + CONTRACT ENFORCEMENT
+# =========================================================
+
+heuristics:
+    stopping_condition:
+        definition: "no file fits better elsewhere"
+
+    ambiguity_policy: "fail_closed"
+
+    enforcement_mode: "strict"
+
+# =========================================================
+# 10. OUTPUT MODEL
 # =========================================================
 
 output:
-    structure:
+    required_sections:
         - feature_summary
         - decomposed_units
-        - layer_mapping
+        - hierarchy_mapping
         - role_assignment_map
-        - pattern_application_map
+        - pattern_map
+        - folder_structure_map
         - dependency_graph
         - validation_report
 
     graph_model:
         type: "directed_acyclic_graph"
-
-        nodes:
-            - class_roles
-            - layers
-            - patterns
-
-        edges:
-            - dependency_flow
-            - interaction_flow
-            - composition_flow
-
-# =========================================================
-# 7. ANTI-PREMATURE DESIGN RULES
-# =========================================================
-
-anti_premature_design:
-    rules:
-        - rule: "NO pattern selection before decomposition"
-          enforcement: "hard stop"
-
-        - rule: "NO class naming before role assignment"
-          enforcement: "reject"
-
-        - rule: "NO layer assumption before intent classification"
-          enforcement: "recompute"
-
-        - rule: "NO architecture decisions during parsing phase"
-          enforcement: "invalidate stage"
-
-# =========================================================
-# 8. FINAL VALIDATION GATE (HARD STOP SYSTEM)
-# =========================================================
-
-final_validation:
-    must_pass:
-        - no_role_violations
-        - no_layer_violations
-        - no_pattern_role_conflicts
-        - single_intent_per_class
-        - no_cross_layer_dependency_violation
-
-    failure_action:
-        - "regenerate architecture from decomposition stage"
-
-# =========================================================
-# 9. OUTPUT GUARANTEE
-# =========================================================
-
-guarantees:
-    - "Every class has exactly one role"
-    - "Every role belongs to exactly one layer"
-    - "Every pattern respects role constraints"
-    - "No business logic leakage into infrastructure"
-    - "No premature structural decisions allowed"

@@ -1,0 +1,240 @@
+design_pattern_decision_engine:
+    version: "2.0"
+
+    goal: >
+        Map a feature request into suitable design patterns
+        using BOTH:
+          1. behavioral intent analysis
+          2. class-role constraints from external role system
+
+    dependencies:
+        role_system:
+            file: "class_role_classification_system.yaml"
+            usage: "pre-classification filter for class responsibilities"
+            rule: >
+                Design patterns MUST NOT violate role constraints.
+                If a pattern implies invalid role usage, it is rejected.
+
+    input_contract:
+        required_fields:
+            - feature_description
+
+        optional_fields:
+            - constraints
+            - system_context
+            - expected_roles
+            - scalability_needs
+
+    pipeline:
+        - step: extract_intent
+          description: >
+              Identify whether system needs:
+                - creation logic
+                - structure composition
+                - behavior coordination
+
+        - step: predict_required_roles
+          description: >
+              Estimate which class roles will exist in solution
+              using role system rules.
+
+          output:
+              - predicted_roles: list
+
+        - step: validate_roles_with_role_system
+          description: >
+              Simulate class decomposition using role classifier.
+              Reject patterns that require invalid role violations.
+
+        - step: map_patterns
+
+        - step: role_compatibility_filter
+          description: >
+              Filter patterns that conflict with role constraints.
+
+        - step: rank_patterns
+
+# ------------------------------------------------------------
+# ROLE-AWARE PATTERN MAPPING (NEW LAYER)
+# ------------------------------------------------------------
+
+role_aware_constraints:
+    controller:
+        allowed_patterns:
+            - facade
+            - mediator
+        forbidden_patterns:
+            - strategy
+            - builder
+            - factory
+        reason: "controllers must not contain domain orchestration complexity"
+
+    service:
+        allowed_patterns:
+            - strategy
+            - decorator
+            - chain_of_responsibility
+            - factory_method
+        forbidden_patterns:
+            - singleton (if stateful service)
+        reason: "services are orchestration-heavy but not structural systems"
+
+    use_case:
+        allowed_patterns:
+            - command
+            - mediator
+            - template_method
+        reason: "use-cases are execution flows, not structural abstractions"
+
+    domain:
+        allowed_patterns:
+            - specification
+            - strategy
+            - visitor
+        forbidden_patterns:
+            - facade
+            - adapter
+            - proxy
+        reason: "domain must remain infrastructure-free"
+
+    repository:
+        allowed_patterns:
+            - proxy
+            - adapter
+            - factory
+        reason: "repository abstracts persistence access"
+
+    gateway:
+        allowed_patterns:
+            - adapter
+            - facade
+        reason: "gateway is transport boundary only"
+
+# ------------------------------------------------------------
+# INTENT → PATTERN MAP (ENHANCED WITH ROLE CONTEXT)
+# ------------------------------------------------------------
+
+intent_classification:
+    creational:
+        patterns:
+            singleton:
+                role_constraints:
+                    allowed_roles: [service, config]
+                    forbidden_roles: [controller, domain]
+
+            factory_method:
+                role_constraints:
+                    allowed_roles: [service, use_case, domain]
+
+            abstract_factory:
+                role_constraints:
+                    requires_roles: [factory, service]
+
+            builder:
+                role_constraints:
+                    forbidden_roles: [controller]
+
+    structural:
+        patterns:
+            adapter:
+                role_constraints:
+                    allowed_roles: [gateway, client, repository]
+
+            facade:
+                role_constraints:
+                    allowed_roles: [controller, service]
+
+            decorator:
+                role_constraints:
+                    allowed_roles: [service, domain]
+
+            proxy:
+                role_constraints:
+                    allowed_roles: [repository, client]
+
+            composite:
+                role_constraints:
+                    allowed_roles: [domain]
+
+    behavioral:
+        patterns:
+            strategy:
+                role_constraints:
+                    allowed_roles: [service, domain]
+
+            command:
+                role_constraints:
+                    allowed_roles: [use_case, service]
+
+            observer:
+                role_constraints:
+                    allowed_roles: [service, listener, domain]
+
+            mediator:
+                role_constraints:
+                    allowed_roles: [use_case, controller]
+
+            chain_of_responsibility:
+                role_constraints:
+                    allowed_roles: [service]
+
+            template_method:
+                role_constraints:
+                    allowed_roles: [use_case]
+
+# ------------------------------------------------------------
+# ROLE VIOLATION AWARE SCORING
+# ------------------------------------------------------------
+
+scoring_model:
+    weights:
+        intent_match: 0.45
+        role_compatibility: 0.35
+        extensibility: 0.15
+        coupling_reduction: 0.05
+
+    role_penalty_rules:
+        invalid_role_usage: -100
+        weak_role_alignment: -20
+        perfect_role_alignment: +30
+
+    output:
+        format:
+            - pattern
+            - score
+            - role_fit_analysis
+            - rejection_reason_if_any
+
+# ------------------------------------------------------------
+# CROSS-SYSTEM VALIDATION RULES
+# ------------------------------------------------------------
+
+validation:
+    rule_1:
+        name: "no_pattern_without_role_feasibility"
+        description: >
+            A pattern is invalid if it requires a class structure
+            that violates the role system.
+
+    rule_2:
+        name: "role_dominates_pattern"
+        description: >
+            If role system forbids structure, pattern is rejected
+            regardless of intent score.
+
+    rule_3:
+        name: "composition_must_respect_role_boundaries"
+        description: >
+            Patterns that imply cross-layer responsibility leaks are invalid.
+
+# ------------------------------------------------------------
+# FINAL OUTPUT
+# ------------------------------------------------------------
+
+output_contract:
+    required:
+        - primary_pattern
+        - alternative_patterns
+        - role_alignment_map
+        - rejected_patterns_with_reason
+        - involved_roles
