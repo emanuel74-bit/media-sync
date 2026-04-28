@@ -1,319 +1,333 @@
 architecture_rules:
-  version: "4.0"
-  mode: "agent_driven_design_system"
-  role: "senior_software_architect"
-  purpose: >
-    Deterministically transform a feature prompt into a clean, scalable,
-    production-grade architecture using strict layering, intent decomposition,
-    and enforceable design constraints.
-  philosophy:
-    - "Decomposition precedes structure"
-    - "Intent defines artifact"
-    - "No ambiguity allowed"
-    - "Consistency over convenience"
-    - "Design must be derivable, not guessed"
-  execution_policy:
-    ambiguity: "fail_closed"
-    missing_information: "ask_or_abort"
-    default_behavior: "forbidden"
-  orchestration:
-    controlled_by: "conventions.orchestrator.yaml"
-    role: "primary_source_of_truth"
-    cannot_be_overridden_by:
-      - "conventions.structure.yaml"
-      - "conventions.roles.yaml"
-      - "conventions.validation.yaml"
-    pattern_exception: >
-      conventions.pattern.yaml is the authority for available design patterns,
-      but selected patterns must still respect architecture constraints.
+  version: '4.1'
+  mode: agent_driven_design_system
+  role: senior_software_architect
+  purpose: 'Deterministically transform a feature prompt into a clean, scalable, production-grade architecture using strict layering, intent decomposition, and enforceable design constraints.
 
+    '
+  philosophy:
+  - Decomposition precedes structure
+  - Intent defines artifact
+  - No ambiguity allowed
+  - Consistency over convenience
+  - Design must be derivable, not guessed
+  execution_policy:
+    ambiguity: fail_closed
+    missing_information: ask_or_abort
+    default_behavior: forbidden
+  orchestration:
+    controlled_by: conventions.orchestrator.yaml
+    role: primary_source_of_truth
+    cannot_be_overridden_by:
+    - conventions.structure.yaml
+    - conventions.roles.yaml
+    - conventions.validation.yaml
+    pattern_exception: 'conventions.pattern.yaml is the authority for available design patterns, but selected patterns must still respect architecture constraints.
+
+      '
   contract:
     input:
-      type: "feature_prompt"
+      type: feature_prompt
     output:
-      type: "architecture_blueprint"
+      type: architecture_blueprint
       must_include:
-        - "capabilities"
-        - "atomic_units"
-        - "intents"
-        - "artifacts"
-        - "layers"
-        - "dependencies"
-        - "structure_intent"
-        - "validation_requirements"
-
+      - capabilities
+      - atomic_units
+      - intents
+      - artifacts
+      - layers
+      - dependencies
+      - structure_intent
+      - validation_requirements
+      - candidate_design
+      - refinement_report
+      - corrected_feature_plan
   pipeline:
     steps:
-      - "extract_capabilities"
-      - "decompose_to_atomic_units"
-      - "classify_intents"
-      - "map_to_artifacts"
-      - "assign_layers"
-      - "infer_dependencies"
-      - "define_structure_intent"
-      - "declare_validation_requirements"
+    - extract_capabilities
+    - decompose_to_atomic_units
+    - classify_intents
+    - map_to_artifacts
+    - assign_layers
+    - infer_dependencies
+    - define_structure_intent
+    - run_integrated_design_refinement
+    - apply_refined_architecture_corrections
+    - declare_validation_requirements
     forbidden_steps:
-      - "assign_file_suffixes"
-      - "select_design_patterns"
-      - "render_final_folder_structure"
-
+    - assign_file_suffixes
+    - select_design_patterns
+    - render_final_folder_structure
+    - finalize_plan_before_integrated_refinement
   capability_model:
-    definition: "A distinct business capability requested or implied by the feature prompt."
+    definition: A distinct business capability requested or implied by the feature prompt.
     rules:
-      - "A capability must map to a business outcome, not a technical type."
-      - "A capability may contain one or more atomic units."
-      - "Unrelated capabilities must become separate modules."
-
+    - A capability must map to a business outcome, not a technical type.
+    - A capability may contain one or more atomic units.
+    - Unrelated capabilities must become separate modules.
   atomic_unit_model:
-    definition: "Smallest independently understandable unit with one clear intent."
+    definition: Smallest independently understandable unit with one clear intent.
     rules:
-      - "Each unit MUST have exactly one intent."
-      - "If multiple reasons to change exist, split the unit."
-      - "If multiple execution outcomes exist, split or model as explicit variants."
-      - "No god classes."
-      - "No fat services."
-
+    - Each unit MUST have exactly one intent.
+    - If multiple reasons to change exist, split the unit.
+    - If multiple execution outcomes exist, split or model as explicit variants.
+    - No god classes.
+    - No fat services.
   intent_model:
     rules:
-      - "Intent must be explicit and behavior-oriented."
-      - "Intent defines artifact existence."
-      - "No artifact may exist without a stable intent."
-      - "Ambiguous intent fails closed."
-
+    - Intent must be explicit and behavior-oriented.
+    - Intent defines artifact existence.
+    - No artifact may exist without a stable intent.
+    - Ambiguous intent fails closed.
   artifact_model:
-    definition: "An abstract implementation unit derived from an atomic unit before role suffix or folder placement."
+    definition: An abstract implementation unit derived from an atomic unit before role suffix or folder placement.
     rules:
-      - "Each artifact must map back to exactly one intent."
-      - "Artifacts must be role-classified by conventions.roles.yaml."
-      - "Artifacts must be layer-assigned by this architecture contract."
-      - "Artifacts must not be created for future/speculative behavior."
-
+    - Each artifact must map back to exactly one intent.
+    - Artifacts must be role-classified by conventions.roles.yaml.
+    - Artifacts must be layer-assigned by this architecture contract.
+    - Artifacts must not be created for future/speculative behavior.
   structure:
     module_definition:
-      rule: "Each module represents a distinct business capability."
+      rule: Each module represents a distinct business capability.
       constraints:
-        - "Modules MUST be independently understandable."
-        - "Modules MUST be independently testable."
-        - "No implicit cross-module coupling."
+      - Modules MUST be independently understandable.
+      - Modules MUST be independently testable.
+      - No implicit cross-module coupling.
     organization:
-      strategy: "feature_first"
-      fallback: "layer_within_feature"
+      strategy: feature_first
+      fallback: layer_within_feature
     layer_boundaries:
       enforced: true
-      rule: "Strict separation between layers."
-
+      rule: Strict separation between layers.
   layers:
     canonical:
       entry:
-        purpose: "Transport and external entry points."
+        purpose: Transport and external entry points.
         examples:
-          - "controller"
-          - "gateway"
+        - controller
+        - gateway
       application:
-        purpose: "Application flow, orchestration, use-case execution, side-effect coordination."
+        purpose: Application flow, orchestration, use-case execution, side-effect coordination.
         examples:
-          - "service"
-          - "use_case"
-          - "orchestrator"
+        - service
+        - use_case
+        - orchestrator
       decision:
-        purpose: "Pure decision logic and policies."
+        purpose: Pure decision logic and policies.
         examples:
-          - "policy"
-          - "specification"
-          - "selector"
-          - "guard"
+        - policy
+        - specification
+        - selector
+        - guard
       domain:
-        purpose: "Pure core business rules and domain state."
+        purpose: Pure core business rules and domain state.
         examples:
-          - "domain"
-          - "event"
+        - domain
+        - event
       infrastructure:
-        purpose: "Persistence, external systems, IO, framework adapters."
+        purpose: Persistence, external systems, IO, framework adapters.
         examples:
-          - "repository"
-          - "client"
-          - "adapter"
-          - "publisher"
-          - "listener"
+        - repository
+        - client
+        - adapter
+        - publisher
+        - listener
       support:
-        purpose: "Boundary support, transformation, validation, construction, constants, types."
+        purpose: Boundary support, transformation, validation, construction, constants, types.
         examples:
-          - "mapper"
-          - "validator"
-          - "factory"
-          - "builder"
-          - "resolver"
-          - "dto"
-          - "types"
-          - "constants"
-          - "enum"
-          - "config"
-          - "error"
-
+        - mapper
+        - validator
+        - factory
+        - builder
+        - resolver
+        - dto
+        - types
+        - constants
+        - enum
+        - config
+        - error
   data_flow:
     direction:
       canonical:
-        - "ENTRY"
-        - "APPLICATION"
-        - "DECISION"
-        - "DOMAIN"
-        - "INFRASTRUCTURE"
+      - ENTRY
+      - APPLICATION
+      - DECISION
+      - DOMAIN
+      - INFRASTRUCTURE
     rules:
-      - "Flow MUST be unidirectional."
-      - "No reverse dependencies."
-      - "No circular dependencies."
-      - "APPLICATION orchestrates but does not persist."
-      - "INFRASTRUCTURE handles all IO."
-      - "Raw persistence models MUST NOT cross boundaries."
-      - "Mapping layer MUST isolate transformations."
-
+    - Flow MUST be unidirectional.
+    - No reverse dependencies.
+    - No circular dependencies.
+    - APPLICATION orchestrates but does not persist.
+    - INFRASTRUCTURE handles all IO.
+    - Raw persistence models MUST NOT cross boundaries.
+    - Mapping layer MUST isolate transformations.
   dependency_rules:
     allowed:
       entry:
-        - "application"
-        - "support"
+      - application
+      - support
       application:
-        - "decision"
-        - "domain"
-        - "support"
-        - "infrastructure_interfaces"
+      - decision
+      - domain
+      - support
+      - infrastructure_interfaces
       decision:
-        - "domain"
-        - "support"
+      - domain
+      - support
       domain: []
       infrastructure:
-        - "domain"
-        - "support"
-        - "infrastructure_interfaces"
+      - domain
+      - support
+      - infrastructure_interfaces
       support:
-        - "domain_when_pure_and_required"
+      - domain_when_pure_and_required
     forbidden:
-      - "domain_importing_infrastructure"
-      - "domain_importing_frameworks"
-      - "service_importing_db_models"
-      - "entry_calling_repository"
-      - "cross_module_internal_access"
-      - "layer_skipping"
-      - "circular_dependencies"
-
+    - domain_importing_infrastructure
+    - domain_importing_frameworks
+    - service_importing_db_models
+    - entry_calling_repository
+    - cross_module_internal_access
+    - layer_skipping
+    - circular_dependencies
   coupling:
     principles:
-      - "Depend on abstractions only."
-      - "All external dependencies via DI."
-      - "No global state."
+    - Depend on abstractions only.
+    - All external dependencies via DI.
+    - No global state.
     required:
-      - "interfaces_at_boundaries"
-      - "inversion_of_control"
-
+    - interfaces_at_boundaries
+    - inversion_of_control
   service_model:
     constraints:
-      - "Services MUST be stateless."
-      - "Services MUST be small and composable."
-      - "Services MUST implement ONE intent only."
+    - Services MUST be stateless.
+    - Services MUST be small and composable.
+    - Services MUST implement ONE intent only.
     forbidden:
-      - "transport_logic_in_service"
-      - "direct_repository_models"
-      - "infrastructure_logic"
+    - transport_logic_in_service
+    - direct_repository_models
+    - infrastructure_logic
     split_conditions:
-      - "multiple_responsibilities"
-      - "growing_orchestration_complexity"
-
+    - multiple_responsibilities
+    - growing_orchestration_complexity
   service_usage:
     rules:
-      - "Same service MUST have ONE canonical interface."
-      - "All usages MUST match same input/output structure."
-      - "No alternative invocation patterns."
+    - Same service MUST have ONE canonical interface.
+    - All usages MUST match same input/output structure.
+    - No alternative invocation patterns.
     forbidden:
-      - "duplicate_service_logic"
-      - "bypassing_service_layer"
-      - "multiple_entrypoints_same_action"
+    - duplicate_service_logic
+    - bypassing_service_layer
+    - multiple_entrypoints_same_action
     resolution:
-      - "standardize_interface"
-      - "refactor_all_call_sites"
-      - "introduce_adapter_only_if_external"
-
+    - standardize_interface
+    - refactor_all_call_sites
+    - introduce_adapter_only_if_external
   patterns:
     governance:
-      source: "conventions.pattern.yaml"
-      rule: "Pattern catalog and selection are owned by conventions.pattern.yaml."
+      source: conventions.pattern.yaml
+      rule: Pattern catalog and selection are owned by conventions.pattern.yaml.
     constraints:
-      - "Patterns MUST follow architecture constraints."
-      - "Patterns MUST NOT alter layering or dependencies."
-      - "Patterns MUST NOT introduce circular dependencies."
-      - "Patterns MUST NOT bypass module boundaries."
-      - "No speculative patterns."
-
+    - Patterns MUST follow architecture constraints.
+    - Patterns MUST NOT alter layering or dependencies.
+    - Patterns MUST NOT introduce circular dependencies.
+    - Patterns MUST NOT bypass module boundaries.
+    - No speculative patterns.
   domain:
     rules:
-      - "Must contain core business rules."
-      - "Must be pure."
-      - "Must not depend on frameworks."
-      - "Must not perform IO."
-
+    - Must contain core business rules.
+    - Must be pure.
+    - Must not depend on frameworks.
+    - Must not perform IO.
   consistency:
     rules:
-      - "Similar problems MUST use same patterns."
-      - "Naming MUST follow conventions."
-      - "No parallel implementations of same logic."
-
+    - Similar problems MUST use same patterns.
+    - Naming MUST follow conventions.
+    - No parallel implementations of same logic.
   scalability:
     rules:
-      - "Design for change."
-      - "Prefer extensibility over shortcuts."
-      - "Avoid tight coupling."
-
+    - Design for change.
+    - Prefer extensibility over shortcuts.
+    - Avoid tight coupling.
   structure_intent:
-    role: "architecture_owned_structure_intent_only"
+    role: architecture_owned_structure_intent_only
     defines:
-      - "feature_boundaries"
-      - "module_boundaries"
-      - "layer_grouping"
-      - "required_artifacts_per_layer"
-      - "dependency_direction"
+    - feature_boundaries
+    - module_boundaries
+    - layer_grouping
+    - required_artifacts_per_layer
+    - dependency_direction
     does_not_define:
-      - "final_folder_tree"
-      - "optional_support_folders"
-      - "folder_depth_rendering"
-      - "exact_file_suffix_selection"
+    - final_folder_tree
+    - optional_support_folders
+    - folder_depth_rendering
+    - exact_file_suffix_selection
     strategy:
-      - "feature_first"
-      - "layer_within_feature"
-
+    - feature_first
+    - layer_within_feature
   validation_requirements:
     fail_conditions:
-      - "multi_intent_unit"
-      - "layer_violation"
-      - "circular_dependency"
-      - "service_interface_inconsistency"
-      - "business_logic_in_wrong_layer"
-      - "duplicate_logic_paths"
+    - multi_intent_unit
+    - layer_violation
+    - circular_dependency
+    - service_interface_inconsistency
+    - business_logic_in_wrong_layer
+    - duplicate_logic_paths
     must_verify:
-      - "all_services_consistent"
-      - "all_dependencies_valid"
-      - "all_layers_respected"
-      - "all_units_single_responsibility"
-
+    - all_services_consistent
+    - all_dependencies_valid
+    - all_layers_respected
+    - all_units_single_responsibility
   forbidden:
     absolute:
-      - "circular_dependencies"
-      - "layer_skipping"
-      - "global_state"
-      - "business_logic_in_infrastructure"
-      - "infrastructure_in_domain"
-      - "direct_db_access_from_services"
-      - "mixed_responsibilities"
-      - "god_classes"
-      - "conditional_heavy_logic_without_strategy"
-      - "duplicated_service_logic"
-      - "inconsistent_service_usage"
-
+    - circular_dependencies
+    - layer_skipping
+    - global_state
+    - business_logic_in_infrastructure
+    - infrastructure_in_domain
+    - direct_db_access_from_services
+    - mixed_responsibilities
+    - god_classes
+    - conditional_heavy_logic_without_strategy
+    - duplicated_service_logic
+    - inconsistent_service_usage
   agent_execution:
     behavior:
-      - "MUST follow orchestrator pipeline strictly."
-      - "MUST NOT skip steps."
-      - "MUST NOT guess missing structure."
-      - "MUST derive everything from intent."
+    - MUST follow orchestrator pipeline strictly.
+    - MUST NOT skip steps.
+    - MUST NOT guess missing structure.
+    - MUST derive everything from intent.
     output_constraints:
-      - "production_grade_only"
-      - "deterministic_only"
-      - "no_unresolved_ambiguity"
+    - production_grade_only
+    - deterministic_only
+    - no_unresolved_ambiguity
+  design_refinement:
+    source_contract: conventions.refactor.yaml
+    mode: embedded_in_feature_request_pipeline
+    trigger: whenever_agent_proposes_an_architecture_or_implementation_plan
+    requires:
+    - candidate_design
+    - artifact_roles
+    - layers
+    - dependency_graph
+    - selected_patterns
+    must:
+    - scan_candidate_design_for_duplication_and_inconsistency
+    - classify_refinement_issues
+    - redesign_target_architecture_before_final_structure
+    - normalize_service_interfaces
+    - replace_candidate_plan_with_corrected_plan
+    - validate_corrected_plan
+    may_update:
+    - artifacts
+    - roles_when_decomposition_changes
+    - dependencies
+    - service_contracts
+    - selected_patterns
+    - structure_intent
+    must_not_update:
+    - original_user_intent_without_explicit_reason
+    - architecture_layer_rules
+    - dependency_direction_rules
+    - module_boundary_rules
+    completion_condition: candidate_design_replaced_by_valid_corrected_feature_plan

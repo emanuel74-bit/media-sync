@@ -1,0 +1,315 @@
+version: '2.0'
+system:
+  name: integrated-design-refinement-pipeline
+  role: feature_design_self_correction_controller
+  purpose: Embed refactor-style scanning, classification, target redesign, correction, and validation inside the regular feature-request architecture pipeline so every proposed design is reevaluated before final output.
+  philosophy:
+  - Detect design problems before presenting a plan
+  - Classify before changing the design
+  - Redesign target architecture before rendering structure
+  - Prefer one source of truth for each behavior
+  - Service usage must be symmetric and consistent
+  - Preserve existing behavior when existing code is involved
+  - A plan is not final until it survives refinement validation
+  enforcement:
+    mode: strict
+    ambiguity_policy: fail_closed
+    step_order: no_skipping
+    behavior_preservation: mandatory_when_existing_code_is_present
+    correction_policy: revise_design_before_final_output
+  orchestration:
+    controlled_by: conventions.orchestrator.yaml
+    mode: embedded_in_regular_feature_request_mode
+    runs_after: candidate_design_generated
+    runs_before: final_structure_rendering_and_final_output
+    requires:
+    - candidate_architecture_blueprint
+    - artifact_roles
+    - layers
+    - dependency_graph
+    - selected_patterns
+    - architecture_constraints
+    - structure_constraints
+    - validation_contract
+    optional_context:
+    - existing_codebase_context
+    - related_existing_modules
+    - known_service_interfaces
+    - legacy_behavior_constraints
+    forbidden:
+    - final_output_before_refinement
+    - implementation_before_target_design
+    - behavior_change_without_explicit_requirement
+    - architecture_violation_as_refinement_shortcut
+input_contract:
+  required:
+  - feature_prompt
+  - candidate_design
+  optional:
+  - existing_codebase_context
+  - known_problem_area
+  - allowed_scope
+  - behavioral_constraints
+  assumptions:
+  - existing_behavior_is_correct_unless_user_says_otherwise
+  - architecture_constraints_remain_active_during_design_refinement
+  - refinement_updates_the_plan_before_the_agent_outputs_it
+integrated_refinement_pipeline:
+  phases:
+  - id: 01_scan_candidate_design
+    goal: Identify problems in the proposed feature design before finalizing the plan.
+    uses:
+    - conventions.architecture.yaml
+    - conventions.structure.yaml
+    - conventions.roles.yaml
+    - conventions.validation.yaml
+    tasks:
+    - detect_duplicate_or_similar_logic_in_candidate_design
+    - detect_service_usage_asymmetry_or_inconsistent_contracts
+    - detect_repeated_orchestration_flows
+    - detect_conditional_heavy_logic_that_suggests_missing_abstraction
+    - detect_srp_violations_or_mixed_responsibilities
+    - detect_cross_layer_violations
+    - detect_tight_module_coupling
+    - compare_with_existing_codebase_when_context_is_available
+    output:
+    - candidate_findings_grouped_by_category
+    - related_units_map
+    - evidence_or_design_references
+    forbids:
+    - finalizing_plan
+    - rendering_final_structure
+    - writing_code_before_refinement
+  - id: 02_classify_refinement_issues
+    goal: Classify every detected design issue and determine the best correction approach.
+    uses:
+    - conventions.roles.yaml
+    - conventions.pattern.yaml
+    - conventions.architecture.yaml
+    requires:
+    - candidate_findings_grouped_by_category
+    - related_units_map
+    classification_types:
+    - duplication
+    - variation_of_same_behavior
+    - orchestration_duplication
+    - service_inconsistency
+    - missing_abstraction
+    - layer_violation
+    - module_coupling
+    - role_mismatch
+    - structure_mismatch
+    allowed_design_approaches:
+    - strategy_pattern
+    - factory_pattern
+    - adapter_pattern
+    - shared_abstraction
+    - service_consolidation
+    - role_decomposition
+    - interface_extraction
+    - mapper_extraction
+    - policy_extraction
+    - orchestrator_extraction
+    - structure_adjustment
+    output:
+    - issue_to_classification_map
+    - issue_to_recommended_approach_map
+    - pattern_tradeoff_report
+    rules:
+    - pattern_yaml_is_pattern_authority
+    - selected_approach_must_respect_architecture_constraints
+    - simplest_valid_approach_wins
+    forbids:
+    - speculative_abstraction
+    - pattern_that_changes_layer_or_dependency_direction
+  - id: 03_redesign_target_architecture
+    goal: Update the candidate design before structure rendering or implementation planning.
+    uses:
+    - conventions.architecture.yaml
+    - conventions.structure.yaml
+    - conventions.roles.yaml
+    requires:
+    - issue_to_classification_map
+    - issue_to_recommended_approach_map
+    define_or_update:
+    - abstractions
+    - service_boundaries
+    - module_ownership
+    - interfaces_and_contracts
+    - normalized_service_method_signatures
+    - normalized_input_output_contracts
+    - artifact_roles_when_decomposition_changes
+    - dependency_graph_when_boundaries_change
+    must_ensure:
+    - high_cohesion
+    - minimal_coupling
+    - strict_layering
+    - consistent_service_apis
+    - module_boundary_integrity
+    - single_source_of_truth_per_behavior
+    output:
+    - refined_architecture_blueprint
+    - refined_abstraction_definitions
+    - refined_service_interface_contracts
+    - design_correction_plan
+    forbids:
+    - generic_god_abstraction
+    - leaking_database_models_into_services
+    - adding_artifacts_without_intent
+  - id: 04_apply_design_corrections_to_plan
+    goal: Replace the initial candidate plan with the refined convention-compliant plan.
+    uses:
+    - conventions.architecture.yaml
+    - conventions.roles.yaml
+    - conventions.pattern.yaml
+    - conventions.structure.yaml
+    requires:
+    - refined_architecture_blueprint
+    - refined_abstraction_definitions
+    - refined_service_interface_contracts
+    - design_correction_plan
+    tasks:
+    - extract_shared_logic_in_design
+    - introduce_required_abstractions
+    - replace_duplicate_design_paths
+    - apply_appropriate_design_patterns
+    - decompose_fat_services_or_god_classes
+    - standardize_service_usage_across_planned_call_sites
+    - update_affected_modules_in_plan
+    service_symmetry_requirement:
+      rule: All usages of the same service behavior must use the same canonical interface.
+      must_be:
+      - symmetric
+      - consistent
+      - single_entrypoint_per_behavior
+    output:
+    - corrected_feature_plan
+    - corrected_artifacts
+    - corrected_dependencies
+    - corrected_service_contracts
+    forbids:
+    - behavior_change_when_existing_behavior_is_in_scope
+    - new_cross_layer_leakage
+    - database_model_leakage
+    - generic_god_utilities
+    - mixed_layer_modules
+  - id: 05_validate_refined_plan
+    goal: Verify the corrected plan before final output.
+    uses:
+    - conventions.validation.yaml
+    - conventions.architecture.yaml
+    - conventions.structure.yaml
+    - conventions.roles.yaml
+    - conventions.pattern.yaml
+    requires:
+    - corrected_feature_plan
+    - corrected_artifacts
+    - corrected_dependencies
+    - corrected_service_contracts
+    verify:
+    - no_duplicate_behavior_paths_remain_in_plan
+    - all_services_are_used_consistently
+    - no_architectural_violations_exist
+    - no_cross_layer_leakage
+    - modules_remain_isolated
+    - naming_and_structure_are_consistent
+    - existing_behavior_preserved_when_applicable
+    output:
+    - refinement_validations_performed
+    - refinement_compliance_report
+    - remaining_risks_or_unresolved_items
+    forbids:
+    - declaring_plan_final_with_unresolved_violations
+issue_detection_catalog:
+  duplicate_or_similar_logic:
+    signals:
+    - copy_paste_reuse
+    - same_branching_logic_in_multiple_locations
+    - same_transformation_logic_repeated
+    - parallel_planned_artifacts_with_same_behavior
+    preferred_resolutions:
+    - shared_abstraction
+    - service_consolidation
+    - strategy_pattern_when_variants_exist
+  inconsistent_service_usage:
+    signals:
+    - same_service_called_with_different_shapes_for_same_behavior
+    - multiple_entrypoints_for_same_action
+    - parallel_implementations_of_same_service_logic
+    preferred_resolutions:
+    - canonical_service_interface
+    - adapter_only_for_external_boundary
+    - call_site_standardization
+  repeated_orchestration_flow:
+    signals:
+    - same_sequence_of_dependency_calls_repeated
+    - workflow_steps_duplicated_across_services
+    preferred_resolutions:
+    - orchestrator_extraction
+    - use_case_extraction
+    - template_method_when_workflow_skeleton_is_shared
+  conditional_heavy_logic:
+    signals:
+    - large_if_else_or_switch_selecting_behavior
+    - type_code_branching
+    - state_based_behavior_clusters
+    preferred_resolutions:
+    - strategy_pattern
+    - state_pattern
+    - factory_pattern_for_creation_branching
+    - selector_or_resolver_role_when_choice_logic_is_isolated
+  srp_violation:
+    signals:
+    - multiple_reasons_to_change
+    - mixed_io_business_rules_and_transformation
+    - fat_service_or_god_class
+    preferred_resolutions:
+    - role_decomposition
+    - extract_policy_mapper_validator_repository_or_service
+  cross_layer_violation:
+    signals:
+    - controller_calls_repository
+    - domain_imports_framework_or_infrastructure
+    - service_uses_raw_persistence_model
+    preferred_resolutions:
+    - restore_layer_boundary
+    - introduce_mapper
+    - introduce_interface_boundary
+  tight_module_coupling:
+    signals:
+    - deep_imports_across_modules
+    - cross_module_internal_access
+    - shared_mutable_state_between_modules
+    preferred_resolutions:
+    - public_module_interface
+    - adapter_at_boundary
+    - event_or_contract_based_communication_when_needed
+anti_patterns_to_eliminate:
+- copy_paste_reuse
+- diverging_implementations_of_same_logic
+- multiple_service_entrypoints_for_same_behavior
+- inconsistent_service_invocation_patterns
+- fat_services
+- god_classes
+- hidden_module_coupling
+- generic_god_utilities
+success_criteria:
+- single_source_of_truth_for_each_logical_behavior
+- clean_abstraction_boundaries
+- consistent_service_contracts
+- reduced_duplication
+- improved_readability_and_maintainability
+- solid_principles_preserved
+- architecture_contracts_still_valid
+output_contract:
+  feature_mode_required_refinement_sections:
+  - candidate_design_findings
+  - refinement_decisions
+  - corrected_feature_plan
+  - refinement_validation
+  global_output_rules:
+  - follow_refinement_steps_strictly_in_order
+  - do_not_present_initial_candidate_as_final
+  - do_not_include_unstructured_explanations_when_executing_pipeline
+  - do_not_produce_pseudocode_for_actual_code_output
+  - production_grade_outputs_only

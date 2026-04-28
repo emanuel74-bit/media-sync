@@ -1,273 +1,349 @@
-version: "1.0"
-
+version: '1.1'
 system:
-  name: "agent-code-architecture-orchestrator"
-  role: "meta_architecture_controller"
-  purpose: >
-    Coordinate all convention contracts used by AI coding agents so a simple
-    feature prompt can be transformed into a deterministic architecture,
-    implementation plan, file structure, and validation report.
-  philosophy:
-    - "No decision before its prerequisites exist"
-    - "Architecture is the source of truth"
-    - "Structure renders architecture and fills only unspecified structure details"
-    - "Roles classify artifacts after intent is stable"
-    - "Patterns refine implementation but never break architecture"
-    - "Validation judges the final result"
-  enforcement:
-    mode: "strict"
-    ambiguity_policy: "fail_closed"
-    missing_information_policy: "ask_or_abort"
-    default_behavior: "forbidden"
+  name: agent-code-architecture-orchestrator
+  role: meta_architecture_controller
+  purpose: 'Coordinate all convention contracts used by AI coding agents so a simple feature prompt can be transformed into a deterministic architecture, implementation plan, file structure, and validation report.
 
+    '
+  philosophy:
+  - No decision before its prerequisites exist
+  - Architecture is the source of truth
+  - Structure renders architecture and fills only unspecified structure details
+  - Roles classify artifacts after intent is stable
+  - Patterns refine implementation but never break architecture
+  - Every candidate plan must be refined before it is final
+  - Validation judges the final result
+  enforcement:
+    mode: strict
+    ambiguity_policy: fail_closed
+    missing_information_policy: ask_or_abort
+    default_behavior: forbidden
 contracts:
   architecture:
-    file: "conventions.architecture.yaml"
-    authority: "primary_source_of_truth"
+    file: conventions.architecture.yaml
+    authority: primary_source_of_truth
     owns:
-      - "capability_extraction"
-      - "intent_decomposition"
-      - "artifact_definition"
-      - "layer_assignment"
-      - "dependency_rules"
-      - "data_flow"
-      - "structure_intent"
-      - "architecture_constraints"
+    - capability_extraction
+    - intent_decomposition
+    - artifact_definition
+    - layer_assignment
+    - dependency_rules
+    - data_flow
+    - structure_intent
+    - architecture_constraints
     does_not_own:
-      - "final_folder_tree_rendering"
-      - "role_suffix_classification"
-      - "design_pattern_catalog"
-      - "final_validation_judgment"
-
+    - final_folder_tree_rendering
+    - role_suffix_classification
+    - design_pattern_catalog
+    - final_validation_judgment
   roles:
-    file: "conventions.roles.yaml"
-    authority: "artifact_role_classifier"
+    file: conventions.roles.yaml
+    authority: artifact_role_classifier
     owns:
-      - "class_role_detection"
-      - "file_suffix_selection"
-      - "single_role_enforcement"
+    - class_role_detection
+    - file_suffix_selection
+    - single_role_enforcement
     does_not_own:
-      - "feature_decomposition"
-      - "layer_policy"
-      - "folder_hierarchy"
-      - "pattern_selection"
-
+    - feature_decomposition
+    - layer_policy
+    - folder_hierarchy
+    - pattern_selection
   patterns:
-    file: "conventions.pattern.yaml"
-    authority: "global_design_pattern_catalog"
+    file: conventions.pattern.yaml
+    authority: global_design_pattern_catalog
     owns:
-      - "all_design_pattern_selection"
-      - "pattern_tradeoff_analysis"
-      - "pattern_misuse_detection"
+    - all_design_pattern_selection
+    - pattern_tradeoff_analysis
+    - pattern_misuse_detection
     can_override:
-      - "architecture_pattern_whitelist"
+    - architecture_pattern_whitelist
     cannot_override:
-      - "layer_assignment"
-      - "dependency_direction"
-      - "module_boundaries"
-      - "data_flow_rules"
-      - "single_responsibility"
-      - "architecture_principles"
-
+    - layer_assignment
+    - dependency_direction
+    - module_boundaries
+    - data_flow_rules
+    - single_responsibility
+    - architecture_principles
   structure:
-    file: "conventions.structure.yaml"
-    authority: "deterministic_structure_renderer"
+    file: conventions.structure.yaml
+    authority: deterministic_structure_renderer
     owns:
-      - "folder_hierarchy"
-      - "folder_depth_classification"
-      - "feature_based_physical_layout"
-      - "module_folder_conventions"
-      - "placement_rules"
+    - folder_hierarchy
+    - folder_depth_classification
+    - feature_based_physical_layout
+    - module_folder_conventions
+    - placement_rules
     derives_from:
-      - "architecture.layers"
-      - "architecture.dependencies"
-      - "architecture.structure_intent"
-      - "roles.suffixes"
+    - architecture.layers
+    - architecture.dependencies
+    - architecture.structure_intent
+    - roles.suffixes
     can_fill:
-      - "folder_hierarchy_details_not_defined_by_architecture"
-      - "optional_folder_selection"
-      - "folder_depth_definitions"
+    - folder_hierarchy_details_not_defined_by_architecture
+    - optional_folder_selection
+    - folder_depth_definitions
     cannot_override:
-      - "architecture_feature_boundaries"
-      - "architecture_layers"
-      - "architecture_dependencies"
-      - "architecture_artifacts"
-
+    - architecture_feature_boundaries
+    - architecture_layers
+    - architecture_dependencies
+    - architecture_artifacts
   validation:
-    file: "conventions.validation.yaml"
-    authority: "final_judge"
+    file: conventions.validation.yaml
+    authority: final_judge
     owns:
-      - "cross_contract_validation"
-      - "anti_pattern_detection"
-      - "completion_conditions"
-      - "fail_conditions"
+    - cross_contract_validation
+    - anti_pattern_detection
+    - completion_conditions
+    - fail_conditions
     does_not_own:
-      - "new_architecture_decisions"
-      - "new_roles"
-      - "new_patterns"
-      - "new_structure"
-
+    - new_architecture_decisions
+    - new_roles
+    - new_patterns
+    - new_structure
+  refinement:
+    file: conventions.refactor.yaml
+    authority: embedded_design_self_correction_pipeline
+    owns:
+    - candidate_design_scanning
+    - refinement_issue_classification
+    - target_design_correction
+    - service_symmetry_review
+    - plan_correction_before_final_output
+    runs_in: regular_feature_request_mode
+    does_not_own:
+    - initial_intent_decomposition
+    - global_pattern_catalog
+    - final_validation_judgment
+    - physical_structure_rendering
+    cannot_override:
+    - architecture_layer_rules
+    - dependency_direction
+    - module_boundaries
+    - role_exclusivity
+    - pattern_constraints
 execution_pipeline:
   phases:
-    - id: "01_extract_capabilities"
-      uses: ["architecture"]
-      input: "feature_prompt"
-      output: ["capabilities"]
-      forbids:
-        - "role_assignment"
-        - "pattern_selection"
-        - "folder_generation"
+  - id: 01_extract_capabilities
+    uses:
+    - architecture
+    input: feature_prompt
+    output:
+    - capabilities
+    forbids:
+    - role_assignment
+    - pattern_selection
+    - folder_generation
+  - id: 02_decompose_to_atomic_units
+    uses:
+    - architecture
+    requires:
+    - capabilities
+    output:
+    - atomic_units
+    rules:
+    - each_atomic_unit_has_one_intent
+    - multi_intent_units_must_split
+  - id: 03_classify_intents
+    uses:
+    - architecture
+    requires:
+    - atomic_units
+    output:
+    - intents
+    rules:
+    - intent_must_be_explicit
+    - unclear_intent_fails_closed
+  - id: 04_map_to_artifacts
+    uses:
+    - architecture
+    requires:
+    - intents
+    output:
+    - abstract_artifacts
+    forbids:
+    - file_suffix_decision
+    - physical_folder_decision
+  - id: 05_assign_roles
+    uses:
+    - roles
+    requires:
+    - abstract_artifacts
+    - stable_intents
+    output:
+    - artifact_roles
+    - file_suffixes
+    rules:
+    - each_artifact_must_have_exactly_one_role
+    - multiple_matching_roles_require_decomposition
+    - fallback_util_requires_explicit_justification
+  - id: 06_assign_layers
+    uses:
+    - architecture
+    requires:
+    - artifact_roles
+    output:
+    - layers
+    rules:
+    - layer_assignment_is_derived_from_role_and_intent
+    - manual_layer_override_forbidden
+  - id: 07_infer_dependencies
+    uses:
+    - architecture
+    requires:
+    - layers
+    - artifact_roles
+    output:
+    - dependency_graph
+    rules:
+    - dependencies_must_follow_allowed_direction
+    - no_circular_dependencies
+    - interfaces_required_at_external_boundaries
+  - id: 08_select_patterns
+    uses:
+    - patterns
+    requires:
+    - stable_intents
+    - artifact_roles
+    - layers
+    - dependency_graph
+    output:
+    - selected_patterns
+    override_model:
+      authority: expansion_only
+      rule: 'Patterns may refine the internal design of artifacts and their local collaboration model, but must not change architecture ownership, layer placement, dependency direction, or module boundaries.
 
-    - id: "02_decompose_to_atomic_units"
-      uses: ["architecture"]
-      requires: ["capabilities"]
-      output: ["atomic_units"]
-      rules:
-        - "each_atomic_unit_has_one_intent"
-        - "multi_intent_units_must_split"
-
-    - id: "03_classify_intents"
-      uses: ["architecture"]
-      requires: ["atomic_units"]
-      output: ["intents"]
-      rules:
-        - "intent_must_be_explicit"
-        - "unclear_intent_fails_closed"
-
-    - id: "04_map_to_artifacts"
-      uses: ["architecture"]
-      requires: ["intents"]
-      output: ["abstract_artifacts"]
-      forbids:
-        - "file_suffix_decision"
-        - "physical_folder_decision"
-
-    - id: "05_assign_roles"
-      uses: ["roles"]
-      requires: ["abstract_artifacts", "stable_intents"]
-      output: ["artifact_roles", "file_suffixes"]
-      rules:
-        - "each_artifact_must_have_exactly_one_role"
-        - "multiple_matching_roles_require_decomposition"
-        - "fallback_util_requires_explicit_justification"
-
-    - id: "06_assign_layers"
-      uses: ["architecture"]
-      requires: ["artifact_roles"]
-      output: ["layers"]
-      rules:
-        - "layer_assignment_is_derived_from_role_and_intent"
-        - "manual_layer_override_forbidden"
-
-    - id: "07_infer_dependencies"
-      uses: ["architecture"]
-      requires: ["layers", "artifact_roles"]
-      output: ["dependency_graph"]
-      rules:
-        - "dependencies_must_follow_allowed_direction"
-        - "no_circular_dependencies"
-        - "interfaces_required_at_external_boundaries"
-
-    - id: "08_select_patterns"
-      uses: ["patterns"]
-      requires: ["stable_intents", "artifact_roles", "layers", "dependency_graph"]
-      output: ["selected_patterns"]
-      override_model:
-        authority: "expansion_only"
-        rule: >
-          Patterns may refine the internal design of artifacts and their local
-          collaboration model, but must not change architecture ownership,
-          layer placement, dependency direction, or module boundaries.
-      rules:
-        - "pattern_must_reduce_complexity_or_improve_clarity"
-        - "no_speculative_patterns"
-        - "simplest_valid_pattern_wins"
-
-    - id: "09_define_structure_intent"
-      uses: ["architecture"]
-      requires: ["layers", "dependency_graph", "selected_patterns"]
-      output: ["structure_intent"]
-      rules:
-        - "architecture_defines_feature_boundaries"
-        - "architecture_defines_required_artifacts_per_layer"
-        - "architecture_does_not_render_final_folder_tree"
-
-    - id: "10_render_structure"
-      uses: ["structure"]
-      requires: ["structure_intent", "layers", "dependency_graph", "file_suffixes"]
-      output: ["final_folder_structure"]
-      rules:
-        - "structure_must_follow_architecture_output"
-        - "structure_may_fill_unspecified_folder_details"
-        - "structure_must_not_introduce_new_artifacts"
-        - "structure_must_not_override_architecture"
-
-    - id: "11_validate_system"
-      uses: ["validation"]
-      requires:
-        - "capabilities"
-        - "atomic_units"
-        - "intents"
-        - "artifact_roles"
-        - "layers"
-        - "dependency_graph"
-        - "selected_patterns"
-        - "final_folder_structure"
-      output: ["validation_report"]
-      rules:
-        - "any_contract_conflict_fails"
-        - "any_ambiguity_fails"
-        - "no_silent_resolution"
-
+        '
+    rules:
+    - pattern_must_reduce_complexity_or_improve_clarity
+    - no_speculative_patterns
+    - simplest_valid_pattern_wins
+  - id: 09_define_candidate_structure_intent
+    uses:
+    - architecture
+    requires:
+    - layers
+    - dependency_graph
+    - selected_patterns
+    output:
+    - candidate_structure_intent
+    - candidate_design
+    rules:
+    - architecture_defines_feature_boundaries
+    - architecture_defines_required_artifacts_per_layer
+    - candidate_design_is_not_final_until_refinement_passes
+  - id: 10_run_integrated_design_refinement
+    uses:
+    - refinement
+    requires:
+    - candidate_design
+    - artifact_roles
+    - layers
+    - dependency_graph
+    - selected_patterns
+    - architecture_constraints
+    output:
+    - corrected_feature_plan
+    - corrected_artifacts
+    - corrected_dependencies
+    - corrected_service_contracts
+    - refinement_report
+    rules:
+    - scan_candidate_design_before_final_output
+    - classify_issues_before_correction
+    - redesign_target_architecture_before_structure_rendering
+    - standardize_service_usage_before_final_output
+    - replace_candidate_plan_with_corrected_plan
+    forbids:
+    - presenting_candidate_design_as_final
+    - skipping_refinement_when_plan_is_proposed
+    - silent_acceptance_of_detected_design_issue
+  - id: 11_render_structure
+    uses:
+    - structure
+    requires:
+    - corrected_feature_plan
+    - corrected_artifacts
+    - corrected_dependencies
+    - file_suffixes
+    output:
+    - final_folder_structure
+    rules:
+    - structure_must_follow_corrected_architecture_output
+    - structure_may_fill_unspecified_folder_details
+    - structure_must_not_introduce_new_artifacts
+    - structure_must_not_override_architecture
+  - id: 12_validate_system
+    uses:
+    - validation
+    requires:
+    - capabilities
+    - atomic_units
+    - intents
+    - artifact_roles
+    - layers
+    - corrected_dependencies
+    - selected_patterns
+    - final_folder_structure
+    - refinement_report
+    output:
+    - validation_report
+    rules:
+    - any_contract_conflict_fails
+    - any_ambiguity_fails
+    - no_silent_resolution
+    - refinement_report_must_pass_before_final_output
 conflict_resolution:
-  principle: "Architecture wins over structure; patterns win over architecture only for pattern selection."
+  principle: Architecture wins over structure; patterns win over architecture only for pattern selection.
   priority:
     architectural_constraints:
-      - "architecture"
-      - "validation"
-      - "roles"
-      - "patterns"
-      - "structure"
+    - architecture
+    - validation
+    - roles
+    - patterns
+    - structure
     pattern_selection:
-      - "patterns"
-      - "architecture_constraints"
-      - "validation"
+    - patterns
+    - architecture_constraints
+    - validation
     physical_structure:
-      - "architecture_structure_intent"
-      - "structure"
-      - "validation"
+    - architecture_structure_intent
+    - structure
+    - validation
     role_classification:
-      - "roles"
-      - "architecture_constraints"
-      - "validation"
-  same_authority_conflict: "fail_closed"
-  cross_authority_conflict: "fail_closed_unless_priority_rule_explicitly_resolves"
-
+    - roles
+    - architecture_constraints
+    - validation
+  same_authority_conflict: fail_closed
+  cross_authority_conflict: fail_closed_unless_priority_rule_explicitly_resolves
 hard_prohibitions:
-  - "role_before_intent"
-  - "pattern_before_role_or_layer"
-  - "structure_before_dependencies"
-  - "structure_overriding_architecture"
-  - "multiple_roles_per_artifact"
-  - "manual_layer_assignment"
-  - "pattern_changing_layer_or_dependency_direction"
-  - "silent_conflict_resolution"
-
+- role_before_intent
+- pattern_before_role_or_layer
+- structure_before_dependencies
+- structure_overriding_architecture
+- multiple_roles_per_artifact
+- manual_layer_assignment
+- pattern_changing_layer_or_dependency_direction
+- silent_conflict_resolution
+- final_plan_before_integrated_refinement
+- presenting_unrefined_candidate_design
+- skipping_refinement_on_feature_plan
 final_output_contract:
   required_sections:
-    - "capabilities"
-    - "atomic_units"
-    - "intents"
-    - "artifacts"
-    - "roles"
-    - "layers"
-    - "dependencies"
-    - "patterns"
-    - "file_structure"
-    - "implementation_steps"
-    - "validation_report"
+  - capabilities
+  - atomic_units
+  - intents
+  - artifacts
+  - roles
+  - layers
+  - dependencies
+  - patterns
+  - file_structure
+  - implementation_steps
+  - refinement_report
+  - corrected_feature_plan
+  - validation_report
   constraints:
-    - "production_grade_only"
-    - "deterministic_output_only"
-    - "no_unresolved_ambiguity"
-    - "no_pseudocode_when_generating_actual_code"
+  - production_grade_only
+  - deterministic_output_only
+  - no_unresolved_ambiguity
+  - no_pseudocode_when_generating_actual_code
