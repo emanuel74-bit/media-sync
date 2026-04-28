@@ -1,0 +1,212 @@
+version: "1.0"
+
+system:
+  name: "architecture-contract-validator"
+  purpose: >
+    Validate the final agent-produced architecture, roles, patterns,
+    dependencies, and folder structure against all convention contracts.
+  philosophy:
+    - "Validation does not design"
+    - "Conflicts fail closed"
+    - "No silent correction"
+    - "A valid system is fully derivable from intent"
+  enforcement:
+    mode: "strict"
+    ambiguity_policy: "fail_closed"
+    correction_policy: "report_only_unless_orchestrator_requests_refactor"
+  orchestration:
+    controlled_by: "conventions.orchestrator.yaml"
+    requires:
+      - "architecture_blueprint"
+      - "role_assignment"
+      - "pattern_selection"
+      - "final_folder_structure"
+      - "dependency_graph"
+    forbidden:
+      - "introducing_new_artifacts"
+      - "changing_roles"
+      - "changing_patterns"
+      - "changing_structure"
+
+validation_order:
+  - "validate_pipeline_order"
+  - "validate_capability_decomposition"
+  - "validate_atomic_units"
+  - "validate_intents"
+  - "validate_role_assignment"
+  - "validate_layer_assignment"
+  - "validate_pattern_selection"
+  - "validate_dependency_graph"
+  - "validate_data_flow"
+  - "validate_structure_rendering"
+  - "validate_file_rules"
+  - "validate_cross_module_rules"
+  - "validate_shared_code"
+  - "detect_anti_patterns"
+  - "validate_completion_conditions"
+
+pipeline_validation:
+  fail_conditions:
+    - "role_before_intent"
+    - "pattern_before_role_or_layer"
+    - "structure_before_dependencies"
+    - "validation_before_structure"
+    - "skipped_required_phase"
+
+architecture_validation:
+  must_verify:
+    - "all_capabilities_are_business_capabilities"
+    - "all_atomic_units_have_single_intent"
+    - "all_artifacts_derive_from_intent"
+    - "all_layers_are_valid"
+    - "all_dependencies_follow_direction"
+    - "all_external_boundaries_use_abstractions"
+  fail_conditions:
+    - "multi_intent_unit"
+    - "unclear_intent"
+    - "artifact_without_intent"
+    - "layer_violation"
+    - "circular_dependency"
+    - "business_logic_in_wrong_layer"
+    - "duplicate_logic_paths"
+    - "service_interface_inconsistency"
+
+role_validation:
+  must_verify:
+    - "every_artifact_has_exactly_one_role"
+    - "role_suffix_matches_role"
+    - "role_does_not_conflict_with_layer"
+    - "fallback_util_has_justification"
+  fail_conditions:
+    - "no_role_matches"
+    - "multiple_roles_match"
+    - "role_suffix_mismatch"
+    - "role_layer_conflict"
+    - "util_without_justification"
+
+pattern_validation:
+  must_verify:
+    - "pattern_selected_after_role_and_layer"
+    - "pattern_has_detected_signal"
+    - "pattern_reduces_complexity_or_improves_clarity"
+    - "pattern_respects_architecture_constraints"
+  fail_conditions:
+    - "pattern_without_reason"
+    - "over_engineering"
+    - "pattern_changes_layer"
+    - "pattern_changes_dependency_direction"
+    - "pattern_crosses_module_boundary_illegally"
+    - "pattern_introduces_circular_dependency"
+
+structure_validation:
+  must_verify:
+    - "structure_derives_from_architecture"
+    - "architecture_feature_boundaries_preserved"
+    - "no_new_artifacts_introduced_by_structure"
+    - "folders_are_feature_first"
+    - "files_are_placed_by_layer_and_role"
+    - "optional_folders_exist_only_when_needed"
+  fail_conditions:
+    - "structure_overrides_architecture"
+    - "folder_by_technical_type_at_root"
+    - "deep_imports"
+    - "empty_conventional_folders"
+    - "file_in_wrong_layer_folder"
+    - "ambiguous_folder_purpose"
+
+file_validation:
+  must_verify:
+    - "one_primary_export_per_file"
+    - "file_represents_single_intent"
+    - "filename_reflects_exact_behavior"
+    - "filename_uses_role_suffix"
+    - "file_size_within_limit_or_split_justified"
+  fail_conditions:
+    - "mixed_responsibilities"
+    - "vague_name"
+    - "forbidden_name_utils_helpers_common"
+    - "multiple_primary_exports"
+    - "oversized_file_without_split"
+
+cross_module_validation:
+  must_verify:
+    - "modules_are_independently_understandable"
+    - "modules_are_independently_testable"
+    - "cross_module_access_uses_public_api"
+    - "no_cross_module_internal_access"
+  fail_conditions:
+    - "implicit_cross_module_coupling"
+    - "deep_import"
+    - "bypassing_module_boundary"
+
+shared_code_validation:
+  must_verify:
+    - "shared_code_is_truly_generic"
+    - "shared_code_has_unrelated_consumers_when_required"
+    - "shared_code_contains_no_domain_logic"
+  fail_conditions:
+    - "dumping_folder"
+    - "mixed_domain_logic"
+    - "feature_specific_logic_in_shared"
+
+anti_patterns:
+  folder_by_type:
+    signals:
+      - "global technical folders"
+      - "root controllers/services/repositories folders"
+  god_module:
+    signals:
+      - "multiple domains in one module"
+      - "module has unrelated reasons to change"
+  god_service:
+    signals:
+      - "multiple intents in one service"
+      - "service owns orchestration, persistence, and domain rules"
+  scattered_logic:
+    signals:
+      - "related logic across unrelated folders"
+      - "same behavior implemented in parallel paths"
+  deep_nesting:
+    signals:
+      - "nested folders without execution or boundary reason"
+      - "unclear nested structure"
+  pattern_abuse:
+    signals:
+      - "pattern selected without problem signal"
+      - "abstraction added for future possibility"
+  boundary_leakage:
+    signals:
+      - "raw persistence model crosses repository boundary"
+      - "external API model reaches domain"
+      - "DTO imported into domain"
+
+completion_conditions:
+  all_must_be_true:
+    - "no_rule_violations"
+    - "all_units_single_intent"
+    - "all_artifacts_have_exactly_one_role"
+    - "all_dependencies_valid"
+    - "all_patterns_architecture_compatible"
+    - "structure_is_derivable_and_unambiguous"
+    - "all_files_have_valid_suffixes"
+    - "no_forbidden_anti_patterns_detected"
+
+validation_report_schema:
+  status: "valid | invalid"
+  checked_contracts:
+    - "conventions.orchestrator.yaml"
+    - "conventions.architecture.yaml"
+    - "conventions.roles.yaml"
+    - "conventions.pattern.yaml"
+    - "conventions.structure.yaml"
+  violations:
+    - rule: "string"
+      severity: "absolute | structural | heuristic"
+      source_contract: "string"
+      artifact_or_path: "string"
+      required_action: "string"
+  warnings:
+    - rule: "string"
+      source_contract: "string"
+      artifact_or_path: "string"
+      recommendation: "string"
