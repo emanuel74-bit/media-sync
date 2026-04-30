@@ -1,0 +1,58 @@
+version: "1.0"
+file:
+  name: "conventions.patterns.yaml"
+  path: "patterns/conventions.patterns.yaml"
+  role: "pattern_system_entrypoint"
+purpose: "Entrypoint and execution order for pattern selection and compatibility validation."
+ownership:
+  owns:
+    - "pattern_system_metadata"
+    - "pattern_file_index"
+    - "pattern_system_execution_order"
+    - "pattern_system_contract"
+  does_not_own:
+    - "detailed_pattern_definitions"
+    - "detailed_pattern_restrictions"
+    - "role_definitions"
+    - "structure_strategy"
+activation:
+  mode: "entrypoint"
+  activates_when:
+    - "pattern system is needed"
+  skips_when: []
+inputs:
+  required:
+    - "role_assignment_table"
+    - "artifact_candidates"
+  optional: []
+outputs:
+  produces:
+    - "pattern_system_result"
+dependencies:
+  required_files:
+    - "patterns/conventions.pattern-catalog.yaml"
+    - "patterns/conventions.pattern-selection.yaml"
+    - "patterns/conventions.pattern-restrictions.yaml"
+    - "patterns/conventions.role-pattern-compatibility.yaml"
+  optional_files: []
+sections:
+  pattern_system_metadata:
+    mode: "strict"
+    default: "no_pattern"
+  pattern_file_index:
+    - "patterns/conventions.pattern-catalog.yaml"
+    - "patterns/conventions.pattern-selection.yaml"
+    - "patterns/conventions.pattern-restrictions.yaml"
+    - "patterns/conventions.role-pattern-compatibility.yaml"
+  pattern_system_execution_order:
+    - "detect_pattern_pressure"
+    - "consider_no_pattern"
+    - "select_candidate_patterns"
+    - "apply_pattern_restrictions"
+    - "validate_role_pattern_compatibility"
+  pattern_system_contract:
+    must_output: "pattern_decision_log"
+validation:
+  fail_conditions:
+    - "pattern_subfile_missing"
+    - "pattern_system_output_missing_pattern_decision_log"

@@ -1,0 +1,72 @@
+version: "1.0"
+file:
+  name: "conventions.pattern-restrictions.yaml"
+  path: "patterns/conventions.pattern-restrictions.yaml"
+  role: "pattern_restriction_and_anti_overengineering_contract"
+purpose: "Control restricted, conditional, disallowed, and deferred patterns."
+ownership:
+  owns:
+    - "restricted_patterns"
+    - "conditional_patterns"
+    - "disallowed_patterns"
+    - "deferred_patterns"
+    - "pattern_anti_overengineering_rules"
+  does_not_own:
+    - "pattern_catalog_definitions"
+    - "role_pattern_compatibility"
+    - "role_definitions"
+    - "architecture_layer_rules"
+activation:
+  mode: "conditional"
+  activates_when:
+    - "candidate_patterns_exist"
+    - "restricted_or_conditional_pattern_candidate_exists"
+  skips_when: []
+inputs:
+  required:
+    - "candidate_patterns"
+    - "pattern_catalog"
+  optional: []
+outputs:
+  produces:
+    - "pattern_restriction_report"
+    - "rejected_patterns"
+    - "approved_pattern_candidates"
+dependencies:
+  required_files:
+    - "patterns/conventions.pattern-catalog.yaml"
+    - "patterns/conventions.pattern-selection.yaml"
+  optional_files: []
+sections:
+  restricted_patterns:
+    - "Singleton"
+    - "Bridge"
+    - "Flyweight"
+    - "TemplateMethod"
+    - "Visitor"
+    - "EventSourcing"
+    - "Saga"
+    - "RetryWithBackoff"
+    - "CircuitBreaker"
+  conditional_patterns:
+    - "CQRS"
+    - "Outbox"
+    - "Inbox"
+    - "AntiCorruptionLayer"
+  disallowed_patterns:
+    - "ServiceLocator"
+  deferred_patterns:
+    - "Result"
+    - "ContractVersioning"
+  pattern_anti_overengineering_rules:
+    - "Prefer role decomposition before pattern introduction."
+    - "Prefer mapper before Adapter when only data shape changes."
+    - "Prefer DI provider before Singleton."
+    - "Prefer simple constructor before Factory."
+    - "Restricted patterns require explicit justification."
+validation:
+  fail_conditions:
+    - "disallowed_pattern_selected"
+    - "restricted_pattern_without_explicit_justification"
+    - "conditional_pattern_without_activation_signal"
+    - "pattern_creates_more_complexity_than_it_removes"

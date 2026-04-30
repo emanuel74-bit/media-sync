@@ -1,0 +1,88 @@
+version: "1.0"
+file:
+  name: "conventions.architecture.yaml"
+  path: "architecture/conventions.architecture.yaml"
+  role: "architecture_blueprint_contract"
+purpose: "Transform a feature prompt into capabilities, flows, artifacts, layers, dependencies, and structure intent."
+ownership:
+  owns:
+    - "capability_extraction"
+    - "intent_decomposition"
+    - "execution_flow_detection"
+    - "artifact_candidate_generation"
+    - "layer_assignment"
+    - "dependency_direction"
+    - "architecture_blueprint"
+    - "structure_intent"
+  does_not_own:
+    - "final_physical_file_structure"
+    - "detailed_role_taxonomy"
+    - "pattern_catalog"
+    - "testing_matrix"
+activation:
+  mode: "always"
+  activates_when:
+    - "feature_or_refactor_architecture_is_needed"
+  skips_when: []
+inputs:
+  required:
+    - "feature_prompt_or_change_request"
+    - "output_schema_registry"
+  optional: []
+outputs:
+  produces:
+    - "architecture_blueprint"
+    - "execution_flows"
+    - "artifact_candidates"
+    - "dependency_graph"
+    - "structure_intent"
+dependencies:
+  required_files:
+    - "core/conventions.output-schema.yaml"
+  optional_files:
+    - "roles/conventions.role-taxonomy.yaml"
+sections:
+  architecture_policy:
+    philosophy:
+      - "Decomposition precedes structure"
+      - "Intent defines artifact"
+      - "Design must be derivable, not guessed"
+    execution_policy:
+      ambiguity: "fail_closed"
+      missing_information: "ask_or_abort"
+  decomposition_pipeline:
+    - "extract_capabilities"
+    - "identify_execution_flows"
+    - "decompose_to_atomic_units"
+    - "classify_intents"
+    - "generate_artifact_candidates"
+    - "assign_layers"
+    - "infer_dependencies"
+    - "define_structure_intent"
+  layer_model:
+    canonical_layers:
+      - "transport"
+      - "application"
+      - "domain"
+      - "infrastructure"
+      - "boundary"
+  dependency_rules:
+    direction: "unidirectional"
+    forbidden:
+      - "circular_dependencies"
+      - "layer_skipping"
+      - "domain_imports_infrastructure"
+      - "controller_calls_repository"
+      - "raw_persistence_model_crosses_boundary"
+  structure_intent:
+    role: "intent_only"
+    does_not_define:
+      - "final folders"
+      - "folder depth"
+      - "role grouping"
+validation:
+  fail_conditions:
+    - "capability_without_intent"
+    - "artifact_without_reason_to_exist"
+    - "dependency_direction_violation"
+    - "architecture_generates_final_physical_structure"

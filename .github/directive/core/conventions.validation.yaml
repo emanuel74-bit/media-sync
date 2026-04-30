@@ -1,0 +1,85 @@
+version: "1.0"
+file:
+  name: "conventions.validation.yaml"
+  path: "core/conventions.validation.yaml"
+  role: "final_cross_system_validation_contract"
+purpose: "Validate final design across active convention systems."
+ownership:
+  owns:
+    - "validation_pipeline"
+    - "cross_file_consistency_checks"
+    - "role_validation"
+    - "pattern_validation"
+    - "role_pattern_validation"
+    - "structure_validation"
+    - "testing_validation"
+    - "fail_conditions"
+  does_not_own:
+    - "role_definitions"
+    - "pattern_definitions"
+    - "structure_rendering"
+    - "test_generation"
+activation:
+  mode: "always"
+  activates_when:
+    - "final design validation is required"
+  skips_when: []
+inputs:
+  required:
+    - "activation_manifest"
+    - "architecture_blueprint"
+    - "role_assignment_table"
+    - "structure_plan"
+  optional: []
+outputs:
+  produces:
+    - "validation_report"
+dependencies:
+  required_files:
+    - "core/conventions.output-schema.yaml"
+    - "roles/conventions.roles.yaml"
+    - "architecture/conventions.architecture.yaml"
+    - "architecture/conventions.structure.yaml"
+  optional_files:
+    - "patterns/conventions.patterns.yaml"
+    - "testing/conventions.testing.yaml"
+sections:
+  validation_policy:
+    mode: "fail_closed"
+  validation_pipeline:
+    - "validate_activation_manifest"
+    - "validate_architecture"
+    - "validate_roles"
+    - "validate_patterns_if_active"
+    - "validate_role_pattern_compatibility_if_active"
+    - "validate_structure"
+    - "validate_testing_if_active"
+    - "produce_validation_report"
+  architecture_validation:
+    - "all artifacts have one intent"
+    - "dependency graph respects allowed matrix"
+  role_validation:
+    - "every artifact has exactly one role"
+    - "generic roles justified"
+    - "suffix matches role"
+  pattern_validation:
+    - "no_pattern considered first"
+    - "activation signals present"
+    - "ServiceLocator not selected"
+  role_pattern_validation:
+    - "introduced roles compatible"
+    - "patterns preserve layer/dependency rules"
+  structure_validation:
+    - "structure renders architecture only"
+    - "folder creation justified"
+  testing_validation:
+    - "test plan exists for production change"
+  cross_file_consistency_checks:
+    - "role suffix equals suffix policy"
+    - "structure artifacts equal architecture artifacts"
+    - "pattern introduced roles added to role assignment table"
+validation:
+  fail_conditions:
+    - "validation_report_missing"
+    - "active_system_not_validated"
+    - "final_design_contains_known_violation"

@@ -1,0 +1,103 @@
+version: "1.0"
+file:
+  name: "conventions.output-schema.yaml"
+  path: "core/conventions.output-schema.yaml"
+  role: "pipeline_output_schema_contract"
+purpose: "Define required intermediate and final output objects for each pipeline phase."
+ownership:
+  owns:
+    - "activation_manifest_schema"
+    - "requirements_manifest_schema"
+    - "architecture_blueprint_schema"
+    - "execution_flow_schema"
+    - "artifact_candidate_schema"
+    - "role_assignment_table_schema"
+    - "role_collision_report_schema"
+    - "pattern_decision_log_schema"
+    - "structure_plan_schema"
+    - "test_plan_schema"
+    - "validation_report_schema"
+  does_not_own:
+    - "role_definitions"
+    - "pattern_definitions"
+    - "structure_strategy"
+    - "validation_rules"
+activation:
+  mode: "always"
+  activates_when:
+    - "any convention pipeline runs"
+  skips_when: []
+inputs:
+  required: []
+  optional: []
+outputs:
+  produces:
+    - "output_schema_registry"
+dependencies:
+  required_files: []
+  optional_files: []
+sections:
+  schema_policy:
+    rule: "Every phase must produce a structured object."
+  activation_manifest_schema:
+    required_fields:
+      - "request_type"
+      - "active_files"
+      - "skipped_files"
+      - "activation_reasons"
+  requirements_manifest_schema:
+    required_fields:
+      - "functional_requirements"
+      - "constraints"
+      - "assumptions"
+      - "acceptance_criteria"
+  architecture_blueprint_schema:
+    required_fields:
+      - "capabilities"
+      - "execution_flows"
+      - "artifact_candidates"
+      - "layers"
+      - "dependencies"
+      - "structure_intent"
+  artifact_candidate_schema:
+    required_fields:
+      - "artifact_id"
+      - "intent"
+      - "responsibilities"
+      - "side_effects"
+      - "dependencies"
+  role_assignment_table_schema:
+    required_fields:
+      - "artifact_id"
+      - "role"
+      - "confidence"
+      - "reason"
+      - "suffix"
+  pattern_decision_log_schema:
+    required_fields:
+      - "no_pattern_considered"
+      - "candidate_patterns"
+      - "selected_patterns"
+      - "activation_signals"
+      - "simpler_alternatives_considered"
+  structure_plan_schema:
+    required_fields:
+      - "strategy"
+      - "folder_decisions"
+      - "file_tree"
+      - "flattening_decisions"
+  test_plan_schema:
+    required_fields:
+      - "required_tests"
+      - "conditional_tests"
+      - "coverage_focus"
+  validation_report_schema:
+    required_fields:
+      - "passed"
+      - "failures"
+      - "warnings"
+      - "validated_systems"
+validation:
+  fail_conditions:
+    - "required_schema_missing"
+    - "phase_output_missing_required_field"

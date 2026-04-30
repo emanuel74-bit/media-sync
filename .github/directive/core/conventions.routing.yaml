@@ -1,0 +1,92 @@
+version: "1.0"
+file:
+  name: "conventions.routing.yaml"
+  path: "core/conventions.routing.yaml"
+  role: "convention_activation_router"
+purpose: "Classify request and activate only required convention files."
+ownership:
+  owns:
+    - "request_type_classification"
+    - "concern_detection_rules"
+    - "active_file_manifest"
+    - "conditional_activation_rules"
+    - "skipped_file_policy"
+  does_not_own:
+    - "role_definitions"
+    - "pattern_definitions"
+    - "architecture_decomposition"
+    - "final_validation"
+activation:
+  mode: "always"
+  activates_when:
+    - "any convention pipeline runs"
+  skips_when: []
+inputs:
+  required:
+    - "user_request"
+    - "file_map"
+  optional: []
+outputs:
+  produces:
+    - "activation_manifest"
+dependencies:
+  required_files:
+    - "core/conventions.output-schema.yaml"
+  optional_files: []
+sections:
+  routing_policy:
+    default_mode: "minimal_core"
+    over_activation_policy: "forbidden"
+    inactive_files_must_not_influence_output: true
+  request_type_classification:
+    - "feature"
+    - "refactor"
+    - "bugfix"
+    - "cleanup"
+    - "integration"
+    - "migration"
+    - "test_only"
+    - "architecture_review"
+  always_active_files:
+    - "core/conventions.output-schema.yaml"
+    - "core/conventions.routing.yaml"
+    - "architecture/conventions.architecture.yaml"
+    - "roles/conventions.roles.yaml"
+    - "architecture/conventions.structure-strategy.yaml"
+    - "architecture/conventions.structure.yaml"
+    - "core/conventions.validation.yaml"
+  conditional_activation_rules:
+    roles/conventions.role-collisions.yaml:
+      - "multiple_roles_match"
+    patterns/conventions.patterns.yaml:
+      - "pattern_signals_exist"
+    testing/conventions.testing.yaml:
+      - "production_code_created_or_changed"
+      - "refactor_requested"
+      - "bugfix_requested"
+  file_map:
+    - "core/conventions.output-schema.yaml"
+    - "roles/conventions.role-taxonomy.yaml"
+    - "roles/conventions.role-resolution.yaml"
+    - "roles/conventions.role-collisions.yaml"
+    - "roles/conventions.role-placement.yaml"
+    - "roles/conventions.roles.yaml"
+    - "patterns/conventions.pattern-catalog.yaml"
+    - "patterns/conventions.pattern-selection.yaml"
+    - "patterns/conventions.pattern-restrictions.yaml"
+    - "patterns/conventions.role-pattern-compatibility.yaml"
+    - "patterns/conventions.patterns.yaml"
+    - "architecture/conventions.architecture.yaml"
+    - "architecture/conventions.structure-strategy.yaml"
+    - "architecture/conventions.structure.yaml"
+    - "testing/conventions.testing-taxonomy.yaml"
+    - "testing/conventions.testing-matrix.yaml"
+    - "testing/conventions.testing.yaml"
+    - "core/conventions.routing.yaml"
+    - "core/conventions.validation.yaml"
+    - "core/conventions.orchestrator.yaml"
+validation:
+  fail_conditions:
+    - "required_core_file_not_activated"
+    - "inactive_file_influenced_decision"
+    - "activation_reason_missing"

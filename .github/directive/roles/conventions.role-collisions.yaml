@@ -1,0 +1,707 @@
+version: "1.0"
+file:
+  name: "conventions.role-collisions.yaml"
+  path: "roles/conventions.role-collisions.yaml"
+  role: "role_ambiguity_resolution_contract"
+purpose: "Resolve ambiguity when multiple roles appear valid."
+ownership:
+  owns:
+    - "role_collision_rules"
+    - "ambiguity_resolution_rules"
+    - "split_triggers"
+  does_not_own:
+    - "role_taxonomy"
+    - "role_detection_order"
+    - "pattern_selection"
+    - "structure_strategy"
+activation:
+  mode: "conditional"
+  activates_when:
+    - "multiple_roles_match"
+    - "role_resolution_confidence < high"
+  skips_when: []
+inputs:
+  required:
+    - "unresolved_role_matches"
+    - "role_taxonomy"
+  optional: []
+outputs:
+  produces:
+    - "resolved_role"
+    - "split_required_items"
+    - "collision_resolution_reason"
+dependencies:
+  required_files:
+    - "roles/conventions.role-taxonomy.yaml"
+    - "roles/conventions.role-resolution.yaml"
+  optional_files: []
+sections:
+  collision_policy:
+    mode: "fail_closed"
+  collision_rule_index:
+    application_execution:
+      - "use_case_vs_command_query_handler"
+      - "use_case_vs_service"
+      - "service_vs_orchestrator"
+      - "handler_vs_use_case"
+      - "workflow_vs_orchestrator"
+    domain_decision:
+      - "validator_vs_guard"
+      - "validator_vs_invariant"
+      - "policy_vs_specification"
+      - "policy_vs_guard"
+      - "selector_vs_strategy"
+      - "entity_vs_value_object"
+      - "entity_vs_aggregate"
+      - "domain_service_vs_application_service"
+    transformation_boundary:
+      - "mapper_vs_adapter"
+      - "mapper_vs_normalizer"
+      - "mapper_vs_formatter"
+      - "serializer_vs_mapper"
+      - "parser_vs_mapper"
+      - "dto_vs_request"
+      - "dto_vs_response"
+      - "interface_vs_port"
+      - "interface_vs_contract"
+      - "port_vs_contract"
+      - "client_vs_adapter"
+    integration_async:
+      - "domain_event_vs_integration_event"
+      - "listener_vs_subscriber"
+      - "subscriber_vs_consumer"
+      - "publisher_vs_producer"
+      - "webhook_vs_controller"
+      - "webhook_vs_consumer"
+      - "scheduler_vs_job"
+      - "job_vs_task"
+      - "job_vs_processor"
+      - "processor_vs_consumer"
+      - "listener_vs_handler"
+    persistence_data:
+      - "repository_vs_service"
+      - "repository_vs_query_builder"
+      - "schema_vs_model"
+      - "model_vs_record"
+      - "record_vs_entity"
+      - "model_vs_entity"
+      - "read_model_vs_response"
+      - "read_model_vs_projection"
+      - "migration_vs_seed"
+      - "transaction_vs_unit_of_work"
+      - "query_builder_vs_specification"
+    construction_resolution:
+      - "factory_vs_builder"
+      - "factory_vs_resolver"
+      - "factory_vs_provider"
+      - "registry_vs_resolver"
+      - "resolver_vs_selector"
+      - "selector_vs_strategy"
+      - "strategy_vs_policy"
+      - "provider_vs_service"
+      - "registry_vs_factory"
+      - "resolver_vs_guard"
+    error_result_type_static:
+      - "error_vs_exception"
+      - "error_vs_error_code"
+      - "exception_vs_error_code"
+      - "result_vs_response"
+      - "result_vs_error"
+      - "types_vs_interface"
+      - "types_vs_contract"
+      - "enum_vs_error_code"
+      - "enum_vs_constants"
+      - "constants_vs_config"
+      - "constants_vs_rule"
+      - "config_vs_provider"
+    testing_verification:
+      - "unit_test_vs_integration_test"
+      - "integration_test_vs_e2e_test"
+      - "contract_test_vs_integration_test"
+      - "api_contract_test_vs_e2e_test"
+      - "event_contract_test_vs_listener_unit_test"
+      - "architecture_test_vs_boundary_test"
+      - "mock_vs_stub"
+      - "stub_vs_fake"
+      - "fake_vs_integration_test"
+      - "fixture_vs_test_factory"
+      - "test_factory_vs_test_builder"
+      - "assertion_vs_matcher"
+  collision_rules:
+    application_execution:
+      use_case_vs_command_query_handler:
+        choose_use_case_when:
+          - "use_case responsibility is primary"
+        choose_command_query_handler_when:
+          - "command_query_handler responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      use_case_vs_service:
+        choose_use_case_when:
+          - "use_case responsibility is primary"
+        choose_service_when:
+          - "service responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      service_vs_orchestrator:
+        choose_service_when:
+          - "service responsibility is primary"
+        choose_orchestrator_when:
+          - "orchestrator responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      handler_vs_use_case:
+        choose_handler_when:
+          - "handler responsibility is primary"
+        choose_use_case_when:
+          - "use_case responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      workflow_vs_orchestrator:
+        choose_workflow_when:
+          - "workflow responsibility is primary"
+        choose_orchestrator_when:
+          - "orchestrator responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+    domain_decision:
+      validator_vs_guard:
+        choose_validator_when:
+          - "validator responsibility is primary"
+        choose_guard_when:
+          - "guard responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      validator_vs_invariant:
+        choose_validator_when:
+          - "validator responsibility is primary"
+        choose_invariant_when:
+          - "invariant responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      policy_vs_specification:
+        choose_policy_when:
+          - "policy responsibility is primary"
+        choose_specification_when:
+          - "specification responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      policy_vs_guard:
+        choose_policy_when:
+          - "policy responsibility is primary"
+        choose_guard_when:
+          - "guard responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      selector_vs_strategy:
+        choose_selector_when:
+          - "selector responsibility is primary"
+        choose_strategy_when:
+          - "strategy responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      entity_vs_value_object:
+        choose_entity_when:
+          - "entity responsibility is primary"
+        choose_value_object_when:
+          - "value_object responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      entity_vs_aggregate:
+        choose_entity_when:
+          - "entity responsibility is primary"
+        choose_aggregate_when:
+          - "aggregate responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      domain_service_vs_application_service:
+        choose_domain_service_when:
+          - "domain_service responsibility is primary"
+        choose_application_service_when:
+          - "application_service responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+    transformation_boundary:
+      mapper_vs_adapter:
+        choose_mapper_when:
+          - "mapper responsibility is primary"
+        choose_adapter_when:
+          - "adapter responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      mapper_vs_normalizer:
+        choose_mapper_when:
+          - "mapper responsibility is primary"
+        choose_normalizer_when:
+          - "normalizer responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      mapper_vs_formatter:
+        choose_mapper_when:
+          - "mapper responsibility is primary"
+        choose_formatter_when:
+          - "formatter responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      serializer_vs_mapper:
+        choose_serializer_when:
+          - "serializer responsibility is primary"
+        choose_mapper_when:
+          - "mapper responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      parser_vs_mapper:
+        choose_parser_when:
+          - "parser responsibility is primary"
+        choose_mapper_when:
+          - "mapper responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      dto_vs_request:
+        choose_dto_when:
+          - "dto responsibility is primary"
+        choose_request_when:
+          - "request responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      dto_vs_response:
+        choose_dto_when:
+          - "dto responsibility is primary"
+        choose_response_when:
+          - "response responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      interface_vs_port:
+        choose_interface_when:
+          - "interface responsibility is primary"
+        choose_port_when:
+          - "port responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      interface_vs_contract:
+        choose_interface_when:
+          - "interface responsibility is primary"
+        choose_contract_when:
+          - "contract responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      port_vs_contract:
+        choose_port_when:
+          - "port responsibility is primary"
+        choose_contract_when:
+          - "contract responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      client_vs_adapter:
+        choose_client_when:
+          - "client responsibility is primary"
+        choose_adapter_when:
+          - "adapter responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+    integration_async:
+      domain_event_vs_integration_event:
+        choose_domain_event_when:
+          - "domain_event responsibility is primary"
+        choose_integration_event_when:
+          - "integration_event responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      listener_vs_subscriber:
+        choose_listener_when:
+          - "listener responsibility is primary"
+        choose_subscriber_when:
+          - "subscriber responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      subscriber_vs_consumer:
+        choose_subscriber_when:
+          - "subscriber responsibility is primary"
+        choose_consumer_when:
+          - "consumer responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      publisher_vs_producer:
+        choose_publisher_when:
+          - "publisher responsibility is primary"
+        choose_producer_when:
+          - "producer responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      webhook_vs_controller:
+        choose_webhook_when:
+          - "webhook responsibility is primary"
+        choose_controller_when:
+          - "controller responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      webhook_vs_consumer:
+        choose_webhook_when:
+          - "webhook responsibility is primary"
+        choose_consumer_when:
+          - "consumer responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      scheduler_vs_job:
+        choose_scheduler_when:
+          - "scheduler responsibility is primary"
+        choose_job_when:
+          - "job responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      job_vs_task:
+        choose_job_when:
+          - "job responsibility is primary"
+        choose_task_when:
+          - "task responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      job_vs_processor:
+        choose_job_when:
+          - "job responsibility is primary"
+        choose_processor_when:
+          - "processor responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      processor_vs_consumer:
+        choose_processor_when:
+          - "processor responsibility is primary"
+        choose_consumer_when:
+          - "consumer responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      listener_vs_handler:
+        choose_listener_when:
+          - "listener responsibility is primary"
+        choose_handler_when:
+          - "handler responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+    persistence_data:
+      repository_vs_service:
+        choose_repository_when:
+          - "repository responsibility is primary"
+        choose_service_when:
+          - "service responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      repository_vs_query_builder:
+        choose_repository_when:
+          - "repository responsibility is primary"
+        choose_query_builder_when:
+          - "query_builder responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      schema_vs_model:
+        choose_schema_when:
+          - "schema responsibility is primary"
+        choose_model_when:
+          - "model responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      model_vs_record:
+        choose_model_when:
+          - "model responsibility is primary"
+        choose_record_when:
+          - "record responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      record_vs_entity:
+        choose_record_when:
+          - "record responsibility is primary"
+        choose_entity_when:
+          - "entity responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      model_vs_entity:
+        choose_model_when:
+          - "model responsibility is primary"
+        choose_entity_when:
+          - "entity responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      read_model_vs_response:
+        choose_read_model_when:
+          - "read_model responsibility is primary"
+        choose_response_when:
+          - "response responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      read_model_vs_projection:
+        choose_read_model_when:
+          - "read_model responsibility is primary"
+        choose_projection_when:
+          - "projection responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      migration_vs_seed:
+        choose_migration_when:
+          - "migration responsibility is primary"
+        choose_seed_when:
+          - "seed responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      transaction_vs_unit_of_work:
+        choose_transaction_when:
+          - "transaction responsibility is primary"
+        choose_unit_of_work_when:
+          - "unit_of_work responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      query_builder_vs_specification:
+        choose_query_builder_when:
+          - "query_builder responsibility is primary"
+        choose_specification_when:
+          - "specification responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+    construction_resolution:
+      factory_vs_builder:
+        choose_factory_when:
+          - "factory responsibility is primary"
+        choose_builder_when:
+          - "builder responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      factory_vs_resolver:
+        choose_factory_when:
+          - "factory responsibility is primary"
+        choose_resolver_when:
+          - "resolver responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      factory_vs_provider:
+        choose_factory_when:
+          - "factory responsibility is primary"
+        choose_provider_when:
+          - "provider responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      registry_vs_resolver:
+        choose_registry_when:
+          - "registry responsibility is primary"
+        choose_resolver_when:
+          - "resolver responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      resolver_vs_selector:
+        choose_resolver_when:
+          - "resolver responsibility is primary"
+        choose_selector_when:
+          - "selector responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      selector_vs_strategy:
+        choose_selector_when:
+          - "selector responsibility is primary"
+        choose_strategy_when:
+          - "strategy responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      strategy_vs_policy:
+        choose_strategy_when:
+          - "strategy responsibility is primary"
+        choose_policy_when:
+          - "policy responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      provider_vs_service:
+        choose_provider_when:
+          - "provider responsibility is primary"
+        choose_service_when:
+          - "service responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      registry_vs_factory:
+        choose_registry_when:
+          - "registry responsibility is primary"
+        choose_factory_when:
+          - "factory responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      resolver_vs_guard:
+        choose_resolver_when:
+          - "resolver responsibility is primary"
+        choose_guard_when:
+          - "guard responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+    error_result_type_static:
+      error_vs_exception:
+        choose_error_when:
+          - "error responsibility is primary"
+        choose_exception_when:
+          - "exception responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      error_vs_error_code:
+        choose_error_when:
+          - "error responsibility is primary"
+        choose_error_code_when:
+          - "error_code responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      exception_vs_error_code:
+        choose_exception_when:
+          - "exception responsibility is primary"
+        choose_error_code_when:
+          - "error_code responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      result_vs_response:
+        choose_result_when:
+          - "result responsibility is primary"
+        choose_response_when:
+          - "response responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      result_vs_error:
+        choose_result_when:
+          - "result responsibility is primary"
+        choose_error_when:
+          - "error responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      types_vs_interface:
+        choose_types_when:
+          - "types responsibility is primary"
+        choose_interface_when:
+          - "interface responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      types_vs_contract:
+        choose_types_when:
+          - "types responsibility is primary"
+        choose_contract_when:
+          - "contract responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      enum_vs_error_code:
+        choose_enum_when:
+          - "enum responsibility is primary"
+        choose_error_code_when:
+          - "error_code responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      enum_vs_constants:
+        choose_enum_when:
+          - "enum responsibility is primary"
+        choose_constants_when:
+          - "constants responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      constants_vs_config:
+        choose_constants_when:
+          - "constants responsibility is primary"
+        choose_config_when:
+          - "config responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      constants_vs_rule:
+        choose_constants_when:
+          - "constants responsibility is primary"
+        choose_rule_when:
+          - "rule responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      config_vs_provider:
+        choose_config_when:
+          - "config responsibility is primary"
+        choose_provider_when:
+          - "provider responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+    testing_verification:
+      unit_test_vs_integration_test:
+        choose_unit_test_when:
+          - "unit_test responsibility is primary"
+        choose_integration_test_when:
+          - "integration_test responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      integration_test_vs_e2e_test:
+        choose_integration_test_when:
+          - "integration_test responsibility is primary"
+        choose_e2e_test_when:
+          - "e2e_test responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      contract_test_vs_integration_test:
+        choose_contract_test_when:
+          - "contract_test responsibility is primary"
+        choose_integration_test_when:
+          - "integration_test responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      api_contract_test_vs_e2e_test:
+        choose_api_contract_test_when:
+          - "api_contract_test responsibility is primary"
+        choose_e2e_test_when:
+          - "e2e_test responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      event_contract_test_vs_listener_unit_test:
+        choose_event_contract_test_when:
+          - "event_contract_test responsibility is primary"
+        choose_listener_unit_test_when:
+          - "listener_unit_test responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      architecture_test_vs_boundary_test:
+        choose_architecture_test_when:
+          - "architecture_test responsibility is primary"
+        choose_boundary_test_when:
+          - "boundary_test responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      mock_vs_stub:
+        choose_mock_when:
+          - "mock responsibility is primary"
+        choose_stub_when:
+          - "stub responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      stub_vs_fake:
+        choose_stub_when:
+          - "stub responsibility is primary"
+        choose_fake_when:
+          - "fake responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      fake_vs_integration_test:
+        choose_fake_when:
+          - "fake responsibility is primary"
+        choose_integration_test_when:
+          - "integration_test responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      fixture_vs_test_factory:
+        choose_fixture_when:
+          - "fixture responsibility is primary"
+        choose_test_factory_when:
+          - "test_factory responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      test_factory_vs_test_builder:
+        choose_test_factory_when:
+          - "test_factory responsibility is primary"
+        choose_test_builder_when:
+          - "test_builder responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+      assertion_vs_matcher:
+        choose_assertion_when:
+          - "assertion responsibility is primary"
+        choose_matcher_when:
+          - "matcher responsibility is primary"
+        fail_when:
+          - "both responsibilities are primary and cannot be separated"
+  split_triggers:
+    - "multiple reasons to change"
+    - "multiple primary responsibilities"
+    - "collision cannot be resolved"
+validation:
+  fail_conditions:
+    - "collision_rule_missing_for_matched_roles"
+    - "ambiguous_role_resolved_silently"
+    - "multi_responsibility_artifact_not_split"

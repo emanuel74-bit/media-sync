@@ -1,0 +1,56 @@
+version: "1.0"
+file:
+  name: "conventions.roles.yaml"
+  path: "roles/conventions.roles.yaml"
+  role: "role_system_entrypoint"
+purpose: "Entrypoint and execution order for role classification."
+ownership:
+  owns:
+    - "role_system_metadata"
+    - "role_file_index"
+    - "role_system_execution_order"
+    - "role_system_contract"
+  does_not_own:
+    - "detailed_role_definitions"
+    - "detailed_collision_rules"
+    - "pattern_catalog"
+    - "structure_strategy"
+activation:
+  mode: "entrypoint"
+  activates_when:
+    - "role system is needed"
+  skips_when: []
+inputs:
+  required:
+    - "artifact_candidates"
+  optional: []
+outputs:
+  produces:
+    - "role_system_result"
+dependencies:
+  required_files:
+    - "roles/conventions.role-taxonomy.yaml"
+    - "roles/conventions.role-resolution.yaml"
+    - "roles/conventions.role-placement.yaml"
+  optional_files:
+    - "roles/conventions.role-collisions.yaml"
+sections:
+  role_system_metadata:
+    mode: "strict"
+    ambiguity_policy: "fail_closed"
+  role_file_index:
+    - "roles/conventions.role-taxonomy.yaml"
+    - "roles/conventions.role-resolution.yaml"
+    - "roles/conventions.role-collisions.yaml"
+    - "roles/conventions.role-placement.yaml"
+  role_system_execution_order:
+    - "load_role_taxonomy"
+    - "resolve_roles"
+    - "resolve_collisions_if_needed"
+    - "apply_role_placement_affinity"
+  role_system_contract:
+    must_output: "role_assignment_table"
+validation:
+  fail_conditions:
+    - "role_subfile_missing"
+    - "role_system_output_missing_role_assignment_table"

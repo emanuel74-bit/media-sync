@@ -1,0 +1,84 @@
+version: "1.0"
+file:
+  name: "conventions.role-resolution.yaml"
+  path: "roles/conventions.role-resolution.yaml"
+  role: "role_decision_engine"
+purpose: "Select exactly one role for each artifact using strict priority."
+ownership:
+  owns:
+    - "role_priority_model"
+    - "role_resolution_algorithm"
+    - "default_role_policy"
+    - "fallback_policy"
+    - "specific_before_generic_rules"
+  does_not_own:
+    - "role_definitions"
+    - "collision_rule_details"
+    - "pattern_selection"
+    - "physical_structure"
+activation:
+  mode: "always"
+  activates_when:
+    - "artifact candidates exist"
+  skips_when: []
+inputs:
+  required:
+    - "artifact_candidates"
+    - "role_taxonomy"
+  optional: []
+outputs:
+  produces:
+    - "role_assignment_table"
+    - "unresolved_role_matches"
+    - "role_resolution_confidence"
+dependencies:
+  required_files:
+    - "roles/conventions.role-taxonomy.yaml"
+  optional_files: []
+sections:
+  resolution_policy:
+    mode: "strict"
+    default_behavior: "fail_closed"
+  role_priority_model:
+    principle: "specific_role_before_generic_role"
+    priority_order:
+      - "structural_framework"
+      - "transport_entry"
+      - "application_execution"
+      - "domain_model"
+      - "domain_constraint"
+      - "decision"
+      - "transformation"
+      - "transport_contract"
+      - "architectural_boundary"
+      - "integration_boundary"
+      - "integration_async"
+      - "persistence_data"
+      - "construction_resolution"
+      - "error_result"
+      - "type_static"
+      - "testing_verification"
+      - "fallback"
+  role_resolution_algorithm:
+    - "detect_test_artifact"
+    - "detect_transport_entry"
+    - "detect_application_execution"
+    - "detect_domain_or_decision"
+    - "detect_transformation_or_boundary"
+    - "detect_integration_async"
+    - "detect_persistence"
+    - "detect_construction_resolution"
+    - "detect_error_result_static"
+    - "fallback"
+  specific_before_generic_rules:
+    - "Never choose service when a specific execution role applies."
+    - "Never choose util when any specific role fits."
+    - "Never choose domain/event as file roles."
+  fallback_policy:
+    util_allowed: "only_with_explicit_justification"
+    otherwise: "fail_closed"
+validation:
+  fail_conditions:
+    - "no_role_matched"
+    - "multiple_roles_matched_without_collision_resolution"
+    - "generic_role_selected_when_specific_role_applies"

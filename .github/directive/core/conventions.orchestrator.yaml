@@ -1,0 +1,120 @@
+version: "1.0"
+file:
+  name: "conventions.orchestrator.yaml"
+  path: "core/conventions.orchestrator.yaml"
+  role: "global_convention_orchestrator"
+purpose: "Control full convention execution pipeline, phase order, activation, handoffs, and fail-closed behavior."
+ownership:
+  owns:
+    - "global_execution_order"
+    - "phase_gates"
+    - "file_activation_rules"
+    - "handoff_rules"
+    - "required_intermediate_outputs"
+    - "fail_closed_policy"
+  does_not_own:
+    - "detailed_role_rules"
+    - "detailed_pattern_rules"
+    - "detailed_structure_rules"
+    - "detailed_testing_rules"
+activation:
+  mode: "always"
+  activates_when:
+    - "any AI agent architecture/design/code generation pipeline starts"
+  skips_when: []
+inputs:
+  required:
+    - "user_request"
+  optional: []
+outputs:
+  produces:
+    - "final_execution_manifest"
+    - "final_architecture_design"
+    - "final_validation_report"
+dependencies:
+  required_files:
+    - "core/conventions.output-schema.yaml"
+    - "core/conventions.routing.yaml"
+    - "core/conventions.validation.yaml"
+  optional_files:
+    - "roles/conventions.roles.yaml"
+    - "patterns/conventions.patterns.yaml"
+    - "architecture/conventions.architecture.yaml"
+    - "architecture/conventions.structure.yaml"
+    - "testing/conventions.testing.yaml"
+sections:
+  orchestrator_policy:
+    mode: "strict"
+    ambiguity_policy: "fail_closed"
+    rule: "No phase may run before required inputs exist."
+  file_map:
+    - "core/conventions.output-schema.yaml"
+    - "roles/conventions.role-taxonomy.yaml"
+    - "roles/conventions.role-resolution.yaml"
+    - "roles/conventions.role-collisions.yaml"
+    - "roles/conventions.role-placement.yaml"
+    - "roles/conventions.roles.yaml"
+    - "patterns/conventions.pattern-catalog.yaml"
+    - "patterns/conventions.pattern-selection.yaml"
+    - "patterns/conventions.pattern-restrictions.yaml"
+    - "patterns/conventions.role-pattern-compatibility.yaml"
+    - "patterns/conventions.patterns.yaml"
+    - "architecture/conventions.architecture.yaml"
+    - "architecture/conventions.structure-strategy.yaml"
+    - "architecture/conventions.structure.yaml"
+    - "testing/conventions.testing-taxonomy.yaml"
+    - "testing/conventions.testing-matrix.yaml"
+    - "testing/conventions.testing.yaml"
+    - "core/conventions.routing.yaml"
+    - "core/conventions.validation.yaml"
+    - "core/conventions.orchestrator.yaml"
+  global_execution_order:
+    - "route_request"
+    - "load_active_contracts"
+    - "extract_requirements"
+    - "decompose_architecture"
+    - "assign_roles"
+    - "resolve_role_collisions_if_needed"
+    - "detect_pattern_pressure_if_needed"
+    - "select_patterns_if_needed"
+    - "validate_role_pattern_compatibility_if_needed"
+    - "refine_design"
+    - "render_structure"
+    - "derive_tests_if_needed"
+    - "validate_final_design"
+  phase_gates:
+    assign_roles:
+      requires:
+        - "artifact_candidates"
+        - "role_taxonomy"
+    resolve_role_collisions_if_needed:
+      requires:
+        - "multiple_roles_match"
+    select_patterns_if_needed:
+      requires:
+        - "pattern_activation_signals"
+    render_structure:
+      requires:
+        - "architecture_blueprint"
+        - "role_assignment_table"
+        - "structure_strategy_decision"
+    validate_final_design:
+      requires:
+        - "architecture_blueprint"
+        - "role_assignment_table"
+        - "structure_plan"
+  handoff_rules:
+    - "Every phase consumes previous structured output."
+    - "Inactive files must not influence decisions."
+    - "Entrypoint files index subfiles."
+  fail_closed_policy:
+    - "missing required input fails phase"
+    - "ambiguous role requires collision resolution or split"
+    - "pattern without activation signal rejected"
+    - "final validation always runs"
+validation:
+  fail_conditions:
+    - "phase_skipped_without_rule"
+    - "required_output_missing"
+    - "inactive_file_used"
+    - "final_validation_not_run"

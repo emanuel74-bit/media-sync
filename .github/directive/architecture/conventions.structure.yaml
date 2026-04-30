@@ -1,0 +1,59 @@
+version: "1.0"
+file:
+  name: "conventions.structure.yaml"
+  path: "architecture/conventions.structure.yaml"
+  role: "structure_renderer_contract"
+purpose: "Render architecture blueprint into minimum sufficient physical file structure."
+ownership:
+  owns:
+    - "physical_file_tree_rendering"
+    - "placement_application_rules"
+    - "final_file_structure_output"
+  does_not_own:
+    - "architecture_decomposition"
+    - "role_classification"
+    - "pattern_selection"
+    - "dependency_direction_authority"
+activation:
+  mode: "always"
+  activates_when:
+    - "architecture_blueprint_exists"
+    - "role_assignment_table_exists"
+  skips_when: []
+inputs:
+  required:
+    - "architecture_blueprint"
+    - "role_assignment_table"
+    - "role_placement_affinity_table"
+    - "structure_strategy_decision"
+  optional: []
+outputs:
+  produces:
+    - "structure_plan"
+    - "final_file_tree"
+dependencies:
+  required_files:
+    - "architecture/conventions.architecture.yaml"
+    - "architecture/conventions.structure-strategy.yaml"
+    - "roles/conventions.role-placement.yaml"
+  optional_files: []
+sections:
+  renderer_policy:
+    source_of_truth: "architecture_blueprint"
+    rule: "Structure renders architecture; it never creates new architecture."
+  rendering_pipeline:
+    - "read_architecture_structure_intent"
+    - "apply_minimum_sufficient_strategy"
+    - "apply_role_placement_affinity"
+    - "avoid_unjustified_folders"
+    - "produce_final_file_tree"
+  placement_application_rules:
+    - "Apply placement affinity as hint only."
+    - "Do not create folder only because role exists."
+    - "Keep small scopes flat when readable."
+validation:
+  fail_conditions:
+    - "structure_introduces_artifact_not_in_architecture"
+    - "structure_changes_role_assignment"
+    - "structure_changes_layer_assignment"
+    - "structure_uses_folder_depth_as_dependency_authority"
