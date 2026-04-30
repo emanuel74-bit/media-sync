@@ -1,5 +1,7 @@
 import { PodRole } from "@/common";
-import { Metric, NewMetricData } from "@/metrics";
+
+import { Metric } from "../domain/types/metric.types";
+import { NewMetricData } from "../domain/types/metric-creation.types";
 
 export abstract class MetricRepository {
     abstract findRecent(streamName: string, limit: number): Promise<Metric[]>;

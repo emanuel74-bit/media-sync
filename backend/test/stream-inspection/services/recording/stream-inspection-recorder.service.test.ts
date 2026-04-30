@@ -2,11 +2,15 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
 import { PodRole } from "@/common";
-import { SystemEventNames } from "@/common";
-import { MediaMtxStreamStatsService } from "@/infrastructure";
+import {
+    MediaMtxStreamInfo,
+    MediaMtxStreamStatsService,
+    V3PathItem,
+} from "@/media-mtx";
 import { StreamInspectionRepository } from "@/stream-inspection";
-import { V3PathItem, MediaMtxStreamInfo } from "@/infrastructure";
-import { StreamInspectionRecorderService } from "@/stream-inspection";
+import { SystemEventNames } from "@/system-events";
+
+import { StreamInspectionRecorderService } from "../../../../src/stream-inspection/services/recording/stream-inspection-recorder.service";
 
 const makeStream = (name = "stream-a"): MediaMtxStreamInfo => ({
     name,

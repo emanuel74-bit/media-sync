@@ -1,9 +1,10 @@
 import { Injectable, Logger } from "@nestjs/common";
 
-import { Stream } from "@/streams";
-import { SyncContext, SyncWorkflow } from "@/sync";
-import { StreamAssignmentService } from "@/streams";
-import { MediaMtxPipelineService } from "@/infrastructure";
+import { MediaMtxPipelineService } from "@/media-mtx";
+import { Stream, StreamsFacadeService } from "@/streams";
+
+import { SyncContext } from "../../domain/types/sync-context.types";
+import { SyncWorkflow } from "../../domain/types/sync-workflow.types";
 
 @Injectable()
 export class StreamReconcileService implements SyncWorkflow {
@@ -12,7 +13,7 @@ export class StreamReconcileService implements SyncWorkflow {
 
     constructor(
         private readonly mediaMtxPipeline: MediaMtxPipelineService,
-        private readonly streamAssignment: StreamAssignmentService,
+        private readonly streams: StreamsFacadeService,
     ) {}
 
     async reconcileAll(
@@ -33,7 +34,7 @@ export class StreamReconcileService implements SyncWorkflow {
         clusterNames: Set<string>,
         podIds: string[],
     ): Promise<void> {
-        await this.streamAssignment.ensureAssigned(stream.name, podIds);
+        await this.streams.ensureAssigned(stream.name, podIds);
 
         if (!clusterNames.has(stream.name)) {
             try {

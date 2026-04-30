@@ -1,8 +1,8 @@
 import { ApiTags } from "@nestjs/swagger";
 import { Controller, DefaultValuePipe, Get, Param, ParseIntPipe, Query } from "@nestjs/common";
 
-import { Metric } from "@/metrics";
-import { MetricPersistenceService } from "@/metrics";
+import { Metric } from "../domain/types/metric.types";
+import { MetricPersistenceService } from "../services/persistence/metric-persistence.service";
 
 @ApiTags("metrics")
 @Controller("api/metrics")

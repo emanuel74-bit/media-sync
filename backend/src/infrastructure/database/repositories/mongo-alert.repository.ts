@@ -3,11 +3,11 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 
 import { AlertType } from "@/common";
-import { AlertRepository } from "@/alerts";
-import { Alert, AlertCreationData } from "@/alerts";
 
 import { Alert as AlertSchema, AlertDocument } from "../schemas";
 import { MongoDomainRepository } from "./mongo-domain.repository";
+import { AlertRepository } from "../../../alerts/repositories/alert.repository";
+import { Alert, AlertCreationData } from "../../../alerts/domain/types/alert.types";
 
 type LeanAlert = AlertSchema & {
     _id: { toString(): string };

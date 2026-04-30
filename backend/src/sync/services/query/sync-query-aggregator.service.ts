@@ -1,16 +1,17 @@
 import { Injectable } from "@nestjs/common";
 
 import { PodRole } from "@/common";
-import { SyncContext } from "@/sync";
+import { MediaMtxStreamListingService } from "@/media-mtx";
 import { PodQueryService } from "@/pods";
-import { StreamQueryService } from "@/streams";
-import { MediaMtxStreamListingService } from "@/infrastructure";
+import { StreamsFacadeService } from "@/streams";
+
+import { SyncContext } from "../../domain/types/sync-context.types";
 
 @Injectable()
 export class SyncQueryAggregatorService {
     constructor(
         private readonly mediaMtxQuery: MediaMtxStreamListingService,
-        private readonly streamQuery: StreamQueryService,
+        private readonly streams: StreamsFacadeService,
         private readonly podsService: PodQueryService,
     ) {}
 
@@ -19,7 +20,7 @@ export class SyncQueryAggregatorService {
             this.mediaMtxQuery.listIngestStreams(),
             this.mediaMtxQuery.listClusterStreams(),
             this.podsService.listActivePodIds(PodRole.CLUSTER),
-            this.streamQuery.findAll(),
+            this.streams.findAll(),
         ]);
 
         return {

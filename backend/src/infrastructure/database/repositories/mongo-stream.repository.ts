@@ -3,11 +3,11 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 
 import { StreamStatus } from "@/common";
-import { StreamRepository } from "@/streams";
-import { Stream, StreamAssignmentInfo } from "@/streams";
 
 import { MongoDomainRepository } from "./mongo-domain.repository";
 import { Stream as StreamSchema, StreamDocument } from "../schemas";
+import { StreamRepository } from "../../../streams/repositories/stream.repository";
+import { Stream, StreamAssignmentInfo } from "../../../streams/domain/types/stream.types";
 
 type LeanStream = StreamSchema & { createdAt?: Date; updatedAt?: Date };
 type LeanAssignment = {

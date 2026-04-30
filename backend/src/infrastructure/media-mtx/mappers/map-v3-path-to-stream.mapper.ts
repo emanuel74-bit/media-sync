@@ -1,4 +1,4 @@
-import { V3PathItem, V3TrackItem, MediaMtxStreamInfo } from "@/infrastructure";
+import { MediaMtxStreamInfo, V3PathItem, V3TrackItem } from "../types";
 
 export function mapV3PathToStream(path: V3PathItem): MediaMtxStreamInfo {
     const trackList: V3TrackItem[] = Array.isArray(path?.tracks) ? path.tracks : [];

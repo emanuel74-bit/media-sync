@@ -1,6 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
 
-import { SequentialStreamTaskRunner } from "@/common";
+import { SequentialStreamTaskRunner } from "@/task-sequencing";
 
 describe("SequentialStreamTaskRunner", () => {
     let service: SequentialStreamTaskRunner;

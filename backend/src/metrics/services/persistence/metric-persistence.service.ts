@@ -1,9 +1,10 @@
 import { Injectable } from "@nestjs/common";
 
 import { PodRole } from "@/common";
-import { Metric } from "@/metrics";
-import { MetricRepository } from "@/metrics";
-import { StreamStats } from "@/infrastructure";
+import { StreamStats } from "@/media-mtx";
+
+import { Metric } from "../../domain/types/metric.types";
+import { MetricRepository } from "../../repositories/metric.repository";
 
 @Injectable()
 export class MetricPersistenceService {

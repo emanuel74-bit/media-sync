@@ -1,12 +1,12 @@
 import { Test, TestingModule } from "@nestjs/testing";
 
 import { PodRole } from "@/common";
+import { MediaMtxStreamInfo, MediaMtxStreamListingService } from "@/media-mtx";
 import { Stream } from "@/streams";
 import { PodQueryService } from "@/pods";
-import { StreamQueryService } from "@/streams";
-import { SyncQueryAggregatorService } from "@/sync";
-import { MediaMtxStreamInfo } from "@/infrastructure";
-import { MediaMtxStreamListingService } from "@/infrastructure";
+import { StreamsFacadeService } from "@/streams";
+
+import { SyncQueryAggregatorService } from "../../../../src/sync/services/query/sync-query-aggregator.service";
 
 const makeStream = (name: string): MediaMtxStreamInfo => ({
     name,
@@ -17,7 +17,7 @@ const makeStream = (name: string): MediaMtxStreamInfo => ({
 describe("SyncQueryAggregatorService", () => {
     let service: SyncQueryAggregatorService;
     let mediaMtxQuery: jest.Mocked<MediaMtxStreamListingService>;
-    let streamQuery: jest.Mocked<StreamQueryService>;
+    let streams: jest.Mocked<StreamsFacadeService>;
     let podsService: jest.Mocked<PodQueryService>;
 
     beforeEach(async () => {
@@ -26,9 +26,9 @@ describe("SyncQueryAggregatorService", () => {
             listClusterStreams: jest.fn(),
         } as unknown as jest.Mocked<MediaMtxStreamListingService>;
 
-        streamQuery = {
+        streams = {
             findAll: jest.fn(),
-        } as unknown as jest.Mocked<StreamQueryService>;
+        } as unknown as jest.Mocked<StreamsFacadeService>;
 
         podsService = {
             listActivePodIds: jest.fn(),
@@ -38,7 +38,7 @@ describe("SyncQueryAggregatorService", () => {
             providers: [
                 SyncQueryAggregatorService,
                 { provide: MediaMtxStreamListingService, useValue: mediaMtxQuery },
-                { provide: StreamQueryService, useValue: streamQuery },
+                { provide: StreamsFacadeService, useValue: streams },
                 { provide: PodQueryService, useValue: podsService },
             ],
         }).compile();
@@ -51,7 +51,7 @@ describe("SyncQueryAggregatorService", () => {
             mediaMtxQuery.listIngestStreams.mockResolvedValue([makeStream("ingest-1")]);
             mediaMtxQuery.listClusterStreams.mockResolvedValue([makeStream("cluster-1")]);
             podsService.listActivePodIds.mockResolvedValue(["pod-a", "pod-b"]);
-            streamQuery.findAll.mockResolvedValue([] as Stream[]);
+            streams.findAll.mockResolvedValue([] as Stream[]);
         });
 
         it("calls all four data sources in parallel", async () => {
@@ -60,7 +60,7 @@ describe("SyncQueryAggregatorService", () => {
             expect(mediaMtxQuery.listIngestStreams).toHaveBeenCalledTimes(1);
             expect(mediaMtxQuery.listClusterStreams).toHaveBeenCalledTimes(1);
             expect(podsService.listActivePodIds).toHaveBeenCalledWith(PodRole.CLUSTER);
-            expect(streamQuery.findAll).toHaveBeenCalledTimes(1);
+            expect(streams.findAll).toHaveBeenCalledTimes(1);
         });
 
         it("assembles ingestList correctly", async () => {
@@ -95,7 +95,7 @@ describe("SyncQueryAggregatorService", () => {
 
         it("includes allStreams from the stream query", async () => {
             const fakeStreams = [{ name: "db-stream-1" }] as Stream[];
-            streamQuery.findAll.mockResolvedValue(fakeStreams);
+            streams.findAll.mockResolvedValue(fakeStreams);
 
             const ctx = await service.buildContext();
             expect(ctx.allStreams).toBe(fakeStreams);
@@ -105,7 +105,7 @@ describe("SyncQueryAggregatorService", () => {
             mediaMtxQuery.listIngestStreams.mockResolvedValue([]);
             mediaMtxQuery.listClusterStreams.mockResolvedValue([]);
             podsService.listActivePodIds.mockResolvedValue([]);
-            streamQuery.findAll.mockResolvedValue([]);
+            streams.findAll.mockResolvedValue([]);
 
             const ctx = await service.buildContext();
 

@@ -2,10 +2,10 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Inject, Injectable, Logger, forwardRef } from "@nestjs/common";
 
 import { PodRole } from "@/common";
-import { SystemEventNames } from "@/common";
-import { MediaMtxStreamInfo } from "@/infrastructure";
-import { MediaMtxStreamStatsService } from "@/infrastructure";
-import { StreamInspectionRepository } from "@/stream-inspection";
+import { MediaMtxStreamInfo, MediaMtxStreamStatsService } from "@/media-mtx";
+import { SystemEventNames } from "@/system-events";
+
+import { StreamInspectionRepository } from "../../repositories/stream-inspection.repository";
 
 import { StreamInspectionRecordFactory } from "./stream-inspection-record.factory";
 

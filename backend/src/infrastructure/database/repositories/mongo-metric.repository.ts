@@ -2,11 +2,11 @@ import { Model } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 
-import { MetricRepository } from "@/metrics";
-import { Metric, NewMetricData } from "@/metrics";
-
 import { MongoDomainRepository } from "./mongo-domain.repository";
 import { Metric as MetricSchema, MetricDocument } from "../schemas";
+import { MetricRepository } from "../../../metrics/repositories/metric.repository";
+import { Metric } from "../../../metrics/domain/types/metric.types";
+import { NewMetricData } from "../../../metrics/domain/types/metric-creation.types";
 
 type LeanMetric = MetricSchema & { createdAt: Date; updatedAt: Date };
 

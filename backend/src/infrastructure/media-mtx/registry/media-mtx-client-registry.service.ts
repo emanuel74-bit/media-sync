@@ -1,9 +1,10 @@
 import { Injectable } from "@nestjs/common";
 
 import { PodRole } from "@/common";
-import { ConfigService } from "@/config";
-import { MediaMtxClient } from "@/infrastructure";
-import { IngestPodEndpoint } from "@/infrastructure";
+import { RuntimeConfigService } from "@/runtime-config";
+
+import { MediaMtxClient } from "../clients";
+import { IngestPodEndpoint } from "../types";
 
 import { MediaMtxClientFactory } from "./media-mtx-client-factory.service";
 
@@ -20,7 +21,7 @@ export class MediaMtxClientRegistry {
     private clusterRoundRobinIndex = 0;
 
     constructor(
-        private readonly config: ConfigService,
+        private readonly config: RuntimeConfigService,
         private readonly factory: MediaMtxClientFactory,
     ) {
         this.ingestClient = this.factory.getOrCreate(this.config.ingestBaseUrl);

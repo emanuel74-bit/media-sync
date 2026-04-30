@@ -3,11 +3,12 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 
 import { Metric } from "@/metrics";
 import { PodRole } from "@/common";
-import { SystemEventNames } from "@/common";
-import { StreamFailoverService } from "@/metrics";
-import { StreamMetricProcessor } from "@/metrics";
-import { MetricPersistenceService } from "@/metrics";
-import { MediaMtxStreamStatsService } from "@/infrastructure";
+import { MediaMtxStreamStatsService } from "@/media-mtx";
+import { SystemEventNames } from "@/system-events";
+
+import { MetricPersistenceService } from "../../../../src/metrics/services/persistence/metric-persistence.service";
+import { StreamMetricProcessor } from "../../../../src/metrics/services/collection/stream-metric-processor.service";
+import { StreamFailoverService } from "../../../../src/metrics/services/failover/stream-failover.service";
 
 const makeMetric = (): Metric => ({
     streamName: "live",

@@ -1,8 +1,8 @@
 import { ApiTags } from "@nestjs/swagger";
 import { Controller, DefaultValuePipe, Get, Param, ParseIntPipe, Query } from "@nestjs/common";
 
-import { StreamInspectionRecord } from "@/stream-inspection";
-import { StreamInspectionQueryService } from "@/stream-inspection";
+import { StreamInspectionRecord } from "../domain/types/stream-inspection.types";
+import { StreamInspectionQueryService } from "../services/query/stream-inspection-query.service";
 
 @ApiTags("stream-inspection")
 @Controller("api/stream-inspection")

@@ -1,5 +1,6 @@
 import { AlertMetricInput } from "@/common";
-import { MetricThresholds, RuntimeAlertRule } from "@/common";
+import { RuntimeAlertRule } from "@/alerts";
+import { MetricThresholds } from "@/common";
 
 export type MetricAlertThresholds = MetricThresholds;
 

@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 
 import { PodRole } from "@/common";
-import { ConfigService } from "@/config";
+import { RuntimeConfigService } from "@/runtime-config";
 
 import { Pod, ActivePodRef } from "../domain";
 import { PodRepository } from "../repositories";
@@ -10,7 +10,7 @@ import { PodRepository } from "../repositories";
 export class PodQueryService {
     constructor(
         private readonly podRepository: PodRepository,
-        private readonly config: ConfigService,
+        private readonly config: RuntimeConfigService,
     ) {}
 
     private activeSince(): Date {

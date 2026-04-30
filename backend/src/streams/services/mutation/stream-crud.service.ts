@@ -1,8 +1,11 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 
 import { StreamStatus } from "@/common";
-import { StreamRepository } from "@/streams";
-import { Stream, CreateStreamData, UpdateStreamData } from "@/streams";
+
+import { StreamRepository } from "../../repositories/stream.repository";
+import { Stream } from "../../domain/types/stream.types";
+import { CreateStreamData } from "../../domain/types/create-stream-data.types";
+import { UpdateStreamData } from "../../domain/types/update-stream-data.types";
 
 @Injectable()
 export class StreamCrudService {

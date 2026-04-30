@@ -1,8 +1,9 @@
 import { Injectable, Logger } from "@nestjs/common";
 
 import { PodRole } from "@/common";
-import { MediaMtxClientRegistry } from "@/infrastructure";
-import { StreamStats, V3PathItem } from "@/infrastructure";
+
+import { MediaMtxClientRegistry } from "../../registry";
+import { StreamStats, V3PathItem } from "../../types";
 
 /**
  * Fetches runtime statistics and track-level details for individual streams.

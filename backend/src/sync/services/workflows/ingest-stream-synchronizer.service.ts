@@ -1,6 +1,8 @@
 import { Injectable } from "@nestjs/common";
 
-import { SyncContext, SyncDiscoveredStream, SyncWorkflow } from "@/sync";
+import { SyncContext } from "../../domain/types/sync-context.types";
+import { SyncDiscoveredStream } from "../../domain/types/sync-discovered-stream.types";
+import { SyncWorkflow } from "../../domain/types/sync-workflow.types";
 
 import { StreamIngestDiscoveryService } from "./stream-ingest-discovery.service";
 import { StreamIngestActivationService } from "./stream-ingest-activation.service";

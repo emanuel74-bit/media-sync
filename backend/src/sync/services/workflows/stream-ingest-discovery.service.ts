@@ -1,9 +1,9 @@
 import { Injectable } from "@nestjs/common";
 
 import { StreamStatus } from "@/common";
-import { SyncDiscoveredStream } from "@/sync";
-import { StreamStatusService } from "@/streams";
-import { Stream, StreamMetadata } from "@/streams";
+import { Stream, StreamMetadata, StreamsFacadeService } from "@/streams";
+
+import { SyncDiscoveredStream } from "../../domain/types/sync-discovered-stream.types";
 
 function buildDiscoveryMetadata(ingest: SyncDiscoveredStream): StreamMetadata {
     return { ...ingest.video, ...ingest.audio, ...ingest.metadata };
@@ -11,10 +11,10 @@ function buildDiscoveryMetadata(ingest: SyncDiscoveredStream): StreamMetadata {
 
 @Injectable()
 export class StreamIngestDiscoveryService {
-    constructor(private readonly streamStatus: StreamStatusService) {}
+    constructor(private readonly streams: StreamsFacadeService) {}
 
     async upsertDiscoveredStream(ingest: SyncDiscoveredStream): Promise<Stream> {
-        return this.streamStatus.upsertFromDiscovery({
+        return this.streams.upsertFromDiscovery({
             name: ingest.name,
             source: ingest.source,
             status: (ingest.status as StreamStatus) || StreamStatus.DISCOVERED,

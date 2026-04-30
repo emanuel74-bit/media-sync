@@ -1,11 +1,12 @@
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Injectable, NotFoundException } from "@nestjs/common";
 
-import { Stream } from "@/streams";
-import { SystemEventNames } from "@/common";
-import { StreamRepository } from "@/streams";
+import { SystemEventNames } from "@/system-events";
 
-import { StreamQueryService } from "../query";
+import { Stream } from "../../domain/types/stream.types";
+import { StreamRepository } from "../../repositories/stream.repository";
+
+import { StreamQueryService } from "../query/stream-query.service";
 import { StreamAssignmentPolicy } from "./stream-assignment.policy";
 
 @Injectable()

@@ -2,9 +2,9 @@ import { Test, TestingModule } from "@nestjs/testing";
 
 import { Pod } from "@/pods";
 import { PodRepository } from "@/pods";
-import { ConfigService } from "@/config";
 import { PodQueryService } from "@/pods";
 import { PodRole, PodStatus } from "@/common";
+import { RuntimeConfigService } from "@/runtime-config";
 
 const makePod = (podId: string, overrides: Partial<Pod> = {}): Pod => ({
     podId,
@@ -21,7 +21,7 @@ const makePod = (podId: string, overrides: Partial<Pod> = {}): Pod => ({
 describe("PodQueryService", () => {
     let service: PodQueryService;
     let podRepository: jest.Mocked<PodRepository>;
-    let config: jest.Mocked<ConfigService>;
+    let config: jest.Mocked<RuntimeConfigService>;
 
     beforeEach(async () => {
         podRepository = {
@@ -33,13 +33,13 @@ describe("PodQueryService", () => {
 
         config = {
             podHeartbeatToleranceSeconds: 120,
-        } as unknown as jest.Mocked<ConfigService>;
+        } as unknown as jest.Mocked<RuntimeConfigService>;
 
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 PodQueryService,
                 { provide: PodRepository, useValue: podRepository },
-                { provide: ConfigService, useValue: config },
+                { provide: RuntimeConfigService, useValue: config },
             ],
         }).compile();
 

@@ -1,7 +1,7 @@
 import { Inject, Injectable, forwardRef } from "@nestjs/common";
 
-import { StreamInspectionRecord } from "@/stream-inspection";
-import { StreamInspectionRepository } from "@/stream-inspection";
+import { StreamInspectionRecord } from "../../domain/types/stream-inspection.types";
+import { StreamInspectionRepository } from "../../repositories/stream-inspection.repository";
 
 @Injectable()
 export class StreamInspectionQueryService {

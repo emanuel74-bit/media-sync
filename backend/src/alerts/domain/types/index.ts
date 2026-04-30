@@ -3,3 +3,4 @@
  */
 
 export * from "./alert.types";
+export * from "./runtime-alert-rule.types";

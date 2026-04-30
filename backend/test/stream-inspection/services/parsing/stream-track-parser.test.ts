@@ -1,10 +1,11 @@
 import { TrackType } from "@/common";
-import { DataTrackParser } from "@/stream-inspection";
-import { VideoTrackParser } from "@/stream-inspection";
-import { AudioTrackParser } from "@/stream-inspection";
-import { SubtitleTrackParser } from "@/stream-inspection";
-import { V3PathItem, V3TrackItem } from "@/infrastructure";
-import { parseTracksFromPathItem } from "@/stream-inspection";
+import { V3PathItem, V3TrackItem } from "@/media-mtx";
+
+import { AudioTrackParser } from "../../../../src/stream-inspection/services/parsing/audio/audio-track-parser.strategy";
+import { DataTrackParser } from "../../../../src/stream-inspection/services/parsing/data/data-track-parser.strategy";
+import { SubtitleTrackParser } from "../../../../src/stream-inspection/services/parsing/subtitle/subtitle-track-parser.strategy";
+import { VideoTrackParser } from "../../../../src/stream-inspection/services/parsing/video/video-track-parser.strategy";
+import { parseTracksFromPathItem } from "../../../../src/stream-inspection/services/parsing/stream-track-parser.util";
 
 // ─── Individual parser unit tests ────────────────────────────────────────────
 

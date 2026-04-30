@@ -1,11 +1,12 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
+import { AlertsModule } from "@/alerts";
 import { PodsModule } from "@/pods";
-import { ConfigModule } from "@/config";
-import { CommonModule } from "@/common";
 import { StreamsModule } from "@/streams";
-import { MediaMtxModule } from "@/infrastructure";
+import { MediaMtxModule } from "@/media-mtx";
+import { RuntimeConfigModule } from "@/runtime-config";
+import { TaskSequencingModule } from "@/task-sequencing";
 import { MongoMetricRepository, Metric, MetricSchema } from "@/infrastructure";
 
 import { MetricRepository } from "./repositories";
@@ -23,9 +24,10 @@ import {
         MongooseModule.forFeature([{ name: Metric.name, schema: MetricSchema }]),
         MediaMtxModule,
         PodsModule,
-        ConfigModule,
+        RuntimeConfigModule,
         StreamsModule,
-        CommonModule,
+        AlertsModule,
+        TaskSequencingModule,
     ],
     providers: [
         MetricCollectionService,

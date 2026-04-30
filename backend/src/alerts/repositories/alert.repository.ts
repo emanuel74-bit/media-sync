@@ -1,5 +1,6 @@
 import { AlertType } from "@/common";
-import { Alert, AlertCreationData } from "@/alerts";
+
+import { Alert, AlertCreationData } from "../domain/types/alert.types";
 
 export abstract class AlertRepository {
     abstract findUnresolvedByStreamAndType(

@@ -1,19 +1,21 @@
 import { OnEvent } from "@nestjs/event-emitter";
 import { Injectable, Logger } from "@nestjs/common";
 
-import { ConfigService } from "@/config";
+import { AlertRuleExecutionService } from "@/alerts";
 import { AlertMetricInput } from "@/common";
-import { AlertRuleEvaluator } from "@/common";
-import { MetricCollectedPayload, SystemEventNames } from "@/common";
-import { METRIC_ALERT_RULES, MetricAlertThresholds } from "@/metrics";
+import { RuntimeConfigService } from "@/runtime-config";
+import { MetricCollectedPayload, SystemEventNames } from "@/system-events";
+
+import { METRIC_ALERT_RULES } from "../../domain/consts/metric-alert-rules.const";
+import { MetricAlertThresholds } from "../../domain/types/metric-alert-rule.types";
 
 @Injectable()
 export class MetricAlertInvocationService {
     private readonly logger = new Logger(MetricAlertInvocationService.name);
 
     constructor(
-        private readonly ruleEvaluator: AlertRuleEvaluator,
-        private readonly config: ConfigService,
+        private readonly alertRuleExecution: AlertRuleExecutionService,
+        private readonly config: RuntimeConfigService,
     ) {}
 
     async checkMetricsAndAlert(streamName: string, metric: AlertMetricInput): Promise<void> {
@@ -24,7 +26,7 @@ export class MetricAlertInvocationService {
                 alertLatencyHighThreshold: this.config.alertLatencyHighThreshold,
             };
 
-            await this.ruleEvaluator.evaluateAndEmit(
+            await this.alertRuleExecution.evaluateAndEmit(
                 streamName,
                 metric,
                 thresholds,

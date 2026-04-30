@@ -6,3 +6,4 @@ export * from "./query";
 export * from "./mutation";
 export * from "./assignment";
 export * from "./orchestration";
+export * from "./external/streams-facade.service";

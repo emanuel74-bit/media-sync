@@ -1,8 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 
-import { SequentialStreamTaskRunner } from "@/common";
-import { MediaMtxStreamListingService } from "@/infrastructure";
+import { MediaMtxStreamListingService } from "@/media-mtx";
+import { SequentialStreamTaskRunner } from "@/task-sequencing";
 
 import { StreamInspectionRecorderService } from "../recording";
 

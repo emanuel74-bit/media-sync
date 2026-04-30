@@ -1,18 +1,19 @@
 import { Injectable } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";
 
+import { AlertRuleExecutionService } from "@/alerts";
 import { StreamTrack } from "@/common";
-import { AlertRuleEvaluator } from "@/common";
-import { StreamQueryService } from "@/streams";
-import { StreamTrackAlertContext } from "@/stream-inspection";
-import { STREAM_TRACK_ALERT_RULES } from "@/stream-inspection";
-import { StreamInspectedPayload, SystemEventNames } from "@/common";
+import { StreamsFacadeService } from "@/streams";
+import { StreamInspectedPayload, SystemEventNames } from "@/system-events";
+
+import { StreamTrackAlertContext } from "../../domain/types/stream-inspection.types";
+import { STREAM_TRACK_ALERT_RULES } from "../../domain/consts/stream-track-alert-rules.const";
 
 @Injectable()
 export class StreamTrackAlertService {
     constructor(
-        private readonly streamQuery: StreamQueryService,
-        private readonly ruleEvaluator: AlertRuleEvaluator,
+        private readonly streams: StreamsFacadeService,
+        private readonly alertRuleExecution: AlertRuleExecutionService,
     ) {}
 
     @OnEvent(SystemEventNames.STREAM_INSPECTED)
@@ -25,7 +26,7 @@ export class StreamTrackAlertService {
     }
 
     async evaluate(streamName: string, tracks: StreamTrack[]): Promise<void> {
-        const stream = await this.streamQuery.findByName(streamName);
+        const stream = await this.streams.findByName(streamName);
         if (!stream) return;
 
         const alertContext: StreamTrackAlertContext = {
@@ -37,7 +38,7 @@ export class StreamTrackAlertService {
                 : undefined,
         };
 
-        await this.ruleEvaluator.evaluateAndEmit(
+        await this.alertRuleExecution.evaluateAndEmit(
             streamName,
             tracks,
             alertContext,

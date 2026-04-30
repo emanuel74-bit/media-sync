@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 
-import { SequentialStreamTaskRunner } from "@/common";
+import { SequentialStreamTaskRunner } from "@/task-sequencing";
 
 import { SyncQueryAggregatorService } from "../query";
 import { SyncOrchestratorService } from "../orchestration";

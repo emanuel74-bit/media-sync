@@ -1,5 +1,5 @@
 import { PodRole } from "@/common";
-import { V3PathItem } from "@/infrastructure";
+import { V3PathItem } from "@/media-mtx";
 import { NewStreamInspectionData } from "../../domain";
 
 import { parseTracksFromPathItem } from "../parsing";

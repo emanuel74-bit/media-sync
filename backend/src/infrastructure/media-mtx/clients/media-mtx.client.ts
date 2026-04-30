@@ -1,6 +1,10 @@
 import axios, { AxiosInstance } from "axios";
 
-import { MediaMtxStreamInfo, V3PathItem, PipelineCreateResult } from "@/infrastructure";
+import {
+    MediaMtxStreamInfo,
+    PipelineCreateResult,
+    V3PathItem,
+} from "../types";
 
 import { mapV3PathToStream } from "../mappers";
 

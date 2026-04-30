@@ -2,10 +2,12 @@ import { Injectable } from "@nestjs/common";
 
 import { PodQueryService } from "@/pods";
 import { PodRole, StreamStatus } from "@/common";
-import { Stream, CreateStreamData } from "@/streams";
 
-import { StreamCrudService } from "../mutation";
-import { StreamAssignmentService } from "../assignment";
+import { Stream } from "../../domain/types/stream.types";
+import { CreateStreamData } from "../../domain/types/create-stream-data.types";
+
+import { StreamCrudService } from "../mutation/stream-crud.service";
+import { StreamAssignmentService } from "../assignment/stream-assignment.service";
 import { StreamProvisioningService } from "./stream-provisioning.service";
 
 @Injectable()

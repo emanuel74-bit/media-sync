@@ -2,8 +2,8 @@ import { Injectable, Logger } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
 import { PodRole } from "@/common";
-import { SystemEventNames } from "@/common";
-import { MediaMtxStreamStatsService } from "@/infrastructure";
+import { MediaMtxStreamStatsService } from "@/media-mtx";
+import { SystemEventNames } from "@/system-events";
 
 import { StreamFailoverService } from "../failover";
 import { MetricPersistenceService } from "../persistence";

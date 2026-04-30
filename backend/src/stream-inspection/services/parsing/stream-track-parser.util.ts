@@ -1,5 +1,5 @@
 import { StreamTrack, TrackType } from "@/common";
-import { V3PathItem } from "@/infrastructure";
+import { V3PathItem } from "@/media-mtx";
 
 import { DataTrackParser } from "./data";
 import { VideoTrackParser } from "./video";

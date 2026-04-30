@@ -1,11 +1,12 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { Stream } from "@/streams";
-import { SystemEventNames } from "@/common";
-import { StreamStatusService } from "@/streams";
-import { SyncContext, SyncWorkflow } from "@/sync";
-import { MediaMtxPipelineService } from "@/infrastructure";
+import { MediaMtxPipelineService } from "@/media-mtx";
+import { Stream, StreamsFacadeService } from "@/streams";
+import { SystemEventNames } from "@/system-events";
+
+import { SyncContext } from "../../domain/types/sync-context.types";
+import { SyncWorkflow } from "../../domain/types/sync-workflow.types";
 
 @Injectable()
 export class StreamStalenessService implements SyncWorkflow {
@@ -14,7 +15,7 @@ export class StreamStalenessService implements SyncWorkflow {
 
     constructor(
         private readonly mediaMtxPipeline: MediaMtxPipelineService,
-        private readonly streamStatus: StreamStatusService,
+        private readonly streams: StreamsFacadeService,
         private readonly events: EventEmitter2,
     ) {}
 
@@ -33,7 +34,7 @@ export class StreamStalenessService implements SyncWorkflow {
 
     async markStale(stream: Stream, clusterNames: Set<string>): Promise<void> {
         try {
-            await this.streamStatus.markStale(stream.name);
+            await this.streams.markStale(stream.name);
 
             if (clusterNames.has(stream.name)) {
                 await this.mediaMtxPipeline.deleteClusterPipeline(stream.name);

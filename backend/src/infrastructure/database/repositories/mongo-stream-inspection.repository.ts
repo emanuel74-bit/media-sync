@@ -3,11 +3,12 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 
 import { StreamTrack } from "@/common";
-import { StreamInspectionRepository } from "@/stream-inspection";
-import { StreamInspectionRecord, NewStreamInspectionData } from "@/stream-inspection";
 
 import { MongoDomainRepository } from "./mongo-domain.repository";
 import { StreamInspection as StreamInspectionSchema, StreamInspectionDocument } from "../schemas";
+import { StreamInspectionRepository } from "../../../stream-inspection/repositories/stream-inspection.repository";
+import { StreamInspectionRecord } from "../../../stream-inspection/domain/types/stream-inspection.types";
+import { NewStreamInspectionData } from "../../../stream-inspection/domain/types/stream-inspection-creation.types";
 
 type LeanInspection = StreamInspectionSchema & {
     createdAt: Date;

@@ -1,9 +1,10 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
-import { CommonModule } from "@/common";
+import { AlertsModule } from "@/alerts";
 import { StreamsModule } from "@/streams";
-import { MediaMtxModule } from "@/infrastructure";
+import { MediaMtxModule } from "@/media-mtx";
+import { TaskSequencingModule } from "@/task-sequencing";
 import {
     MongoStreamInspectionRepository,
     StreamInspection,
@@ -24,9 +25,10 @@ import {
         MongooseModule.forFeature([
             { name: StreamInspection.name, schema: StreamInspectionSchema },
         ]),
+        AlertsModule,
         MediaMtxModule,
         StreamsModule,
-        CommonModule,
+        TaskSequencingModule,
     ],
     providers: [
         StreamInspectionSchedulerService,

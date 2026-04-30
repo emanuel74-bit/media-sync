@@ -1,4 +1,4 @@
-import { V3TrackItem } from "@/infrastructure";
+import { V3TrackItem } from "@/media-mtx";
 import { StreamTrack, TrackType } from "@/common";
 
 export class VideoTrackParser {

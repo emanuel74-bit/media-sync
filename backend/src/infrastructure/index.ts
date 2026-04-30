@@ -3,4 +3,8 @@
  */
 
 export * from "./database";
-export * from "./media-mtx";
+export * from "./media-mtx/types";
+export * from "./media-mtx/clients";
+export * from "./media-mtx/mappers";
+export * from "./media-mtx/registry";
+export * from "./media-mtx/services/listing";
