@@ -1,309 +1,53 @@
-version: "1.0"
+version: '1.0'
 file:
-  name: "conventions.testing-taxonomy.yaml"
-  path: "testing/conventions.testing-taxonomy.yaml"
-  role: "testing_role_taxonomy_contract"
-purpose: "Define test artifact roles, test support roles, and verification support roles."
+  name: conventions.testing-taxonomy.yaml
+  path: testing/conventions.testing-taxonomy.yaml
+  role: testing_taxonomy_contract
+  executability: vocabulary
+purpose: Define test role vocabulary and test types.
 ownership:
   owns:
-    - "testing_verification_taxonomy"
-    - "behavior_test_roles"
-    - "contract_test_roles"
-    - "architecture_test_roles"
-    - "test_support_roles"
-    - "verification_support_roles"
+  - test_type_enum
+  - test_role_definitions
   does_not_own:
-    - "production_role_taxonomy"
-    - "test_requirements_by_role"
-    - "final_test_plan"
+  - test_derivation_matrix
 activation:
-  mode: "conditional"
-  activates_when:
-    - "testing system is active"
+  mode: always
+  activates_when: []
   skips_when: []
 inputs:
-  required:
-    - "role_taxonomy"
+  required: []
   optional: []
 outputs:
   produces:
-    - "testing_role_taxonomy"
+  - testing_taxonomy_registry
 dependencies:
-  required_files:
-    - "roles/conventions.role-taxonomy.yaml"
+  required_files: []
   optional_files: []
 sections:
-  testing_taxonomy_policy:
-    rule: "Testing roles remain test-scoped."
-  behavior_tests:
-    - "unit_test"
-    - "integration_test"
-    - "e2e_test"
-  contract_tests:
-    - "contract_test"
-    - "api_contract_test"
-    - "event_contract_test"
-  architecture_tests:
-    - "architecture_test"
-    - "boundary_test"
-  test_support:
-    - "mock"
-    - "stub"
-    - "fake"
-    - "spy"
-    - "fixture"
-    - "test_factory"
-    - "test_builder"
-  verification_support:
-    - "assertion"
-    - "matcher"
-  testing_role_definitions:
-    unit_test:
-      family: "testing_verification"
-      suffix:
-        - ".unit-test.ts"
-        - ".unit.spec.ts"
-      definition: "unit test role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    integration_test:
-      family: "testing_verification"
-      suffix:
-        - ".integration-test.ts"
-        - ".integration.spec.ts"
-      definition: "integration test role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    e2e_test:
-      family: "testing_verification"
-      suffix:
-        - ".e2e-test.ts"
-        - ".e2e.spec.ts"
-      definition: "e2e test role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    contract_test:
-      family: "testing_verification"
-      suffix: ".contract-test.ts"
-      definition: "contract test role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    api_contract_test:
-      family: "testing_verification"
-      suffix: ".api-contract-test.ts"
-      definition: "api contract test role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    event_contract_test:
-      family: "testing_verification"
-      suffix: ".event-contract-test.ts"
-      definition: "event contract test role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    architecture_test:
-      family: "testing_verification"
-      suffix: ".architecture-test.ts"
-      definition: "architecture test role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    boundary_test:
-      family: "testing_verification"
-      suffix: ".boundary-test.ts"
-      definition: "boundary test role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    mock:
-      family: "testing_verification"
-      suffix: ".mock.ts"
-      definition: "mock role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    stub:
-      family: "testing_verification"
-      suffix: ".stub.ts"
-      definition: "stub role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    fake:
-      family: "testing_verification"
-      suffix: ".fake.ts"
-      definition: "fake role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    spy:
-      family: "testing_verification"
-      suffix: ".spy.ts"
-      definition: "spy role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    fixture:
-      family: "testing_verification"
-      suffix: ".fixture.ts"
-      definition: "fixture role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    test_factory:
-      family: "testing_verification"
-      suffix: ".test-factory.ts"
-      definition: "test factory role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    test_builder:
-      family: "testing_verification"
-      suffix: ".test-builder.ts"
-      definition: "test builder role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    assertion:
-      family: "testing_verification"
-      suffix: ".assertion.ts"
-      definition: "assertion role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    matcher:
-      family: "testing_verification"
-      suffix: ".matcher.ts"
-      definition: "matcher role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
+  test_type_enum:
+    allowed:
+    - unit
+    - integration
+    - contract
+    - e2e
+    - regression
+    - characterization
+    - migration
+    - security
+    - performance
+    - snapshot
+  test_role_definitions:
+    unit: isolated logic test
+    integration: multiple components or infrastructure boundary
+    contract: contract compatibility test
+    regression: preserve existing behavior after bugfix/refactor
+    characterization: capture existing behavior before refactor
 validation:
   fail_conditions:
-    - "test_role_missing_definition"
-    - "test_role_missing_choose_when"
-    - "test_support_role_used_in_production"
+  - id: TESTING-CONVENTIONS-TESTING-TAXONOMY-YAML-FC-001
+    condition: unknown_test_type
+    message: Unknown test type.
+    severity: error
+    owner: testing/conventions.testing-taxonomy.yaml
+  required_checks: []

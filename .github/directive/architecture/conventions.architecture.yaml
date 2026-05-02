@@ -1,88 +1,73 @@
-version: "1.0"
+version: '1.0'
 file:
-  name: "conventions.architecture.yaml"
-  path: "architecture/conventions.architecture.yaml"
-  role: "architecture_blueprint_contract"
-purpose: "Transform a feature prompt into capabilities, flows, artifacts, layers, dependencies, and structure intent."
+  name: conventions.architecture.yaml
+  path: architecture/conventions.architecture.yaml
+  role: architecture_decomposition_contract
+  executability: decision_engine
+purpose: Transform behavior contract into architecture blueprint, capabilities, flows, and artifact candidates.
 ownership:
   owns:
-    - "capability_extraction"
-    - "intent_decomposition"
-    - "execution_flow_detection"
-    - "artifact_candidate_generation"
-    - "layer_assignment"
-    - "dependency_direction"
-    - "architecture_blueprint"
-    - "structure_intent"
+  - architecture_blueprint_schema
+  - capability_detection
+  - execution_flow_detection
+  - artifact_candidate_generation
+  - dependency_direction
   does_not_own:
-    - "final_physical_file_structure"
-    - "detailed_role_taxonomy"
-    - "pattern_catalog"
-    - "testing_matrix"
+  - folder_rendering
+  - role_assignment
+  - pattern_selection
 activation:
-  mode: "always"
-  activates_when:
-    - "feature_or_refactor_architecture_is_needed"
+  mode: always
+  activates_when: []
   skips_when: []
 inputs:
-  required:
-    - "feature_prompt_or_change_request"
-    - "output_schema_registry"
+  required: []
   optional: []
 outputs:
   produces:
-    - "architecture_blueprint"
-    - "execution_flows"
-    - "artifact_candidates"
-    - "dependency_graph"
-    - "structure_intent"
+  - architecture_result
 dependencies:
   required_files:
-    - "core/conventions.output-schema.yaml"
-  optional_files:
-    - "roles/conventions.role-taxonomy.yaml"
+  - planning/conventions.behavior-contract.yaml
+  - risk/conventions.risk-taxonomy.yaml
+  - boundaries/conventions.boundary-taxonomy.yaml
+  - dependencies/conventions.dependency-taxonomy.yaml
+  optional_files: []
 sections:
-  architecture_policy:
-    philosophy:
-      - "Decomposition precedes structure"
-      - "Intent defines artifact"
-      - "Design must be derivable, not guessed"
-    execution_policy:
-      ambiguity: "fail_closed"
-      missing_information: "ask_or_abort"
-  decomposition_pipeline:
-    - "extract_capabilities"
-    - "identify_execution_flows"
-    - "decompose_to_atomic_units"
-    - "classify_intents"
-    - "generate_artifact_candidates"
-    - "assign_layers"
-    - "infer_dependencies"
-    - "define_structure_intent"
-  layer_model:
-    canonical_layers:
-      - "transport"
-      - "application"
-      - "domain"
-      - "infrastructure"
-      - "boundary"
-  dependency_rules:
-    direction: "unidirectional"
-    forbidden:
-      - "circular_dependencies"
-      - "layer_skipping"
-      - "domain_imports_infrastructure"
-      - "controller_calls_repository"
-      - "raw_persistence_model_crosses_boundary"
-  structure_intent:
-    role: "intent_only"
-    does_not_define:
-      - "final folders"
-      - "folder depth"
-      - "role grouping"
+  principles:
+  - Architecture is source of truth
+  - Decomposition precedes structure
+  - Intent defines artifact
+  - No ambiguity allowed
+  - Design must be derivable
+  layers:
+  - transport
+  - application
+  - domain
+  - infrastructure
+  - persistence
+  pipeline:
+  - consume_behavior_contract
+  - detect_capabilities
+  - detect_execution_flows
+  - define_boundaries
+  - generate_artifact_candidates
+  - define_dependency_constraints
 validation:
   fail_conditions:
-    - "capability_without_intent"
-    - "artifact_without_reason_to_exist"
-    - "dependency_direction_violation"
-    - "architecture_generates_final_physical_structure"
+  - id: ARCHITECTURE-CONVENTIONS-ARCHITECTURE-YAML-FC-001
+    condition: architecture_started_without_behavior_contract
+    message: Architecture started without behavior contract.
+    severity: error
+    owner: architecture/conventions.architecture.yaml
+  - id: ARCHITECTURE-CONVENTIONS-ARCHITECTURE-YAML-FC-002
+    condition: capability_missing_owner
+    message: Capability missing owner.
+    severity: error
+    owner: architecture/conventions.architecture.yaml
+  - id: ARCHITECTURE-CONVENTIONS-ARCHITECTURE-YAML-FC-003
+    condition: dependency_direction_undefined
+    message: Dependency direction undefined.
+    severity: error
+    owner: architecture/conventions.architecture.yaml
+  required_checks: []

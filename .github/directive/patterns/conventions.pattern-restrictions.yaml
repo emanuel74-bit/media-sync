@@ -1,72 +1,51 @@
-version: "1.0"
+version: '1.0'
 file:
-  name: "conventions.pattern-restrictions.yaml"
-  path: "patterns/conventions.pattern-restrictions.yaml"
-  role: "pattern_restriction_and_anti_overengineering_contract"
-purpose: "Control restricted, conditional, disallowed, and deferred patterns."
+  name: conventions.pattern-restrictions.yaml
+  path: patterns/conventions.pattern-restrictions.yaml
+  role: pattern_restriction_contract
+  executability: vocabulary
+purpose: Define restricted, conditional, deferred, and disallowed pattern usage.
 ownership:
   owns:
-    - "restricted_patterns"
-    - "conditional_patterns"
-    - "disallowed_patterns"
-    - "deferred_patterns"
-    - "pattern_anti_overengineering_rules"
+  - restricted_patterns
+  - conditional_patterns
+  - disallowed_patterns
   does_not_own:
-    - "pattern_catalog_definitions"
-    - "role_pattern_compatibility"
-    - "role_definitions"
-    - "architecture_layer_rules"
+  - pattern_catalog
 activation:
-  mode: "conditional"
-  activates_when:
-    - "candidate_patterns_exist"
-    - "restricted_or_conditional_pattern_candidate_exists"
+  mode: always
+  activates_when: []
   skips_when: []
 inputs:
-  required:
-    - "candidate_patterns"
-    - "pattern_catalog"
+  required: []
   optional: []
 outputs:
   produces:
-    - "pattern_restriction_report"
-    - "rejected_patterns"
-    - "approved_pattern_candidates"
+  - pattern_restrictions_result
 dependencies:
-  required_files:
-    - "patterns/conventions.pattern-catalog.yaml"
-    - "patterns/conventions.pattern-selection.yaml"
+  required_files: []
   optional_files: []
 sections:
   restricted_patterns:
-    - "Singleton"
-    - "Bridge"
-    - "Flyweight"
-    - "TemplateMethod"
-    - "Visitor"
-    - "EventSourcing"
-    - "Saga"
-    - "RetryWithBackoff"
-    - "CircuitBreaker"
-  conditional_patterns:
-    - "CQRS"
-    - "Outbox"
-    - "Inbox"
-    - "AntiCorruptionLayer"
+  - Saga
+  - CQRS
+  - Outbox
+  - UnitOfWork
+  - ContractVersioning
   disallowed_patterns:
-    - "ServiceLocator"
-  deferred_patterns:
-    - "Result"
-    - "ContractVersioning"
-  pattern_anti_overengineering_rules:
-    - "Prefer role decomposition before pattern introduction."
-    - "Prefer mapper before Adapter when only data shape changes."
-    - "Prefer DI provider before Singleton."
-    - "Prefer simple constructor before Factory."
-    - "Restricted patterns require explicit justification."
+  - ServiceLocator
+  deferred_to_contracts:
+  - ContractVersioning
 validation:
   fail_conditions:
-    - "disallowed_pattern_selected"
-    - "restricted_pattern_without_explicit_justification"
-    - "conditional_pattern_without_activation_signal"
-    - "pattern_creates_more_complexity_than_it_removes"
+  - id: PATTERNS-CONVENTIONS-PATTERN-RESTRICTIONS-YAML-FC-001
+    condition: restricted_pattern_without_required_signal
+    message: Restricted pattern without required signal.
+    severity: error
+    owner: patterns/conventions.pattern-restrictions.yaml
+  - id: PATTERNS-CONVENTIONS-PATTERN-RESTRICTIONS-YAML-FC-002
+    condition: ServiceLocator_allowed
+    message: Servicelocator allowed.
+    severity: error
+    owner: patterns/conventions.pattern-restrictions.yaml
+  required_checks: []

@@ -1,84 +1,54 @@
-version: "1.0"
+version: '1.0'
 file:
-  name: "conventions.pattern-selection.yaml"
-  path: "patterns/conventions.pattern-selection.yaml"
-  role: "pattern_selection_engine"
-purpose: "Determine whether a design pattern is needed; no-pattern is default."
+  name: conventions.pattern-selection.yaml
+  path: patterns/conventions.pattern-selection.yaml
+  role: pattern_selection_engine
+  executability: decision_engine
+purpose: Select patterns only when pattern pressure exists and simpler alternatives fail.
 ownership:
   owns:
-    - "no_pattern_default"
-    - "pattern_activation_gates"
-    - "pattern_selection_order"
-    - "pattern_decision_output_schema"
-    - "simpler_alternative_requirement"
+  - pattern_activation_gates
+  - no_pattern_default
+  - pattern_decision_log
   does_not_own:
-    - "full_pattern_catalog"
-    - "role_pattern_compatibility"
-    - "role_definitions"
-    - "structure_generation"
+  - pattern_catalog
 activation:
-  mode: "conditional"
-  activates_when:
-    - "pattern_signals_exist"
-    - "conditional_complexity_detected"
-    - "object_creation_varies"
-    - "interface_mismatch_exists"
-    - "behavior_variation_exists"
+  mode: always
+  activates_when: []
   skips_when: []
 inputs:
-  required:
-    - "artifact_candidates"
-    - "role_assignment_table"
+  required: []
   optional: []
 outputs:
   produces:
-    - "pattern_decision_log"
-    - "candidate_patterns"
-    - "no_pattern_decision"
+  - pattern_selection_decision_report
 dependencies:
   required_files:
-    - "patterns/conventions.pattern-catalog.yaml"
+  - patterns/conventions.pattern-catalog.yaml
+  - roles/conventions.role-taxonomy.yaml
   optional_files: []
 sections:
-  selection_policy:
-    default_decision: "no_pattern"
-  no_pattern_decision:
-    choose_when:
-      - "single implementation"
-      - "no meaningful variation axis"
-      - "simple role decomposition is enough"
-  pattern_activation_gates:
-    must_have_at_least_one:
-      - "multiple_variants_exist"
-      - "conditional_complexity_detected"
-      - "object_creation_varies"
-      - "external_interface_mismatch_exists"
-      - "workflow_has_repeated_steps_or_handlers"
-      - "state_dependent_behavior_exists"
-      - "tree_or_recursive_structure_exists"
-      - "cross_boundary_abstraction_needed"
-    reject_if:
-      - "single_simple_implementation"
-      - "simple_function_or_method_is_enough"
-      - "variation_is_speculative"
-  pattern_selection_order:
-    - "detect_no_pattern_possible"
-    - "detect_pattern_pressure"
-    - "rank_candidate_patterns"
-    - "reject_overengineering"
-    - "validate_against_roles_and_architecture"
-  pattern_decision_output_schema:
-    required_fields:
-      - "candidate_patterns"
-      - "selected_patterns"
-      - "no_pattern_considered"
-      - "activation_signals"
-      - "rejection_signals"
-      - "introduced_roles"
-      - "simpler_alternatives_considered"
-      - "confidence"
+  default: NoPattern
+  selection_pipeline:
+  - detect_pattern_pressure
+  - evaluate_simpler_alternative
+  - select_pattern_if_justified
+  - record_rejected_patterns
 validation:
   fail_conditions:
-    - "no_pattern_not_considered"
-    - "pattern_selected_without_activation_signal"
-    - "simpler_alternative_not_considered"
+  - id: PATTERNS-CONVENTIONS-PATTERN-SELECTION-YAML-FC-001
+    condition: pattern_selected_without_pressure
+    message: Pattern selected without pressure.
+    severity: error
+    owner: patterns/conventions.pattern-selection.yaml
+  - id: PATTERNS-CONVENTIONS-PATTERN-SELECTION-YAML-FC-002
+    condition: pattern_selected_before_roles
+    message: Pattern selected before roles.
+    severity: error
+    owner: patterns/conventions.pattern-selection.yaml
+  - id: PATTERNS-CONVENTIONS-PATTERN-SELECTION-YAML-FC-003
+    condition: simpler_alternative_not_considered
+    message: Simpler alternative not considered.
+    severity: error
+    owner: patterns/conventions.pattern-selection.yaml
+  required_checks: []

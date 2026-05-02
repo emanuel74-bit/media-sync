@@ -1,1136 +1,271 @@
-version: "1.0"
+version: '1.0'
 file:
-  name: "conventions.pattern-catalog.yaml"
-  path: "patterns/conventions.pattern-catalog.yaml"
-  role: "pattern_catalog_contract"
-purpose: "Define accepted classic GoF and enterprise design patterns."
+  name: conventions.pattern-catalog.yaml
+  path: patterns/conventions.pattern-catalog.yaml
+  role: pattern_catalog_contract
+  executability: vocabulary
+purpose: Define pattern vocabulary including classic, enterprise, conditional, and disallowed patterns.
 ownership:
   owns:
-    - "pattern_definition_schema"
-    - "classic_gof_patterns"
-    - "enterprise_patterns"
-    - "disallowed_pattern_names"
-    - "deferred_pattern_names"
+  - pattern_enum
+  - pattern_definitions
+  - pattern_categories
   does_not_own:
-    - "pattern_selection_process"
-    - "pattern_restriction_policy"
-    - "role_pattern_compatibility"
-    - "role_definitions"
+  - pattern_selection_process
 activation:
-  mode: "conditional"
-  activates_when:
-    - "pattern pressure is detected"
+  mode: always
+  activates_when: []
   skips_when: []
 inputs:
-  required:
-    - "role_taxonomy"
+  required: []
   optional: []
 outputs:
   produces:
-    - "pattern_catalog"
-    - "pattern_definition_registry"
+  - pattern_catalog_registry
 dependencies:
-  required_files:
-    - "roles/conventions.role-taxonomy.yaml"
+  required_files: []
   optional_files: []
 sections:
-  pattern_catalog_policy:
-    default_decision: "no_pattern"
-  pattern_definition_schema:
-    - "category"
-    - "status"
-    - "problem_it_solves"
-    - "activate_when"
-    - "reject_when"
-    - "introduced_roles"
-    - "compatible_roles"
-    - "simpler_alternatives"
-    - "validation_checks"
-  patterns:
-    FactoryMethod:
-      category: "classic_gof.creational"
-      status: "active"
-      problem_it_solves: "FactoryMethod pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
+  pattern_enum:
+    allowed:
+    - NoPattern
+    - Strategy
+    - FactoryMethod
+    - AbstractFactory
+    - Builder
+    - Adapter
+    - Facade
+    - Proxy
+    - Decorator
+    - Command
+    - ChainOfResponsibility
+    - Observer
+    - Mediator
+    - TemplateMethod
+    - State
+    - Specification
+    - Policy
+    - Repository
+    - UnitOfWork
+    - CQRS
+    - Outbox
+    - Saga
+    - Pipeline
+    - DomainEvent
+    - AntiCorruptionLayer
+    - Result
+    - ContractVersioning
+    - ServiceLocator
+  pattern_definitions:
+    NoPattern:
+      definition: Default when no pattern pressure exists.
+      activation_signals:
+      - NoPattern pressure detected
       reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "factory"
-        - "interface"
-      compatible_roles:
-        - "factory"
-        - "interface"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    AbstractFactory:
-      category: "classic_gof.creational"
-      status: "active"
-      problem_it_solves: "AbstractFactory pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
-      reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "factory"
-        - "interface"
-        - "provider"
-      compatible_roles:
-        - "factory"
-        - "interface"
-        - "provider"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    Builder:
-      category: "classic_gof.creational"
-      status: "active"
-      problem_it_solves: "Builder pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
-      reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "builder"
-      compatible_roles:
-        - "builder"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    Prototype:
-      category: "classic_gof.creational"
-      status: "active"
-      problem_it_solves: "Prototype pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
-      reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "factory"
-        - "builder"
-      compatible_roles:
-        - "factory"
-        - "builder"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    Singleton:
-      category: "classic_gof.creational"
-      status: "restricted"
-      problem_it_solves: "Singleton pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
-      reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "provider"
-        - "config"
-      compatible_roles:
-        - "provider"
-        - "config"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    Adapter:
-      category: "classic_gof.structural"
-      status: "active"
-      problem_it_solves: "Adapter pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
-      reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "adapter"
-        - "port"
-        - "client"
-        - "mapper"
-      compatible_roles:
-        - "adapter"
-        - "port"
-        - "client"
-        - "mapper"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    Bridge:
-      category: "classic_gof.structural"
-      status: "restricted"
-      problem_it_solves: "Bridge pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
-      reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "interface"
-        - "adapter"
-        - "strategy"
-      compatible_roles:
-        - "interface"
-        - "adapter"
-        - "strategy"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    Composite:
-      category: "classic_gof.structural"
-      status: "active"
-      problem_it_solves: "Composite pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
-      reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "interface"
-        - "entity"
-        - "value_object"
-      compatible_roles:
-        - "interface"
-        - "entity"
-        - "value_object"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    Decorator:
-      category: "classic_gof.structural"
-      status: "active"
-      problem_it_solves: "Decorator pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
-      reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "interface"
-        - "adapter"
-        - "service"
-      compatible_roles:
-        - "interface"
-        - "adapter"
-        - "service"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    Facade:
-      category: "classic_gof.structural"
-      status: "active"
-      problem_it_solves: "Facade pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
-      reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "service"
-        - "adapter"
-        - "orchestrator"
-      compatible_roles:
-        - "service"
-        - "adapter"
-        - "orchestrator"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    Flyweight:
-      category: "classic_gof.structural"
-      status: "restricted"
-      problem_it_solves: "Flyweight pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
-      reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "factory"
-        - "registry"
-        - "value_object"
-      compatible_roles:
-        - "factory"
-        - "registry"
-        - "value_object"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    Proxy:
-      category: "classic_gof.structural"
-      status: "active"
-      problem_it_solves: "Proxy pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
-      reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "adapter"
-        - "guard"
-        - "service"
-        - "provider"
-      compatible_roles:
-        - "adapter"
-        - "guard"
-        - "service"
-        - "provider"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    ChainOfResponsibility:
-      category: "classic_gof.behavioral"
-      status: "active"
-      problem_it_solves: "ChainOfResponsibility pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
-      reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "handler"
-        - "registry"
-        - "processor"
-      compatible_roles:
-        - "handler"
-        - "registry"
-        - "processor"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    Command:
-      category: "classic_gof.behavioral"
-      status: "active"
-      problem_it_solves: "Command pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
-      reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "command"
-        - "handler"
-        - "result"
-      compatible_roles:
-        - "command"
-        - "handler"
-        - "result"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    Iterator:
-      category: "classic_gof.behavioral"
-      status: "active"
-      problem_it_solves: "Iterator pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
-      reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "processor"
-        - "interface"
-      compatible_roles:
-        - "processor"
-        - "interface"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    Mediator:
-      category: "classic_gof.behavioral"
-      status: "active"
-      problem_it_solves: "Mediator pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
-      reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "orchestrator"
-        - "handler"
-        - "publisher"
-        - "listener"
-      compatible_roles:
-        - "orchestrator"
-        - "handler"
-        - "publisher"
-        - "listener"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    Memento:
-      category: "classic_gof.behavioral"
-      status: "active"
-      problem_it_solves: "Memento pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
-      reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "value_object"
-        - "record"
-        - "repository"
-      compatible_roles:
-        - "value_object"
-        - "record"
-        - "repository"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    Observer:
-      category: "classic_gof.behavioral"
-      status: "active"
-      problem_it_solves: "Observer pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
-      reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "domain_event"
-        - "integration_event"
-        - "publisher"
-        - "listener"
-        - "subscriber"
-      compatible_roles:
-        - "domain_event"
-        - "integration_event"
-        - "publisher"
-        - "listener"
-        - "subscriber"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    State:
-      category: "classic_gof.behavioral"
-      status: "active"
-      problem_it_solves: "State pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
-      reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "state"
-        - "strategy"
-        - "entity"
-        - "invariant"
-      compatible_roles:
-        - "state"
-        - "strategy"
-        - "entity"
-        - "invariant"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
+      - no pattern pressure
+      - simpler direct design is sufficient
     Strategy:
-      category: "classic_gof.behavioral"
-      status: "active"
-      problem_it_solves: "Strategy pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
+      definition: Strategy design pattern.
+      activation_signals:
+      - Strategy pressure detected
       reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "strategy"
-        - "selector"
-        - "interface"
-        - "registry"
-      compatible_roles:
-        - "strategy"
-        - "selector"
-        - "interface"
-        - "registry"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
+      - no pattern pressure
+      - simpler direct design is sufficient
+    FactoryMethod:
+      definition: FactoryMethod design pattern.
+      activation_signals:
+      - FactoryMethod pressure detected
+      reject_when:
+      - no pattern pressure
+      - simpler direct design is sufficient
+    AbstractFactory:
+      definition: AbstractFactory design pattern.
+      activation_signals:
+      - AbstractFactory pressure detected
+      reject_when:
+      - no pattern pressure
+      - simpler direct design is sufficient
+    Builder:
+      definition: Builder design pattern.
+      activation_signals:
+      - Builder pressure detected
+      reject_when:
+      - no pattern pressure
+      - simpler direct design is sufficient
+    Adapter:
+      definition: Adapter design pattern.
+      activation_signals:
+      - Adapter pressure detected
+      reject_when:
+      - no pattern pressure
+      - simpler direct design is sufficient
+    Facade:
+      definition: Facade design pattern.
+      activation_signals:
+      - Facade pressure detected
+      reject_when:
+      - no pattern pressure
+      - simpler direct design is sufficient
+    Proxy:
+      definition: Proxy design pattern.
+      activation_signals:
+      - Proxy pressure detected
+      reject_when:
+      - no pattern pressure
+      - simpler direct design is sufficient
+    Decorator:
+      definition: Decorator design pattern.
+      activation_signals:
+      - Decorator pressure detected
+      reject_when:
+      - no pattern pressure
+      - simpler direct design is sufficient
+    Command:
+      definition: Command design pattern.
+      activation_signals:
+      - Command pressure detected
+      reject_when:
+      - no pattern pressure
+      - simpler direct design is sufficient
+    ChainOfResponsibility:
+      definition: ChainOfResponsibility design pattern.
+      activation_signals:
+      - ChainOfResponsibility pressure detected
+      reject_when:
+      - no pattern pressure
+      - simpler direct design is sufficient
+    Observer:
+      definition: Observer design pattern.
+      activation_signals:
+      - Observer pressure detected
+      reject_when:
+      - no pattern pressure
+      - simpler direct design is sufficient
+    Mediator:
+      definition: Mediator design pattern.
+      activation_signals:
+      - Mediator pressure detected
+      reject_when:
+      - no pattern pressure
+      - simpler direct design is sufficient
     TemplateMethod:
-      category: "classic_gof.behavioral"
-      status: "restricted"
-      problem_it_solves: "TemplateMethod pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
+      definition: TemplateMethod design pattern.
+      activation_signals:
+      - TemplateMethod pressure detected
       reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "service"
-        - "strategy"
-      compatible_roles:
-        - "service"
-        - "strategy"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    Visitor:
-      category: "classic_gof.behavioral"
-      status: "restricted"
-      problem_it_solves: "Visitor pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
+      - no pattern pressure
+      - simpler direct design is sufficient
+    State:
+      definition: State design pattern.
+      activation_signals:
+      - State pressure detected
       reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "interface"
-      compatible_roles:
-        - "interface"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    DependencyInjection:
-      category: "enterprise.architectural"
-      status: "active"
-      problem_it_solves: "DependencyInjection pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
-      reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "provider"
-        - "interface"
-        - "port"
-      compatible_roles:
-        - "provider"
-        - "interface"
-        - "port"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    PortsAndAdapters:
-      category: "enterprise.architectural"
-      status: "active"
-      problem_it_solves: "PortsAndAdapters pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
-      reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "port"
-        - "adapter"
-        - "client"
-        - "mapper"
-      compatible_roles:
-        - "port"
-        - "adapter"
-        - "client"
-        - "mapper"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    CQRS:
-      category: "enterprise.architectural"
-      status: "conditional"
-      problem_it_solves: "CQRS pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
-      reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "command"
-        - "query"
-        - "handler"
-        - "read_model"
-        - "projection"
-      compatible_roles:
-        - "command"
-        - "query"
-        - "handler"
-        - "read_model"
-        - "projection"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
+      - no pattern pressure
+      - simpler direct design is sufficient
     Specification:
-      category: "enterprise.domain"
-      status: "active"
-      problem_it_solves: "Specification pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
+      definition: Specification design pattern.
+      activation_signals:
+      - Specification pressure detected
       reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "specification"
-      compatible_roles:
-        - "specification"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    DomainEvent:
-      category: "enterprise.domain"
-      status: "active"
-      problem_it_solves: "DomainEvent pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
+      - no pattern pressure
+      - simpler direct design is sufficient
+    Policy:
+      definition: Policy design pattern.
+      activation_signals:
+      - Policy pressure detected
       reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "domain_event"
-        - "publisher"
-        - "listener"
-      compatible_roles:
-        - "domain_event"
-        - "publisher"
-        - "listener"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
+      - no pattern pressure
+      - simpler direct design is sufficient
     Repository:
-      category: "enterprise.persistence"
-      status: "active"
-      problem_it_solves: "Repository pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
+      definition: Repository design pattern.
+      activation_signals:
+      - Repository pressure detected
       reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "repository"
-        - "mapper"
-      compatible_roles:
-        - "repository"
-        - "mapper"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    DataMapper:
-      category: "enterprise.persistence"
-      status: "active"
-      problem_it_solves: "DataMapper pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
-      reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "mapper"
-        - "record"
-        - "model"
-        - "entity"
-        - "value_object"
-      compatible_roles:
-        - "mapper"
-        - "record"
-        - "model"
-        - "entity"
-        - "value_object"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
+      - no pattern pressure
+      - simpler direct design is sufficient
     UnitOfWork:
-      category: "enterprise.persistence"
-      status: "active"
-      problem_it_solves: "UnitOfWork pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
+      definition: UnitOfWork design pattern.
+      activation_signals:
+      - UnitOfWork pressure detected
       reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "unit_of_work"
-        - "repository"
-        - "transaction"
-      compatible_roles:
-        - "unit_of_work"
-        - "repository"
-        - "transaction"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    Projection:
-      category: "enterprise.persistence"
-      status: "active"
-      problem_it_solves: "Projection pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
+      - no pattern pressure
+      - simpler direct design is sufficient
+    CQRS:
+      definition: CQRS design pattern.
+      activation_signals:
+      - CQRS pressure detected
       reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "projection"
-        - "read_model"
-        - "domain_event"
-        - "integration_event"
-      compatible_roles:
-        - "projection"
-        - "read_model"
-        - "domain_event"
-        - "integration_event"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    ReadModel:
-      category: "enterprise.persistence"
-      status: "active"
-      problem_it_solves: "ReadModel pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
-      reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "read_model"
-        - "mapper"
-      compatible_roles:
-        - "read_model"
-        - "mapper"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    EventSourcing:
-      category: "enterprise.persistence"
-      status: "restricted"
-      problem_it_solves: "EventSourcing pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
-      reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "domain_event"
-        - "repository"
-        - "projection"
-        - "read_model"
-        - "processor"
-        - "integration_event"
-      compatible_roles:
-        - "domain_event"
-        - "repository"
-        - "projection"
-        - "read_model"
-        - "processor"
-        - "integration_event"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
+      - no pattern pressure
+      - simpler direct design is sufficient
     Outbox:
-      category: "enterprise.integration"
-      status: "conditional"
-      problem_it_solves: "Outbox pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
+      definition: Outbox design pattern.
+      activation_signals:
+      - Outbox pressure detected
       reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "integration_event"
-        - "repository"
-        - "transaction"
-        - "producer"
-        - "processor"
-        - "job"
-        - "record"
-      compatible_roles:
-        - "integration_event"
-        - "repository"
-        - "transaction"
-        - "producer"
-        - "processor"
-        - "job"
-        - "record"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    Inbox:
-      category: "enterprise.integration"
-      status: "conditional"
-      problem_it_solves: "Inbox pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
-      reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "consumer"
-        - "repository"
-        - "record"
-        - "handler"
-        - "guard"
-      compatible_roles:
-        - "consumer"
-        - "repository"
-        - "record"
-        - "handler"
-        - "guard"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    AntiCorruptionLayer:
-      category: "enterprise.integration"
-      status: "conditional"
-      problem_it_solves: "AntiCorruptionLayer pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
-      reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "adapter"
-        - "mapper"
-        - "port"
-        - "client"
-        - "policy"
-      compatible_roles:
-        - "adapter"
-        - "mapper"
-        - "port"
-        - "client"
-        - "policy"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
+      - no pattern pressure
+      - simpler direct design is sufficient
     Saga:
-      category: "enterprise.integration"
-      status: "restricted"
-      problem_it_solves: "Saga pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
+      definition: Saga design pattern.
+      activation_signals:
+      - Saga pressure detected
       reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "workflow"
-        - "command"
-        - "handler"
-        - "domain_event"
-        - "integration_event"
-        - "policy"
-        - "repository"
-        - "state"
-      compatible_roles:
-        - "workflow"
-        - "command"
-        - "handler"
-        - "domain_event"
-        - "integration_event"
-        - "policy"
-        - "repository"
-        - "state"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    IdempotencyKey:
-      category: "enterprise.resilience"
-      status: "active"
-      problem_it_solves: "IdempotencyKey pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
-      reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "guard"
-        - "repository"
-        - "record"
-        - "policy"
-        - "error"
-      compatible_roles:
-        - "guard"
-        - "repository"
-        - "record"
-        - "policy"
-        - "error"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    RetryWithBackoff:
-      category: "enterprise.resilience"
-      status: "restricted"
-      problem_it_solves: "RetryWithBackoff pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
-      reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "policy"
-        - "config"
-        - "job"
-        - "processor"
-        - "adapter"
-      compatible_roles:
-        - "policy"
-        - "config"
-        - "job"
-        - "processor"
-        - "adapter"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
-    CircuitBreaker:
-      category: "enterprise.resilience"
-      status: "restricted"
-      problem_it_solves: "CircuitBreaker pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
-      reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "adapter"
-        - "client"
-        - "policy"
-        - "config"
-        - "state"
-      compatible_roles:
-        - "adapter"
-        - "client"
-        - "policy"
-        - "config"
-        - "state"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
+      - no pattern pressure
+      - simpler direct design is sufficient
     Pipeline:
-      category: "enterprise.behavioral"
-      status: "active"
-      problem_it_solves: "Pipeline pattern pressure"
-      activate_when:
-        - "detected pressure matching pattern problem"
+      definition: Pipeline design pattern.
+      activation_signals:
+      - Pipeline pressure detected
       reject_when:
-        - "no activation signal"
-        - "simpler alternative is enough"
-        - "adds more complexity than it removes"
-      introduced_roles:
-        - "processor"
-        - "handler"
-        - "task"
-        - "validator"
-        - "mapper"
-        - "parser"
-        - "normalizer"
-      compatible_roles:
-        - "processor"
-        - "handler"
-        - "task"
-        - "validator"
-        - "mapper"
-        - "parser"
-        - "normalizer"
-      simpler_alternatives:
-        - "no_pattern"
-        - "role_decomposition"
-      validation_checks:
-        - "activation signal present"
-        - "introduced roles compatible"
-        - "layer/dependency rules preserved"
+      - no pattern pressure
+      - simpler direct design is sufficient
+    DomainEvent:
+      definition: DomainEvent design pattern.
+      activation_signals:
+      - DomainEvent pressure detected
+      reject_when:
+      - no pattern pressure
+      - simpler direct design is sufficient
+    AntiCorruptionLayer:
+      definition: AntiCorruptionLayer design pattern.
+      activation_signals:
+      - AntiCorruptionLayer pressure detected
+      reject_when:
+      - no pattern pressure
+      - simpler direct design is sufficient
+    Result:
+      definition: Result design pattern.
+      activation_signals:
+      - Result pressure detected
+      reject_when:
+      - no pattern pressure
+      - simpler direct design is sufficient
+    ContractVersioning:
+      definition: ContractVersioning design pattern.
+      activation_signals:
+      - ContractVersioning pressure detected
+      reject_when:
+      - no pattern pressure
+      - simpler direct design is sufficient
+    ServiceLocator:
+      definition: ServiceLocator design pattern.
+      activation_signals:
+      - ServiceLocator pressure detected
+      reject_when:
+      - no pattern pressure
+      - simpler direct design is sufficient
+      status: disallowed
   disallowed_patterns:
-    - "ServiceLocator"
-  deferred_patterns:
-    Result: "Covered as result role unless system-wide Result/Either convention is adopted."
-    ContractVersioning: "Deferred to future contracts/compatibility conventions."
+  - ServiceLocator
 validation:
   fail_conditions:
-    - "pattern_missing_activation_rules"
-    - "pattern_missing_rejection_rules"
-    - "disallowed_pattern_selected"
+  - id: PATTERNS-CONVENTIONS-PATTERN-CATALOG-YAML-FC-001
+    condition: unknown_pattern
+    message: Unknown pattern.
+    severity: error
+    owner: patterns/conventions.pattern-catalog.yaml
+  - id: PATTERNS-CONVENTIONS-PATTERN-CATALOG-YAML-FC-002
+    condition: disallowed_pattern_selected
+    message: Disallowed pattern selected.
+    severity: error
+    owner: patterns/conventions.pattern-catalog.yaml
+  required_checks: []

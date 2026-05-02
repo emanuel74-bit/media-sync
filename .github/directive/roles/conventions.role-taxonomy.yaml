@@ -1,1533 +1,496 @@
-version: "1.0"
+version: '1.0'
 file:
-  name: "conventions.role-taxonomy.yaml"
-  path: "roles/conventions.role-taxonomy.yaml"
-  role: "role_vocabulary_contract"
-purpose: "Define the accepted artifact role vocabulary."
+  name: conventions.role-taxonomy.yaml
+  path: roles/conventions.role-taxonomy.yaml
+  role: role_taxonomy_contract
+  executability: vocabulary
+purpose: Define artifact roles, suffixes, and responsibility signals.
 ownership:
   owns:
-    - "master_role_taxonomy"
-    - "role_definition_schema"
-    - "role_families"
-    - "role_definitions"
-    - "suffix_policy"
-    - "deprecated_roles"
-    - "discouraged_roles"
-    - "restricted_roles"
+  - role_enum
+  - role_definitions
+  - suffix_policy
+  - role_detection_signals
   does_not_own:
-    - "role_resolution_algorithm"
-    - "role_collision_rules"
-    - "physical_folder_strategy"
-    - "pattern_selection"
+  - role_resolution_process
+  - role_collision_resolution
 activation:
-  mode: "always"
-  activates_when:
-    - "artifact roles must be classified"
+  mode: always
+  activates_when: []
   skips_when: []
 inputs:
-  required:
-    - "output_schema_registry"
+  required: []
   optional: []
 outputs:
   produces:
-    - "role_taxonomy"
-    - "role_definition_registry"
-    - "suffix_registry"
+  - role_taxonomy_registry
 dependencies:
-  required_files:
-    - "core/conventions.output-schema.yaml"
+  required_files: []
   optional_files: []
 sections:
-  taxonomy_policy:
-    principles:
-      - "specific_role_before_generic_role"
-      - "service_is_not_default"
-      - "util_is_last_resort"
-      - "domain_is_category_not_file_role"
-      - "event_must_resolve_to_domain_event_or_integration_event"
-  role_definition_schema:
-    required_fields:
-      - "family"
-      - "suffix"
-      - "definition"
-      - "choose_when"
-      - "reject_when"
-      - "must"
-      - "forbidden"
-      - "status"
-  master_role_taxonomy:
-    structural_framework:
-      - "module"
-    transport_entry:
-      - "controller"
-      - "gateway"
-      - "webhook"
-    application_execution:
-      - "use_case"
-      - "command"
-      - "query"
-      - "handler"
-      - "service"
-      - "orchestrator"
-      - "workflow"
-      - "job"
-      - "task"
-      - "processor"
-    domain_model:
-      - "entity"
-      - "value_object"
-      - "aggregate"
-      - "domain_service"
-      - "domain_event"
-    domain_constraint:
-      - "rule"
-      - "invariant"
-    decision:
-      - "policy"
-      - "specification"
-      - "guard"
-      - "selector"
-      - "strategy"
-    transformation:
-      - "mapper"
-      - "normalizer"
-      - "formatter"
-      - "serializer"
-      - "parser"
-    transport_contract:
-      - "dto"
-      - "request"
-      - "response"
-    architectural_boundary:
-      - "interface"
-      - "port"
-      - "contract"
-    integration_boundary:
-      - "client"
-      - "adapter"
-    integration_async:
-      - "integration_event"
-      - "listener"
-      - "subscriber"
-      - "consumer"
-      - "producer"
-      - "publisher"
-      - "scheduler"
-    persistence_data:
-      - "repository"
-      - "query_builder"
-      - "schema"
-      - "model"
-      - "record"
-      - "migration"
-      - "seed"
-      - "read_model"
-      - "projection"
-      - "transaction"
-      - "unit_of_work"
-    construction_resolution:
-      - "factory"
-      - "builder"
-      - "provider"
-      - "registry"
-      - "resolver"
-    error_result:
-      - "error"
-      - "exception"
-      - "error_code"
-      - "result"
-    type_static:
-      - "types"
-      - "enum"
-      - "constants"
-      - "config"
-    testing_verification:
-      - "unit_test"
-      - "integration_test"
-      - "e2e_test"
-      - "contract_test"
-      - "api_contract_test"
-      - "event_contract_test"
-      - "architecture_test"
-      - "boundary_test"
-      - "mock"
-      - "stub"
-      - "fake"
-      - "spy"
-      - "fixture"
-      - "test_factory"
-      - "test_builder"
-      - "assertion"
-      - "matcher"
-    fallback:
-      - "util"
+  role_enum:
+    allowed:
+    - module
+    - controller
+    - gateway
+    - webhook
+    - consumer
+    - producer
+    - service
+    - use_case
+    - handler
+    - command
+    - query
+    - orchestrator
+    - workflow
+    - policy
+    - rule
+    - specification
+    - invariant
+    - entity
+    - aggregate
+    - value_object
+    - domain_service
+    - domain_event
+    - repository
+    - port
+    - adapter
+    - client
+    - mapper
+    - normalizer
+    - formatter
+    - parser
+    - serializer
+    - factory
+    - builder
+    - strategy
+    - validator
+    - guard
+    - interceptor
+    - middleware
+    - schema
+    - model
+    - record
+    - migration
+    - projection
+    - read_model
+    - resolver
+    - presenter
+    - config
+    - provider
+    - scheduler
+    - job
+    - fixture
+    - fake
+    - mock
+    - stub
+    - spy
+    - test_factory
   role_definitions:
     module:
-      family: "structural_framework"
-      suffix: ".module.ts"
-      definition: "module role"
+      definition: module artifact role.
       choose_when:
-        - "artifact responsibility matches role definition"
+      - artifact responsibility matches module
       reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
+      - multiple primary responsibilities detected
+      suffix: .module.ts
     controller:
-      family: "transport_entry"
-      suffix: ".controller.ts"
-      definition: "controller role"
+      definition: controller artifact role.
       choose_when:
-        - "artifact responsibility matches role definition"
+      - artifact responsibility matches controller
       reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
+      - multiple primary responsibilities detected
+      suffix: .controller.ts
     gateway:
-      family: "transport_entry"
-      suffix: ".gateway.ts"
-      definition: "gateway role"
+      definition: gateway artifact role.
       choose_when:
-        - "artifact responsibility matches role definition"
+      - artifact responsibility matches gateway
       reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
+      - multiple primary responsibilities detected
+      suffix: .gateway.ts
     webhook:
-      family: "transport_entry"
-      suffix: ".webhook.ts"
-      definition: "webhook role"
+      definition: webhook artifact role.
       choose_when:
-        - "artifact responsibility matches role definition"
+      - artifact responsibility matches webhook
       reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    use_case:
-      family: "application_execution"
-      suffix: ".use-case.ts"
-      definition: "use case role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    command:
-      family: "application_execution"
-      suffix: ".command.ts"
-      definition: "command role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    query:
-      family: "application_execution"
-      suffix: ".query.ts"
-      definition: "query role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    handler:
-      family: "application_execution"
-      suffix: ".handler.ts"
-      definition: "handler role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    service:
-      family: "application_execution"
-      suffix: ".service.ts"
-      definition: "service role"
-      choose_when:
-        - "reusable application capability"
-        - "side-effect coordination used by multiple actions"
-      reject_when:
-        - "single application action"
-        - "pure domain rule"
-        - "data access only"
-        - "generic logic bucket"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "restricted"
-    orchestrator:
-      family: "application_execution"
-      suffix: ".orchestrator.ts"
-      definition: "orchestrator role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    workflow:
-      family: "application_execution"
-      suffix: ".workflow.ts"
-      definition: "workflow role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    job:
-      family: "application_execution"
-      suffix: ".job.ts"
-      definition: "job role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    task:
-      family: "application_execution"
-      suffix: ".task.ts"
-      definition: "task role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    processor:
-      family: "application_execution"
-      suffix: ".processor.ts"
-      definition: "processor role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    entity:
-      family: "domain_model"
-      suffix: ".entity.ts"
-      definition: "Domain object with identity, lifecycle, state, and behavior."
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    value_object:
-      family: "domain_model"
-      suffix: ".value-object.ts"
-      definition: "value object role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    aggregate:
-      family: "domain_model"
-      suffix: ".aggregate.ts"
-      definition: "aggregate role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    domain_service:
-      family: "domain_model"
-      suffix: ".domain-service.ts"
-      definition: "domain service role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    domain_event:
-      family: "domain_model"
-      suffix: ".domain-event.ts"
-      definition: "Immutable internal business fact raised by the domain."
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "external integration payload"
-        - "transport fields"
-      must:
-        - "past-tense naming"
-        - "immutable"
-        - "domain language only"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    rule:
-      family: "domain_constraint"
-      suffix: ".rule.ts"
-      definition: "rule role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    invariant:
-      family: "domain_constraint"
-      suffix: ".invariant.ts"
-      definition: "invariant role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    policy:
-      family: "decision"
-      suffix: ".policy.ts"
-      definition: "policy role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    specification:
-      family: "decision"
-      suffix: ".specification.ts"
-      definition: "specification role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    guard:
-      family: "decision"
-      suffix: ".guard.ts"
-      definition: "guard role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    selector:
-      family: "decision"
-      suffix: ".selector.ts"
-      definition: "selector role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    strategy:
-      family: "decision"
-      suffix: ".strategy.ts"
-      definition: "strategy role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    mapper:
-      family: "transformation"
-      suffix: ".mapper.ts"
-      definition: "Pure transformation between structured shapes or boundaries."
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    normalizer:
-      family: "transformation"
-      suffix: ".normalizer.ts"
-      definition: "normalizer role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    formatter:
-      family: "transformation"
-      suffix: ".formatter.ts"
-      definition: "formatter role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    serializer:
-      family: "transformation"
-      suffix: ".serializer.ts"
-      definition: "serializer role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    parser:
-      family: "transformation"
-      suffix: ".parser.ts"
-      definition: "parser role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    dto:
-      family: "transport_contract"
-      suffix: ".dto.ts"
-      definition: "dto role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    request:
-      family: "transport_contract"
-      suffix: ".request.ts"
-      definition: "request role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    response:
-      family: "transport_contract"
-      suffix: ".response.ts"
-      definition: "response role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    interface:
-      family: "architectural_boundary"
-      suffix: ".interface.ts"
-      definition: "interface role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    port:
-      family: "architectural_boundary"
-      suffix: ".port.ts"
-      definition: "Inner-owned contract for required external capability."
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    contract:
-      family: "architectural_boundary"
-      suffix: ".contract.ts"
-      definition: "Stable public/cross-module agreement."
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    client:
-      family: "integration_boundary"
-      suffix: ".client.ts"
-      definition: "Low-level external system communication wrapper."
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    adapter:
-      family: "integration_boundary"
-      suffix: ".adapter.ts"
-      definition: "Bridge from external/incompatible interface into internal boundary."
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    integration_event:
-      family: "integration_async"
-      suffix: ".integration-event.ts"
-      definition: "Stable cross-boundary event contract."
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "internal-only domain fact"
-      must:
-        - "stable payload"
-        - "versionable when public/durable"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    listener:
-      family: "integration_async"
-      suffix: ".listener.ts"
-      definition: "listener role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    subscriber:
-      family: "integration_async"
-      suffix: ".subscriber.ts"
-      definition: "subscriber role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
+      - multiple primary responsibilities detected
+      suffix: .webhook.ts
     consumer:
-      family: "integration_async"
-      suffix: ".consumer.ts"
-      definition: "consumer role"
+      definition: consumer artifact role.
       choose_when:
-        - "artifact responsibility matches role definition"
+      - artifact responsibility matches consumer
       reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
+      - multiple primary responsibilities detected
+      suffix: .consumer.ts
     producer:
-      family: "integration_async"
-      suffix: ".producer.ts"
-      definition: "producer role"
+      definition: producer artifact role.
       choose_when:
-        - "artifact responsibility matches role definition"
+      - artifact responsibility matches producer
       reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    publisher:
-      family: "integration_async"
-      suffix: ".publisher.ts"
-      definition: "publisher role"
+      - multiple primary responsibilities detected
+      suffix: .producer.ts
+    service:
+      definition: service artifact role.
       choose_when:
-        - "artifact responsibility matches role definition"
+      - artifact responsibility matches service
       reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    scheduler:
-      family: "integration_async"
-      suffix: ".scheduler.ts"
-      definition: "scheduler role"
+      - multiple primary responsibilities detected
+      suffix: .service.ts
+    use_case:
+      definition: use_case artifact role.
       choose_when:
-        - "artifact responsibility matches role definition"
+      - artifact responsibility matches use_case
       reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
+      - multiple primary responsibilities detected
+      suffix: .use-case.ts
+    handler:
+      definition: handler artifact role.
+      choose_when:
+      - artifact responsibility matches handler
+      reject_when:
+      - multiple primary responsibilities detected
+      suffix: .handler.ts
+    command:
+      definition: command artifact role.
+      choose_when:
+      - artifact responsibility matches command
+      reject_when:
+      - multiple primary responsibilities detected
+      suffix: .command.ts
+    query:
+      definition: query artifact role.
+      choose_when:
+      - artifact responsibility matches query
+      reject_when:
+      - multiple primary responsibilities detected
+      suffix: .query.ts
+    orchestrator:
+      definition: orchestrator artifact role.
+      choose_when:
+      - artifact responsibility matches orchestrator
+      reject_when:
+      - multiple primary responsibilities detected
+      suffix: .orchestrator.ts
+    workflow:
+      definition: workflow artifact role.
+      choose_when:
+      - artifact responsibility matches workflow
+      reject_when:
+      - multiple primary responsibilities detected
+      suffix: .workflow.ts
+    policy:
+      definition: policy artifact role.
+      choose_when:
+      - artifact responsibility matches policy
+      reject_when:
+      - multiple primary responsibilities detected
+      suffix: .policy.ts
+    rule:
+      definition: rule artifact role.
+      choose_when:
+      - artifact responsibility matches rule
+      reject_when:
+      - multiple primary responsibilities detected
+      suffix: .rule.ts
+    specification:
+      definition: specification artifact role.
+      choose_when:
+      - artifact responsibility matches specification
+      reject_when:
+      - multiple primary responsibilities detected
+      suffix: .specification.ts
+    invariant:
+      definition: invariant artifact role.
+      choose_when:
+      - artifact responsibility matches invariant
+      reject_when:
+      - multiple primary responsibilities detected
+      suffix: .invariant.ts
+    entity:
+      definition: entity artifact role.
+      choose_when:
+      - artifact responsibility matches entity
+      reject_when:
+      - multiple primary responsibilities detected
+      suffix: .entity.ts
+    aggregate:
+      definition: aggregate artifact role.
+      choose_when:
+      - artifact responsibility matches aggregate
+      reject_when:
+      - multiple primary responsibilities detected
+      suffix: .aggregate.ts
+    value_object:
+      definition: value_object artifact role.
+      choose_when:
+      - artifact responsibility matches value_object
+      reject_when:
+      - multiple primary responsibilities detected
+      suffix: .value-object.ts
+    domain_service:
+      definition: domain_service artifact role.
+      choose_when:
+      - artifact responsibility matches domain_service
+      reject_when:
+      - multiple primary responsibilities detected
+      suffix: .domain-service.ts
+    domain_event:
+      definition: domain_event artifact role.
+      choose_when:
+      - artifact responsibility matches domain_event
+      reject_when:
+      - multiple primary responsibilities detected
+      suffix: .domain-event.ts
     repository:
-      family: "persistence_data"
-      suffix: ".repository.ts"
-      definition: "repository role"
+      definition: repository artifact role.
       choose_when:
-        - "artifact responsibility matches role definition"
+      - artifact responsibility matches repository
       reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    query_builder:
-      family: "persistence_data"
-      suffix: ".query-builder.ts"
-      definition: "query builder role"
+      - multiple primary responsibilities detected
+      suffix: .repository.ts
+    port:
+      definition: port artifact role.
       choose_when:
-        - "artifact responsibility matches role definition"
+      - artifact responsibility matches port
       reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    schema:
-      family: "persistence_data"
-      suffix: ".schema.ts"
-      definition: "Declarative database/table/collection/validation structure metadata."
+      - multiple primary responsibilities detected
+      suffix: .port.ts
+    adapter:
+      definition: adapter artifact role.
       choose_when:
-        - "artifact responsibility matches role definition"
+      - artifact responsibility matches adapter
       reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    model:
-      family: "persistence_data"
-      suffix: ".model.ts"
-      definition: "ORM/database runtime representation used by persistence tooling."
+      - multiple primary responsibilities detected
+      suffix: .adapter.ts
+    client:
+      definition: client artifact role.
       choose_when:
-        - "artifact responsibility matches role definition"
+      - artifact responsibility matches client
       reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    record:
-      family: "persistence_data"
-      suffix: ".record.ts"
-      definition: "Raw database row/document shape with no behavior."
+      - multiple primary responsibilities detected
+      suffix: .client.ts
+    mapper:
+      definition: mapper artifact role.
       choose_when:
-        - "artifact responsibility matches role definition"
+      - artifact responsibility matches mapper
       reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    migration:
-      family: "persistence_data"
-      suffix: ".migration.ts"
-      definition: "migration role"
+      - multiple primary responsibilities detected
+      suffix: .mapper.ts
+    normalizer:
+      definition: normalizer artifact role.
       choose_when:
-        - "artifact responsibility matches role definition"
+      - artifact responsibility matches normalizer
       reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    seed:
-      family: "persistence_data"
-      suffix: ".seed.ts"
-      definition: "seed role"
+      - multiple primary responsibilities detected
+      suffix: .normalizer.ts
+    formatter:
+      definition: formatter artifact role.
       choose_when:
-        - "artifact responsibility matches role definition"
+      - artifact responsibility matches formatter
       reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    read_model:
-      family: "persistence_data"
-      suffix: ".read-model.ts"
-      definition: "read model role"
+      - multiple primary responsibilities detected
+      suffix: .formatter.ts
+    parser:
+      definition: parser artifact role.
       choose_when:
-        - "artifact responsibility matches role definition"
+      - artifact responsibility matches parser
       reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    projection:
-      family: "persistence_data"
-      suffix: ".projection.ts"
-      definition: "projection role"
+      - multiple primary responsibilities detected
+      suffix: .parser.ts
+    serializer:
+      definition: serializer artifact role.
       choose_when:
-        - "artifact responsibility matches role definition"
+      - artifact responsibility matches serializer
       reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    transaction:
-      family: "persistence_data"
-      suffix: ".transaction.ts"
-      definition: "transaction role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    unit_of_work:
-      family: "persistence_data"
-      suffix: ".unit-of-work.ts"
-      definition: "unit of work role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
+      - multiple primary responsibilities detected
+      suffix: .serializer.ts
     factory:
-      family: "construction_resolution"
-      suffix: ".factory.ts"
-      definition: "factory role"
+      definition: factory artifact role.
       choose_when:
-        - "artifact responsibility matches role definition"
+      - artifact responsibility matches factory
       reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
+      - multiple primary responsibilities detected
+      suffix: .factory.ts
     builder:
-      family: "construction_resolution"
-      suffix: ".builder.ts"
-      definition: "builder role"
+      definition: builder artifact role.
       choose_when:
-        - "artifact responsibility matches role definition"
+      - artifact responsibility matches builder
       reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    provider:
-      family: "construction_resolution"
-      suffix: ".provider.ts"
-      definition: "provider role"
+      - multiple primary responsibilities detected
+      suffix: .builder.ts
+    strategy:
+      definition: strategy artifact role.
       choose_when:
-        - "artifact responsibility matches role definition"
+      - artifact responsibility matches strategy
       reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    registry:
-      family: "construction_resolution"
-      suffix: ".registry.ts"
-      definition: "registry role"
+      - multiple primary responsibilities detected
+      suffix: .strategy.ts
+    validator:
+      definition: validator artifact role.
       choose_when:
-        - "artifact responsibility matches role definition"
+      - artifact responsibility matches validator
       reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
+      - multiple primary responsibilities detected
+      suffix: .validator.ts
+    guard:
+      definition: guard artifact role.
+      choose_when:
+      - artifact responsibility matches guard
+      reject_when:
+      - multiple primary responsibilities detected
+      suffix: .guard.ts
+    interceptor:
+      definition: interceptor artifact role.
+      choose_when:
+      - artifact responsibility matches interceptor
+      reject_when:
+      - multiple primary responsibilities detected
+      suffix: .interceptor.ts
+    middleware:
+      definition: middleware artifact role.
+      choose_when:
+      - artifact responsibility matches middleware
+      reject_when:
+      - multiple primary responsibilities detected
+      suffix: .middleware.ts
+    schema:
+      definition: schema artifact role.
+      choose_when:
+      - artifact responsibility matches schema
+      reject_when:
+      - multiple primary responsibilities detected
+      suffix: .schema.ts
+    model:
+      definition: model artifact role.
+      choose_when:
+      - artifact responsibility matches model
+      reject_when:
+      - multiple primary responsibilities detected
+      suffix: .model.ts
+    record:
+      definition: record artifact role.
+      choose_when:
+      - artifact responsibility matches record
+      reject_when:
+      - multiple primary responsibilities detected
+      suffix: .record.ts
+    migration:
+      definition: migration artifact role.
+      choose_when:
+      - artifact responsibility matches migration
+      reject_when:
+      - multiple primary responsibilities detected
+      suffix: .migration.ts
+    projection:
+      definition: projection artifact role.
+      choose_when:
+      - artifact responsibility matches projection
+      reject_when:
+      - multiple primary responsibilities detected
+      suffix: .projection.ts
+    read_model:
+      definition: read_model artifact role.
+      choose_when:
+      - artifact responsibility matches read_model
+      reject_when:
+      - multiple primary responsibilities detected
+      suffix: .read-model.ts
     resolver:
-      family: "construction_resolution"
-      suffix: ".resolver.ts"
-      definition: "resolver role"
+      definition: resolver artifact role.
       choose_when:
-        - "artifact responsibility matches role definition"
+      - artifact responsibility matches resolver
       reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    error:
-      family: "error_result"
-      suffix: ".error.ts"
-      definition: "error role"
+      - multiple primary responsibilities detected
+      suffix: .resolver.ts
+    presenter:
+      definition: presenter artifact role.
       choose_when:
-        - "artifact responsibility matches role definition"
+      - artifact responsibility matches presenter
       reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    exception:
-      family: "error_result"
-      suffix: ".exception.ts"
-      definition: "exception role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    error_code:
-      family: "error_result"
-      suffix: ".error-code.ts"
-      definition: "error code role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    result:
-      family: "error_result"
-      suffix: ".result.ts"
-      definition: "result role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    types:
-      family: "type_static"
-      suffix: ".types.ts"
-      definition: "types role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    enum:
-      family: "type_static"
-      suffix: ".enum.ts"
-      definition: "enum role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    constants:
-      family: "type_static"
-      suffix: ".const.ts"
-      definition: "constants role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "environment config"
-        - "business threshold"
-        - "unrelated constants"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "restricted"
+      - multiple primary responsibilities detected
+      suffix: .presenter.ts
     config:
-      family: "type_static"
-      suffix: ".config.ts"
-      definition: "config role"
+      definition: config artifact role.
       choose_when:
-        - "artifact responsibility matches role definition"
+      - artifact responsibility matches config
       reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    unit_test:
-      family: "testing_verification"
-      suffix:
-        - ".unit-test.ts"
-        - ".unit.spec.ts"
-      definition: "unit test role"
+      - multiple primary responsibilities detected
+      suffix: .config.ts
+    provider:
+      definition: provider artifact role.
       choose_when:
-        - "artifact responsibility matches role definition"
+      - artifact responsibility matches provider
       reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    integration_test:
-      family: "testing_verification"
-      suffix:
-        - ".integration-test.ts"
-        - ".integration.spec.ts"
-      definition: "integration test role"
+      - multiple primary responsibilities detected
+      suffix: .provider.ts
+    scheduler:
+      definition: scheduler artifact role.
       choose_when:
-        - "artifact responsibility matches role definition"
+      - artifact responsibility matches scheduler
       reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    e2e_test:
-      family: "testing_verification"
-      suffix:
-        - ".e2e-test.ts"
-        - ".e2e.spec.ts"
-      definition: "e2e test role"
+      - multiple primary responsibilities detected
+      suffix: .scheduler.ts
+    job:
+      definition: job artifact role.
       choose_when:
-        - "artifact responsibility matches role definition"
+      - artifact responsibility matches job
       reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    contract_test:
-      family: "testing_verification"
-      suffix: ".contract-test.ts"
-      definition: "contract test role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    api_contract_test:
-      family: "testing_verification"
-      suffix: ".api-contract-test.ts"
-      definition: "api contract test role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    event_contract_test:
-      family: "testing_verification"
-      suffix: ".event-contract-test.ts"
-      definition: "event contract test role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    architecture_test:
-      family: "testing_verification"
-      suffix: ".architecture-test.ts"
-      definition: "architecture test role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    boundary_test:
-      family: "testing_verification"
-      suffix: ".boundary-test.ts"
-      definition: "boundary test role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    mock:
-      family: "testing_verification"
-      suffix: ".mock.ts"
-      definition: "mock role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    stub:
-      family: "testing_verification"
-      suffix: ".stub.ts"
-      definition: "stub role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    fake:
-      family: "testing_verification"
-      suffix: ".fake.ts"
-      definition: "fake role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    spy:
-      family: "testing_verification"
-      suffix: ".spy.ts"
-      definition: "spy role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
+      - multiple primary responsibilities detected
+      suffix: .job.ts
     fixture:
-      family: "testing_verification"
-      suffix: ".fixture.ts"
-      definition: "fixture role"
+      definition: fixture artifact role.
       choose_when:
-        - "artifact responsibility matches role definition"
+      - artifact responsibility matches fixture
       reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
+      - multiple primary responsibilities detected
+      suffix: .fixture.ts
+    fake:
+      definition: fake artifact role.
+      choose_when:
+      - artifact responsibility matches fake
+      reject_when:
+      - multiple primary responsibilities detected
+      suffix: .fake.ts
+    mock:
+      definition: mock artifact role.
+      choose_when:
+      - artifact responsibility matches mock
+      reject_when:
+      - multiple primary responsibilities detected
+      suffix: .mock.ts
+    stub:
+      definition: stub artifact role.
+      choose_when:
+      - artifact responsibility matches stub
+      reject_when:
+      - multiple primary responsibilities detected
+      suffix: .stub.ts
+    spy:
+      definition: spy artifact role.
+      choose_when:
+      - artifact responsibility matches spy
+      reject_when:
+      - multiple primary responsibilities detected
+      suffix: .spy.ts
     test_factory:
-      family: "testing_verification"
-      suffix: ".test-factory.ts"
-      definition: "test factory role"
+      definition: test_factory artifact role.
       choose_when:
-        - "artifact responsibility matches role definition"
+      - artifact responsibility matches test_factory
       reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    test_builder:
-      family: "testing_verification"
-      suffix: ".test-builder.ts"
-      definition: "test builder role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    assertion:
-      family: "testing_verification"
-      suffix: ".assertion.ts"
-      definition: "assertion role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    matcher:
-      family: "testing_verification"
-      suffix: ".matcher.ts"
-      definition: "matcher role"
-      choose_when:
-        - "artifact responsibility matches role definition"
-      reject_when:
-        - "a more specific role applies"
-        - "artifact has multiple responsibilities"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "active"
-    util:
-      family: "fallback"
-      suffix: ".util.ts"
-      definition: "util role"
-      choose_when:
-        - "pure generic domain-neutral helper"
-        - "no stronger role applies"
-      reject_when:
-        - "business logic"
-        - "workflow"
-        - "IO"
-        - "unrelated helpers"
-      must:
-        - "own exactly one responsibility"
-      forbidden:
-        - "mixed responsibilities"
-      status: "last_resort"
+      - multiple primary responsibilities detected
+      suffix: .test-factory.ts
   suffix_policy:
-    module: ".module.ts"
-    controller: ".controller.ts"
-    gateway: ".gateway.ts"
-    webhook: ".webhook.ts"
-    use_case: ".use-case.ts"
-    command: ".command.ts"
-    query: ".query.ts"
-    handler: ".handler.ts"
-    service: ".service.ts"
-    orchestrator: ".orchestrator.ts"
-    workflow: ".workflow.ts"
-    job: ".job.ts"
-    task: ".task.ts"
-    processor: ".processor.ts"
-    entity: ".entity.ts"
-    value_object: ".value-object.ts"
-    aggregate: ".aggregate.ts"
-    domain_service: ".domain-service.ts"
-    domain_event: ".domain-event.ts"
-    rule: ".rule.ts"
-    invariant: ".invariant.ts"
-    policy: ".policy.ts"
-    specification: ".specification.ts"
-    guard: ".guard.ts"
-    selector: ".selector.ts"
-    strategy: ".strategy.ts"
-    mapper: ".mapper.ts"
-    normalizer: ".normalizer.ts"
-    formatter: ".formatter.ts"
-    serializer: ".serializer.ts"
-    parser: ".parser.ts"
-    dto: ".dto.ts"
-    request: ".request.ts"
-    response: ".response.ts"
-    interface: ".interface.ts"
-    port: ".port.ts"
-    contract: ".contract.ts"
-    client: ".client.ts"
-    adapter: ".adapter.ts"
-    integration_event: ".integration-event.ts"
-    listener: ".listener.ts"
-    subscriber: ".subscriber.ts"
-    consumer: ".consumer.ts"
-    producer: ".producer.ts"
-    publisher: ".publisher.ts"
-    scheduler: ".scheduler.ts"
-    repository: ".repository.ts"
-    query_builder: ".query-builder.ts"
-    schema: ".schema.ts"
-    model: ".model.ts"
-    record: ".record.ts"
-    migration: ".migration.ts"
-    seed: ".seed.ts"
-    read_model: ".read-model.ts"
-    projection: ".projection.ts"
-    transaction: ".transaction.ts"
-    unit_of_work: ".unit-of-work.ts"
-    factory: ".factory.ts"
-    builder: ".builder.ts"
-    provider: ".provider.ts"
-    registry: ".registry.ts"
-    resolver: ".resolver.ts"
-    error: ".error.ts"
-    exception: ".exception.ts"
-    error_code: ".error-code.ts"
-    result: ".result.ts"
-    types: ".types.ts"
-    enum: ".enum.ts"
-    constants: ".const.ts"
-    config: ".config.ts"
-    util: ".util.ts"
-    unit_test:
-      - ".unit-test.ts"
-      - ".unit.spec.ts"
-    integration_test:
-      - ".integration-test.ts"
-      - ".integration.spec.ts"
-    e2e_test:
-      - ".e2e-test.ts"
-      - ".e2e.spec.ts"
-    contract_test: ".contract-test.ts"
-    api_contract_test: ".api-contract-test.ts"
-    event_contract_test: ".event-contract-test.ts"
-    architecture_test: ".architecture-test.ts"
-    boundary_test: ".boundary-test.ts"
-    mock: ".mock.ts"
-    stub: ".stub.ts"
-    fake: ".fake.ts"
-    spy: ".spy.ts"
-    fixture: ".fixture.ts"
-    test_factory: ".test-factory.ts"
-    test_builder: ".test-builder.ts"
-    assertion: ".assertion.ts"
-    matcher: ".matcher.ts"
-  deprecated_roles:
-    domain:
-      replacement_order:
-        - "entity"
-        - "value_object"
-        - "aggregate"
-        - "domain_service"
-        - "rule"
-        - "invariant"
-        - "policy"
-        - "specification"
-        - "domain_event"
-  discouraged_roles:
-    event:
-      replacement_order:
-        - "domain_event"
-        - "integration_event"
-  restricted_roles:
-    - "service"
-    - "util"
-    - "constants"
+    required: role suffix must reflect resolved role unless framework convention requires otherwise
 validation:
   fail_conditions:
-    - "role_missing_suffix"
-    - "role_missing_choose_when"
-    - "deprecated_role_used_as_primary"
-    - "restricted_role_used_without_required_condition"
+  - id: ROLES-CONVENTIONS-ROLE-TAXONOMY-YAML-FC-001
+    condition: unknown_role
+    message: Unknown role.
+    severity: error
+    owner: roles/conventions.role-taxonomy.yaml
+  - id: ROLES-CONVENTIONS-ROLE-TAXONOMY-YAML-FC-002
+    condition: multi_role_artifact_without_decomposition
+    message: Multi role artifact without decomposition.
+    severity: error
+    owner: roles/conventions.role-taxonomy.yaml
+  required_checks: []
