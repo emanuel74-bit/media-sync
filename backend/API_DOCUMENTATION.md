@@ -8,10 +8,10 @@ This document provides comprehensive documentation for all API endpoints in the 
 http://localhost:3000
 ```
 
-**WebSocket Server:**
+**WebSocket Server (Socket.IO):**
 
 ```
-ws://localhost:3000
+ws://localhost:3000  (path: /socket.io)
 ```
 
 ## Authentication
@@ -37,20 +37,20 @@ Provides Swagger UI for testing all endpoints.
 
 The MediaMTX Stream Sync system is a NestJS-based distributed streaming orchestration platform that:
 
-- Discovers streams from one or more MediaMTX ingest pods
-- Automatically synchronizes them to a cluster of MediaMTX nodes
-- Distributes load across cluster nodes intelligently
-- Monitors stream health with real-time metrics
-- Inspects stream tracks and raises alerts on issues
+- Discovers streams from the ingest MediaMTX node (with fallback to registered ingest pods)
+- Automatically synchronizes them to a cluster of MediaMTX nodes via pull pipelines
+- Distributes load across cluster nodes using a deterministic hash assignment policy
+- Monitors stream health with periodic metrics and threshold-based alerts
+- Inspects stream tracks and raises alerts on missing/unexpected content
 - Provides WebSocket-based real-time notifications
 
 ### Key Concepts
 
 - **Pod**: A MediaMTX instance (ingest or cluster type) that registers with the system
-- **Stream**: A media stream discovered from ingest, tracked in the database, and assigned to cluster pods
-- **Assignment**: A stream's current pod assignment, used for load distributing and failover
+- **Stream**: A media stream discovered from ingest (or created manually), tracked in the database, and assigned to cluster pods
+- **Assignment**: A stream's current pod assignment, used for load distribution and failover
 - **Metric**: A timestamped performance sample (bitrate, FPS, latency, etc.) for a stream on a pod
-- **Alert**: A system-generated notification for conditions like bitrate drops or packet loss
+- **Alert**: A system-generated notification for conditions like low bitrate or packet loss
 - **Inspection**: Analysis of a stream's media tracks (video/audio/subtitle/data) and their codecs
 
 ## Streams API
@@ -87,7 +87,7 @@ Retrieve a list of all streams.
 
 ### Create Stream
 
-Create a new stream.
+Create a new stream. The stream is immediately assigned to an active cluster pod and a pull pipeline is provisioned. If no cluster pods are active, the stream is stored with status `pending_assignment`.
 
 **Endpoint:** `POST /api/streams`
 
@@ -103,6 +103,25 @@ Create a new stream.
 
 **Response:** Stream object (same as above)
 
+### Get Stream Assignments
+
+Get assignment information for all streams. (Declared before `GET /api/streams/{name}`, so the literal path `assignment` is never shadowed by the name parameter.)
+
+**Endpoint:** `GET /api/streams/assignment`
+
+**Response:**
+
+```json
+[
+    {
+        "name": "string",
+        "status": "created|discovered|pending_assignment|assigned|synced|sync_error|stale",
+        "assignedPod": "string|null",
+        "assignedAt": "2023-01-01T00:00:00.000Z|null"
+    }
+]
+```
+
 ### Get Stream by Name
 
 Retrieve a specific stream by name.
@@ -113,7 +132,7 @@ Retrieve a specific stream by name.
 
 - `name` (path): Stream name
 
-**Response:** Stream object
+**Response:** Stream object, or `null` if not found
 
 ### Update Stream
 
@@ -131,8 +150,7 @@ Update an existing stream.
 {
   "source": "string (optional)",
   "isEnabled": boolean (optional),
-  "status": "created|discovered|pending_assignment|assigned|synced|sync_error|stale (optional)",
-  "metadata": "object (optional)"
+  "status": "created|discovered|pending_assignment|assigned|synced|sync_error|stale (optional)"
 }
 ```
 
@@ -148,7 +166,7 @@ Delete a stream.
 
 - `name` (path): Stream name
 
-**Response:** Empty (204)
+**Response:** Empty
 
 ### Assign Stream to Pod
 
@@ -182,34 +200,15 @@ Remove pod assignment from a stream.
 
 **Response:** Updated stream object with `assignedPod: null`
 
-### Get Stream Assignments
-
-Get assignment information for all streams.
-
-**Endpoint:** `GET /api/streams/assignment`
-
-**Response:**
-
-```json
-[
-    {
-        "name": "string",
-        "status": "created|discovered|pending_assignment|assigned|synced|sync_error|stale",
-        "assignedPod": "string|null",
-        "assignedAt": "2023-01-01T00:00:00.000Z|null"
-    }
-]
-```
-
 ---
 
 ## Pods API
 
-Register or re-heartbeat a MediaMTX pod. Pods automatically call this on startup and periodically.
+Pods automatically register on startup and send periodic heartbeats to stay active.
 
-### Register/Heartbeat Pod
+### Register Pod
 
-Register a pod or update heartbeat timestamp. This enables dynamic discovery of available pod IDs.
+Register a pod or refresh an existing one. Upserts by `podId`, sets status to `active`, and updates `lastHeartbeatAt`. Emits the `pod.registered` WebSocket event.
 
 **Endpoint:** `POST /api/pods/register`
 
@@ -228,13 +227,17 @@ Register a pod or update heartbeat timestamp. This enables dynamic discovery of 
 
 ### Pod Heartbeat
 
-Send a heartbeat to keep a pod active (identical to register request, alternate endpoint).
-
-Send periodic heartbeat to stay active.
+Refresh a pod's heartbeat timestamp to keep it active. Unlike `register`, it only takes the pod ID and does not emit an event.
 
 **Endpoint:** `POST /api/pods/heartbeat`
 
-**Request Body:** same as `register`
+**Request Body:**
+
+```json
+{
+    "podId": "string (required)"
+}
+```
 
 **Response:** Pod object
 
@@ -267,7 +270,7 @@ Retrieve a list of all alerts.
 ```json
 [
   {
-    "id": "string",
+    "_id": "string",
     "streamName": "string",
     "type": "bitrate_low|packet_loss|latency_high|missing_video_track|missing_audio_track|unexpected_track_types",
     "severity": "info|warning|critical",
@@ -282,15 +285,15 @@ Retrieve a list of all alerts.
 
 ### Resolve Alert
 
-Mark an alert as resolved.
+Mark an alert as resolved. Emits the `alert.resolved` WebSocket event.
 
 **Endpoint:** `PATCH /api/alerts/{id}/resolve`
 
 **Parameters:**
 
-- `id` (path): Alert ID
+- `id` (path): Alert ID (`_id`)
 
-**Response:** Updated alert object
+**Response:** Updated alert object, or `null` if not found
 
 ---
 
@@ -327,9 +330,13 @@ Retrieve recent metrics for a specific stream.
 ]
 ```
 
+**Note:** The MediaMTX v3 path API does not expose bitrate/fps/latency/jitter/packetLoss directly; absent fields are persisted as `0`.
+
 ---
 
 ## Stream Inspection API
+
+Inspections run automatically on a 30-second cycle.
 
 ### Get All Latest Inspections
 
@@ -359,7 +366,7 @@ Retrieve the latest inspection data for all streams.
       }
     ],
     "metadata": {},
-    "lastError": "string",
+    "lastError": "string|null",
     "inspectedAt": "2023-01-01T00:00:00.000Z",
     "createdAt": "2023-01-01T00:00:00.000Z",
     "updatedAt": "2023-01-01T00:00:00.000Z"
@@ -377,7 +384,7 @@ Retrieve the latest inspection data for a specific stream.
 
 - `streamName` (path): Stream name
 
-**Response:** Single inspection object (same format as above)
+**Response:** Single inspection object (same format as above), or `null` if none exists
 
 ### Get Inspection History for Stream
 
@@ -391,15 +398,12 @@ Retrieve historical inspection data for a specific stream.
 - `limit` (query, optional): Number of records to return (default: 10)
 
 **Response:** Array of inspection objects
-Trigger an immediate inspection of a stream (normally runs on 30-second cycle).
 
 ---
 
 ## WebSocket Events
 
-Connect to the WebSocket server at `ws://localhost:3000` for real-time notifications.
-
-Connect to the WebSocket server at the base URL for real-time notifications.
+Connect to the Socket.IO server at the base URL (path `/socket.io`) for real-time notifications. CORS is open (`origin: *`).
 
 ### Events
 
@@ -413,7 +417,7 @@ Emitted when a stream is successfully synchronized to a cluster pod (pipeline cr
 
 #### Stream Removed
 
-Emitted when a stream is deleted from the system.
+Emitted when a stale stream's cluster pipeline is removed.
 
 **Event Name:** `stream.removed`
 
@@ -461,7 +465,7 @@ Emitted when an alert is marked as resolved.
 
 #### Stream Inspected
 
-Emitted when a stream inspection completes successfully or with error.
+Emitted when a stream inspection completes (successfully or with error).
 
 **Event Name:** `stream.inspected`
 
@@ -476,7 +480,6 @@ Emitted when a stream inspection completes successfully or with error.
             "type": "video|audio|subtitle|data",
             "codec": "string",
             "language": "string",
-            "bitrate": 1800000,
             "width": 1920,
             "height": 1080,
             "fps": 30,
@@ -484,7 +487,7 @@ Emitted when a stream inspection completes successfully or with error.
             "sampleRate": 48000
         }
     ],
-    "metadata": {},
+    "metadata": { "bytesReceived": number, "bytesSent": number, "readers": number },
     "inspectedAt": "2023-01-01T00:00:00.000Z",
     "lastError": "string|null"
 }
@@ -492,98 +495,17 @@ Emitted when a stream inspection completes successfully or with error.
 
 #### Pod Registered
 
-Emitted when a new pod registers or sends a heartbeat.
+Emitted when a pod registers (not on plain heartbeats).
 
 **Event Name:** `pod.registered`
 
 **Payload:** Full pod document
 
-#### Pod Removed
+### Internal Events (not broadcast)
 
-Emitted when a pod is deleted or becomes inactive.
+These are emitted on the in-process event bus only and are not forwarded to WebSocket clients:
 
-**Event Name:** `pod.removed`
-
-**Payload:** Pod ID (string)
-
----
-
-#### Stream Synced
-
-Emitted when a stream is successfully synced.
-
-**Event:** `stream.synced`
-
-**Payload:**
-
-```json
-{
-    "_id": "string",
-    "name": "string",
-    "source": "string",
-    "status": "string"
-    // ... full stream object
-}
-```
-
-#### Stream Removed
-
-Emitted when a stream is removed.
-
-**Event:** `stream.removed`
-
-**Payload:** Stream name (string)
-
-#### Alert Created
-
-Emitted when a new alert is created.
-
-**Event:** `alert.created`
-
-**Payload:** Alert object (same as GET /api/alerts response)
-
-#### Stream Inspected
-
-Emitted when a stream inspection is completed.
-
-**Event:** `stream.inspected`
-
-**Payload:**
-
-```json
-{
-    "streamName": "string",
-    "source": "ingest|cluster",
-    "tracks": [
-        {
-            "type": "video|audio|data|subtitle",
-            "codec": "string",
-            "language": "string",
-            "bitrate": number,
-            "width": number,
-            "height": number,
-            "fps": number,
-            "channels": number,
-            "sampleRate": number
-        }
-    ],
-    "metadata": {},
-    "inspectedAt": "ISO date string",
-    "lastError": "string|null"
-}
-```
-
----
-
-## OpenAPI Documentation
-
-Interactive API documentation is available at:
-
-```
-GET /api/docs
-```
-
-This provides a Swagger UI interface for testing all endpoints.
+- `sync.tick` — `{ ingest: number, cluster: number, failures: string[] }` inventory counts and failed workflow names per sync cycle
 
 ---
 
@@ -630,7 +552,7 @@ All endpoints may return the following error formats:
 ```typescript
 {
   _id: string;
-  name: string;
+  name: string;                 // unique
   source: string;
   status: 'created' | 'discovered' | 'pending_assignment' | 'assigned' | 'synced' | 'sync_error' | 'stale';
   metadata: Record<string, any>;
@@ -651,15 +573,15 @@ All endpoints may return the following error formats:
 
 ```typescript
 {
-  id: string;
+  _id: string;
   streamName: string;
   type: 'bitrate_low' | 'packet_loss' | 'latency_high' | 'missing_video_track' | 'missing_audio_track' | 'unexpected_track_types';
   severity: 'info' | 'warning' | 'critical';
   message: string;
   isResolved: boolean;
   resolvedAt?: Date | null;
-  createdAt?: Date;
-  updatedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 ```
 
@@ -686,8 +608,9 @@ All endpoints may return the following error formats:
 ```typescript
 {
   _id: string;
-  podId: string;
+  podId: string;                // unique
   host?: string;
+  type: 'ingest' | 'cluster';   // default: cluster
   tags: string[];
   status: 'active' | 'inactive' | 'draining';
   lastHeartbeatAt: Date;
@@ -704,7 +627,7 @@ All endpoints may return the following error formats:
   streamName: string;
   source: 'ingest' | 'cluster';
   tracks: StreamTrack[];
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;  // bytesReceived, bytesSent, readers
   lastError?: string;
   inspectedAt: Date;
   createdAt: Date;
@@ -716,12 +639,11 @@ interface StreamTrack {
   codec?: string;
   language?: string;
   bitrate?: number;
-  width?: number;
-  height?: number;
-  fps?: number;
-  channels?: number;
-  sampleRate?: number;
-  [key: string]: any;
+  width?: number;       // video only
+  height?: number;      // video only
+  fps?: number;         // video only
+  channels?: number;    // audio only
+  sampleRate?: number;  // audio only
 }
 ```
 
@@ -737,56 +659,44 @@ interface StreamTrack {
 | `CLUSTER_MEDIAMTX_BASE_URL`    | string | `http://localhost:9001`                 | Fallback cluster MediaMTX API URL                            |
 | `CLUSTER_MEDIAMTX_BASE_URLS`   | string | falls back to CLUSTER_MEDIAMTX_BASE_URL | Comma-separated cluster URLs                                 |
 | `POD_HEALTH_TOLERANCE_SECONDS` | number | `120`                                   | Max seconds without heartbeat before pod considered inactive |
+| `INGEST_POD_MEDIAMTX_PORT`     | number | `9000`                                  | MediaMTX API port used when querying registered ingest pods  |
+| `ALERT_BITRATE_LOW`            | number | `500`                                   | Bitrate-low alert threshold (warning)                        |
+| `ALERT_PACKET_LOSS`            | number | `2`                                     | Packet-loss alert threshold % (critical; also triggers failover) |
+| `ALERT_LATENCY_HIGH`           | number | `1000`                                  | High-latency alert threshold ms (warning; also triggers failover) |
 | `SYNC_POLL_INTERVAL`           | number | `10000`                                 | (unused) intended sync interval in ms                        |
 | `METRICS_POLL_INTERVAL`        | number | `5000`                                  | (unused) intended metrics interval in ms                     |
 | `INSPECTION_INTERVAL`          | number | `30000`                                 | (unused) intended inspection interval in ms                  |
 | `ALERT_BITRATE_DROP_PERCENT`   | number | `30`                                    | (unused) bitrate drop threshold %                            |
 | `ALERT_STALE_SECONDS`          | number | `60`                                    | (unused) stale stream threshold seconds                      |
 
-**Note:** Interval configurable properties are currently unused; scheduling is hard-coded in decorators.
-
-The following environment variables can be configured:
-
-- `MONGODB_URI`: MongoDB connection string
-- `INGEST_MEDIAMTX_BASE_URL`: MediaMTX ingest server URL
-- `CLUSTER_MEDIAMTX_BASE_URL`: MediaMTX cluster server URL
-- `CLUSTER_MEDIAMTX_BASE_URLS`: Comma-separated list of cluster URLs
-- `SYNC_POLL_INTERVAL`: Sync polling interval in ms
-- `METRICS_POLL_INTERVAL`: Metrics polling interval in ms
-- `INSPECTION_INTERVAL`: Stream inspection interval in ms (default: 30000)
-- `POD_HEALTH_TOLERANCE_SECONDS`: Pod heartbeat timeout in seconds (default: 120)
-- `ALERT_BITRATE_DROP_PERCENT`: Bitrate drop alert threshold
-- `ALERT_STALE_SECONDS`: Stale stream alert threshold
+**Note:** Interval properties are currently unused; scheduling is hard-coded in `@Cron` decorators (sync 10s, metrics 10s, inspection 30s).
 
 ---
 
 ## Docker Deployment
 
-To run with Docker Compose:
+There is no default `docker-compose.yml`; pass the compose file explicitly:
 
 ```bash
-docker-compose up --build
+docker-compose -f docker-compose.local up --build
 ```
 
 Services:
 
 - App: `http://localhost:3000`
 - MongoDB: `localhost:27017`
-- MediaMTX Ingest: `localhost:9000`
+- MediaMTX Ingest: API `localhost:9000`, RTSP `8554`, HLS `8888`
+- MediaMTX Cluster: API `localhost:9001`, RTSP `8555`, HLS `8889`
 
 ### Scaled Deployment
 
-For production with multiple cluster instances:
+For multiple cluster instances:
 
 ```bash
-docker-compose -f docker-compose.scale.yml up --scale mediamtx-cluster=3
+docker-compose -f docker-compose.local -f docker-compose.cluster up --build
 ```
 
-The MediaMTX cluster instances automatically register themselves via the pod registration endpoint.
-
-- MediaMTX Cluster: `localhost:9001` (scales horizontally with automatic pod registration)
-
-The MediaMTX cluster instances automatically register themselves with the sync service on startup and send periodic heartbeats. No manual pod configuration required. Scale the cluster by running multiple instances of the same service.
+The MediaMTX cluster instances automatically register themselves with the sync service on startup and send periodic heartbeats. No manual pod configuration required.
 
 ## OpenShift/Kubernetes Deployment
 
@@ -827,7 +737,7 @@ The deployment includes:
 
 ## Testing
 
-Run the included test script:
+Run the included test scripts against a running stack:
 
 ```bash
 # PowerShell
@@ -837,4 +747,4 @@ Run the included test script:
 ./test.sh
 ```
 
-This will test all endpoints and report results.
+This will test all endpoints and report results. Unit tests run with `npm test` (Jest).
