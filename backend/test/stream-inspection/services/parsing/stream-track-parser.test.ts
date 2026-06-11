@@ -1,10 +1,12 @@
 import { TrackType } from "@/common";
-import { DataTrackParser } from "@/stream-inspection";
-import { VideoTrackParser } from "@/stream-inspection";
-import { AudioTrackParser } from "@/stream-inspection";
-import { SubtitleTrackParser } from "@/stream-inspection";
 import { V3PathItem, V3TrackItem } from "@/infrastructure";
-import { parseTracksFromPathItem } from "@/stream-inspection";
+import {
+    AudioTrackParser,
+    DataTrackParser,
+    parseTracksFromPathItem,
+    SubtitleTrackParser,
+    VideoTrackParser,
+} from "@/stream-inspection/services/parsing";
 
 // ─── Individual parser unit tests ────────────────────────────────────────────
 

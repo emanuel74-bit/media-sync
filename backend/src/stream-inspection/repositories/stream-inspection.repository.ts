@@ -1,4 +1,4 @@
-import { StreamInspectionRecord, NewStreamInspectionData } from "@/stream-inspection";
+import { StreamInspectionRecord, NewStreamInspectionData } from "../domain";
 
 export abstract class StreamInspectionRepository {
     abstract save(data: NewStreamInspectionData): Promise<void>;

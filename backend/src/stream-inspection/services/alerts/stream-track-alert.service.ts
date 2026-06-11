@@ -1,18 +1,18 @@
 import { Injectable } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";
 
+import { AlertEvaluationService } from "@/alerts";
 import { StreamTrack } from "@/common";
-import { AlertRuleEvaluator } from "@/common";
 import { StreamQueryService } from "@/streams";
-import { StreamTrackAlertContext } from "@/stream-inspection";
-import { STREAM_TRACK_ALERT_RULES } from "@/stream-inspection";
 import { StreamInspectedPayload, SystemEventNames } from "@/common";
+
+import { STREAM_TRACK_ALERT_RULES, StreamTrackAlertContext } from "../../domain";
 
 @Injectable()
 export class StreamTrackAlertService {
     constructor(
         private readonly streamQuery: StreamQueryService,
-        private readonly ruleEvaluator: AlertRuleEvaluator,
+        private readonly alerts: AlertEvaluationService,
     ) {}
 
     @OnEvent(SystemEventNames.STREAM_INSPECTED)
@@ -37,7 +37,7 @@ export class StreamTrackAlertService {
                 : undefined,
         };
 
-        await this.ruleEvaluator.evaluateAndEmit(
+        await this.alerts.evaluateAndCreate(
             streamName,
             tracks,
             alertContext,

@@ -1,28 +1,30 @@
 import { Injectable } from "@nestjs/common";
-import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { RuntimeAlertRule } from "@/common";
+import { AlertSeverity, AlertType, RuntimeAlertRule } from "../domain";
 
-import { SystemEventNames, AlertCreateRequestedPayload } from "../events";
+export interface EvaluatedAlert {
+    streamName: string;
+    type: AlertType;
+    severity: AlertSeverity;
+    message: string;
+}
 
 @Injectable()
-export class AlertRuleEvaluator {
-    constructor(private readonly events: EventEmitter2) {}
-
-    async evaluateAndEmit<TInput, TContext>(
+export class RuleEvaluator {
+    async evaluate<TInput, TContext>(
         streamName: string,
         input: TInput,
         context: TContext,
         rules: readonly RuntimeAlertRule<TInput, TContext>[],
-    ): Promise<AlertCreateRequestedPayload[]> {
-        const payloads: AlertCreateRequestedPayload[] = [];
+    ): Promise<EvaluatedAlert[]> {
+        const payloads: EvaluatedAlert[] = [];
 
         for (const rule of rules) {
             if (!rule.check(input, context)) {
                 continue;
             }
 
-            const payload: AlertCreateRequestedPayload = {
+            const payload: EvaluatedAlert = {
                 streamName,
                 type: rule.type,
                 severity: rule.severity,
@@ -30,7 +32,6 @@ export class AlertRuleEvaluator {
             };
 
             payloads.push(payload);
-            this.events.emit(SystemEventNames.ALERT_CREATE, payload);
         }
 
         return payloads;

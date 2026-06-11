@@ -1,10 +1,10 @@
 import { Test, TestingModule } from "@nestjs/testing";
 
-import { Pod } from "@/pods";
-import { PodRepository } from "@/pods";
 import { ConfigService } from "@/config";
-import { PodQueryService } from "@/pods";
 import { PodRole, PodStatus } from "@/common";
+import { Pod } from "@/pods/domain";
+import { PodRepository } from "@/pods/repositories";
+import { PodQueryService } from "@/pods/services";
 
 const makePod = (podId: string, overrides: Partial<Pod> = {}): Pod => ({
     podId,

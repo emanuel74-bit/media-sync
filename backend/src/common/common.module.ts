@@ -1,9 +1,9 @@
 import { Module } from "@nestjs/common";
 
-import { AlertRuleEvaluator, SequentialStreamTaskRunner } from "./services";
+import { RuleEvaluator, SequentialStreamTaskRunner } from "./services";
 
 @Module({
-    providers: [AlertRuleEvaluator, SequentialStreamTaskRunner],
-    exports: [AlertRuleEvaluator, SequentialStreamTaskRunner],
+    providers: [RuleEvaluator, SequentialStreamTaskRunner],
+    exports: [RuleEvaluator, SequentialStreamTaskRunner],
 })
 export class CommonModule {}

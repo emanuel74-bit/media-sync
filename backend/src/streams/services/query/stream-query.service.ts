@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 
-import { StreamRepository } from "@/streams";
-import { Stream, StreamAssignmentInfo } from "@/streams";
+import { Stream, StreamAssignmentInfo } from "../../domain";
+import { StreamRepository } from "../../repositories";
 
 @Injectable()
 export class StreamQueryService {

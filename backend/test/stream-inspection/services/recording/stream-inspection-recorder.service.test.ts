@@ -4,9 +4,9 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 import { PodRole } from "@/common";
 import { SystemEventNames } from "@/common";
 import { MediaMtxStreamStatsService } from "@/infrastructure";
-import { StreamInspectionRepository } from "@/stream-inspection";
 import { V3PathItem, MediaMtxStreamInfo } from "@/infrastructure";
-import { StreamInspectionRecorderService } from "@/stream-inspection";
+import { StreamInspectionRepository } from "@/stream-inspection/repositories";
+import { StreamInspectionRecorderService } from "@/stream-inspection/services";
 
 const makeStream = (name = "stream-a"): MediaMtxStreamInfo => ({
     name,

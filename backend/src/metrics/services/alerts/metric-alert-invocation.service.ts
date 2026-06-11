@@ -1,18 +1,17 @@
-import { OnEvent } from "@nestjs/event-emitter";
 import { Injectable, Logger } from "@nestjs/common";
 
+import { AlertEvaluationService } from "@/alerts";
 import { ConfigService } from "@/config";
 import { AlertMetricInput } from "@/common";
-import { AlertRuleEvaluator } from "@/common";
-import { MetricCollectedPayload, SystemEventNames } from "@/common";
-import { METRIC_ALERT_RULES, MetricAlertThresholds } from "@/metrics";
+
+import { METRIC_ALERT_RULES, MetricAlertThresholds } from "../../domain";
 
 @Injectable()
 export class MetricAlertInvocationService {
     private readonly logger = new Logger(MetricAlertInvocationService.name);
 
     constructor(
-        private readonly ruleEvaluator: AlertRuleEvaluator,
+        private readonly alerts: AlertEvaluationService,
         private readonly config: ConfigService,
     ) {}
 
@@ -24,7 +23,7 @@ export class MetricAlertInvocationService {
                 alertLatencyHighThreshold: this.config.alertLatencyHighThreshold,
             };
 
-            await this.ruleEvaluator.evaluateAndEmit(
+            await this.alerts.evaluateAndCreate(
                 streamName,
                 metric,
                 thresholds,
@@ -33,10 +32,5 @@ export class MetricAlertInvocationService {
         } catch (error) {
             this.logger.error("Failed during metric alert evaluation", error);
         }
-    }
-
-    @OnEvent(SystemEventNames.METRIC_COLLECTED)
-    async handleMetricCollected(payload: MetricCollectedPayload): Promise<void> {
-        await this.checkMetricsAndAlert(payload.streamName, payload.metric);
     }
 }

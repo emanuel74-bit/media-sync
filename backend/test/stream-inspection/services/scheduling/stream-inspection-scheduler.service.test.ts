@@ -4,8 +4,10 @@ import { PodRole } from "@/common";
 import { SequentialStreamTaskRunner } from "@/common";
 import { ContextualMediaMtxStream } from "@/infrastructure";
 import { MediaMtxStreamListingService } from "@/infrastructure";
-import { StreamInspectionRecorderService } from "@/stream-inspection";
-import { StreamInspectionSchedulerService } from "@/stream-inspection";
+import {
+    StreamInspectionRecorderService,
+    StreamInspectionSchedulerService,
+} from "@/stream-inspection/services";
 
 const makeContextualStream = (name: string, role: PodRole): ContextualMediaMtxStream => ({
     stream: { name, source: "rtsp://host/path", status: "ready" },

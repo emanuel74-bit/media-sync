@@ -69,16 +69,16 @@ Retrieve a list of all streams.
     "_id": "string",
     "name": "string",
     "source": "string",
-      "status": "discovered|assigned|active|inactive|error",
-    "status": "string",
+    "status": "created|discovered|pending_assignment|assigned|synced|sync_error|stale",
     "metadata": {},
-    "enabled": boolean,
+    "isEnabled": boolean,
     "lastSeenAt": "2023-01-01T00:00:00.000Z",
     "lastSyncedAt": "2023-01-01T00:00:00.000Z",
-    "lastError": "string",
+    "lastError": "string|null",
     "activeConsumers": number,
-    "assignedPod": "string",
-    "assignedAt": "2023-01-01T00:00:00.000Z",
+    "isManual": boolean,
+    "assignedPod": "string|null",
+    "assignedAt": "2023-01-01T00:00:00.000Z|null",
     "createdAt": "2023-01-01T00:00:00.000Z",
     "updatedAt": "2023-01-01T00:00:00.000Z"
   }
@@ -97,7 +97,7 @@ Create a new stream.
 {
   "name": "string (required)",
   "source": "string (required)",
-  "enabled": boolean (optional, default: false)
+  "isEnabled": boolean (optional, default: false)
 }
 ```
 
@@ -130,8 +130,8 @@ Update an existing stream.
 ```json
 {
   "source": "string (optional)",
-  "enabled": boolean (optional),
-  "status": "string (optional)"
+  "isEnabled": boolean (optional),
+  "status": "created|discovered|pending_assignment|assigned|synced|sync_error|stale (optional)",
   "metadata": "object (optional)"
 }
 ```
@@ -190,38 +190,16 @@ Get assignment information for all streams.
 
 **Response:**
 
-````json
+```json
 [
     {
         "name": "string",
-        "assignedPod": "string",
-        "assignedAt": "2023-01-01T00:00:00.000Z"
-    ### Rebalance Streams
-
-    Trigger automatic load-balancing of unassigned streams across available cluster pods.
-
-    **Endpoint:** `POST /api/streams/rebalance`
-
-    **Request Body:** (empty)
-
-    **Response:**
-
-    ```json
-    {
-      "message": "Rebalancing initiated",
-      "totalStreams": 42,
-      "assignedStreams": 35,
-      "unassignedStreams": 7
-    }
-    ```
-
-    **Notes:**
-    - Uses consistent hashing to assign streams to available pods
-    - Preserves existing assignments
-
+        "status": "created|discovered|pending_assignment|assigned|synced|sync_error|stale",
+        "assignedPod": "string|null",
+        "assignedAt": "2023-01-01T00:00:00.000Z|null"
     }
 ]
-````
+```
 
 ---
 
@@ -241,7 +219,8 @@ Register a pod or update heartbeat timestamp. This enables dynamic discovery of 
 {
   "podId": "string (required)",
   "host": "string (optional)",
-  "tags": ["string"] (optional)
+  "tags": ["string"] (optional),
+  "type": "ingest|cluster (optional, default: cluster)"
 }
 ```
 
@@ -270,8 +249,6 @@ Send periodic heartbeat to stay active.
 Get pods that have sent heartbeats within the configured tolerance window (default: 120 seconds).
 
 **Endpoint:** `GET /api/pods/active`
-Get active pods with `type: 'ingest'`.
-Get active pods with `type: 'cluster'`.
 
 **Response:** Array of Pod objects active in heartbeat window
 
@@ -290,14 +267,13 @@ Retrieve a list of all alerts.
 ```json
 [
   {
-    "_id": "string",
+    "id": "string",
     "streamName": "string",
-    "type": "string",
+    "type": "bitrate_low|packet_loss|latency_high|missing_video_track|missing_audio_track|unexpected_track_types",
     "severity": "info|warning|critical",
     "message": "string",
-    "resolved": boolean,
-    "resolvedAt": "2023-01-01T00:00:00.000Z",
-    Manually create an alert (typically called by monitoring integrations).
+    "isResolved": boolean,
+    "resolvedAt": "2023-01-01T00:00:00.000Z|null",
     "createdAt": "2023-01-01T00:00:00.000Z",
     "updatedAt": "2023-01-01T00:00:00.000Z"
   }
@@ -339,8 +315,6 @@ Retrieve recent metrics for a specific stream.
     "_id": "string",
     "streamName": "string",
     "context": "ingest|cluster",
-    Retrieve metrics across all streams or filter by stream name.
-    Get the most recent metric sample for each active stream.
     "bitrate": number,
     "fps": number,
     "latency": number,
@@ -658,15 +632,16 @@ All endpoints may return the following error formats:
   _id: string;
   name: string;
   source: string;
-  status: string;
+  status: 'created' | 'discovered' | 'pending_assignment' | 'assigned' | 'synced' | 'sync_error' | 'stale';
   metadata: Record<string, any>;
-  enabled: boolean;
-  lastSeenAt?: Date;
-  lastSyncedAt?: Date;
-  lastError?: string;
+  isEnabled: boolean;
+  lastSeenAt?: Date | null;
+  lastSyncedAt?: Date | null;
+  lastError?: string | null;
   activeConsumers: number;
-  assignedPod?: string;
-  assignedAt?: Date;
+  isManual: boolean;
+  assignedPod?: string | null;
+  assignedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -676,15 +651,15 @@ All endpoints may return the following error formats:
 
 ```typescript
 {
-  _id: string;
+  id: string;
   streamName: string;
-  type: string;
+  type: 'bitrate_low' | 'packet_loss' | 'latency_high' | 'missing_video_track' | 'missing_audio_track' | 'unexpected_track_types';
   severity: 'info' | 'warning' | 'critical';
   message: string;
-  resolved: boolean;
-  resolvedAt?: Date;
-  createdAt: Date;
-  updatedAt: Date;
+  isResolved: boolean;
+  resolvedAt?: Date | null;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 ```
 

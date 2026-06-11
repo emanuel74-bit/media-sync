@@ -1,8 +1,8 @@
 import { Test, TestingModule } from "@nestjs/testing";
 
-import { StreamInspectionRecord } from "@/stream-inspection";
-import { StreamInspectionRepository } from "@/stream-inspection";
-import { StreamInspectionQueryService } from "@/stream-inspection";
+import { StreamInspectionRecord } from "@/stream-inspection/domain";
+import { StreamInspectionRepository } from "@/stream-inspection/repositories";
+import { StreamInspectionQueryService } from "@/stream-inspection/services";
 
 const makeRecord = (streamName: string): StreamInspectionRecord =>
     ({

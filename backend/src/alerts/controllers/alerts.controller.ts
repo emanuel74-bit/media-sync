@@ -1,8 +1,8 @@
 import { ApiTags } from "@nestjs/swagger";
 import { Controller, Get, Patch, Param } from "@nestjs/common";
 
-import { Alert } from "@/alerts";
-import { AlertLifecycleService } from "@/alerts";
+import { Alert } from "../domain";
+import { AlertLifecycleService } from "../services";
 
 @ApiTags("alerts")
 @Controller("api/alerts")

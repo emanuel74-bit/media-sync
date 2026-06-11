@@ -4,7 +4,7 @@ import { Cron, CronExpression } from "@nestjs/schedule";
 import { SequentialStreamTaskRunner } from "@/common";
 import { MediaMtxStreamListingService } from "@/infrastructure";
 
-import { StreamMetricProcessor } from "./stream-metric-processor.service";
+import { MetricCollectionWorkflowService } from "./metric-collection-workflow.service";
 
 @Injectable()
 export class MetricCollectionService {
@@ -12,7 +12,7 @@ export class MetricCollectionService {
 
     constructor(
         private readonly mediaMtxListing: MediaMtxStreamListingService,
-        private readonly metricProcessor: StreamMetricProcessor,
+        private readonly metricWorkflow: MetricCollectionWorkflowService,
         private readonly scheduledWork: SequentialStreamTaskRunner,
     ) {}
 
@@ -20,7 +20,7 @@ export class MetricCollectionService {
     async collectMetrics(): Promise<void> {
         const streams = await this.mediaMtxListing.listContextualStreams();
         await this.scheduledWork.processSequential(streams, async ({ stream, context }) => {
-            await this.metricProcessor.processStreamMetric(stream.name, context);
+            await this.metricWorkflow.runStreamMetricWorkflow(stream.name, context);
         });
     }
 }

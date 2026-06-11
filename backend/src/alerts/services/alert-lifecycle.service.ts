@@ -1,9 +1,10 @@
 import { Injectable } from "@nestjs/common";
-import { EventEmitter2, OnEvent } from "@nestjs/event-emitter";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { AlertRepository } from "@/alerts";
-import { Alert, AlertCreationData } from "@/alerts";
-import { SystemEventNames, AlertCreateRequestedPayload } from "@/common";
+import { SystemEventNames } from "@/common";
+
+import { AlertRepository } from "../repositories";
+import { Alert, AlertCreationData } from "../domain";
 
 @Injectable()
 export class AlertLifecycleService {
@@ -11,11 +12,6 @@ export class AlertLifecycleService {
         private readonly alertRepository: AlertRepository,
         private readonly events: EventEmitter2,
     ) {}
-
-    @OnEvent(SystemEventNames.ALERT_CREATE)
-    async handleAlertCreateRequested(payload: AlertCreateRequestedPayload): Promise<void> {
-        await this.findOrCreateAlert(payload);
-    }
 
     async findOrCreateAlert(data: AlertCreationData): Promise<Alert> {
         const existing = await this.alertRepository.findUnresolvedByStreamAndType(

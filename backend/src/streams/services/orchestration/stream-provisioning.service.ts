@@ -1,11 +1,11 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { Stream } from "@/streams";
 import { StreamStatus } from "@/common";
 import { SystemEventNames } from "@/common";
 import { MediaMtxPipelineService } from "@/infrastructure";
 
+import { Stream } from "../../domain";
 import { StreamCrudService } from "../mutation";
 
 @Injectable()
@@ -42,12 +42,7 @@ export class StreamProvisioningService {
                 status: StreamStatus.SYNC_ERROR,
                 lastError: message,
             });
-            const result = updated ?? stream;
-            this.events.emit(SystemEventNames.STREAM_SYNC_FAILURE, {
-                stream: stream.name,
-                error: message,
-            });
-            return result;
+            return updated ?? stream;
         }
     }
 }

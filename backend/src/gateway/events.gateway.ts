@@ -26,7 +26,6 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect, 
         SystemEventNames.ALERT_RESOLVED,
         SystemEventNames.STREAM_INSPECTED,
         SystemEventNames.POD_REGISTERED,
-        SystemEventNames.POD_REMOVED,
     ];
 
     constructor(private readonly events: EventEmitter2) {}

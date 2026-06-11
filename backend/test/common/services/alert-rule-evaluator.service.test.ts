@@ -1,26 +1,20 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { RuntimeAlertRule } from "@/common";
-import { SystemEventNames } from "@/common";
-import { AlertRuleEvaluator } from "@/common";
-import { AlertSeverity, AlertType } from "@/common";
+import { AlertSeverity, AlertType, RuntimeAlertRule } from "@/common/domain";
+import { RuleEvaluator } from "@/common/services";
 
-describe("AlertRuleEvaluator", () => {
-    let service: AlertRuleEvaluator;
-    let events: jest.Mocked<EventEmitter2>;
+describe("RuleEvaluator", () => {
+    let service: RuleEvaluator;
 
     beforeEach(async () => {
-        events = { emit: jest.fn() } as unknown as jest.Mocked<EventEmitter2>;
-
         const module: TestingModule = await Test.createTestingModule({
-            providers: [AlertRuleEvaluator, { provide: EventEmitter2, useValue: events }],
+            providers: [RuleEvaluator],
         }).compile();
 
-        service = module.get<AlertRuleEvaluator>(AlertRuleEvaluator);
+        service = module.get<RuleEvaluator>(RuleEvaluator);
     });
 
-    describe("evaluateAndEmit", () => {
+    describe("evaluate", () => {
         const matchingRule: RuntimeAlertRule<number, void> = {
             check: (input) => input > 100,
             type: AlertType.BITRATE_LOW,
@@ -36,14 +30,13 @@ describe("AlertRuleEvaluator", () => {
         };
 
         it("returns an empty array when no rules match", async () => {
-            const result = await service.evaluateAndEmit("stream1", 50, undefined, [matchingRule]);
+            const result = await service.evaluate("stream1", 50, undefined, [matchingRule]);
 
             expect(result).toHaveLength(0);
-            expect(events.emit).not.toHaveBeenCalled();
         });
 
-        it("returns a payload and emits an event when a rule matches", async () => {
-            const result = await service.evaluateAndEmit("stream1", 150, undefined, [matchingRule]);
+        it("returns a payload when a rule matches", async () => {
+            const result = await service.evaluate("stream1", 150, undefined, [matchingRule]);
 
             expect(result).toHaveLength(1);
             expect(result[0]).toMatchObject({
@@ -52,21 +45,18 @@ describe("AlertRuleEvaluator", () => {
                 severity: AlertSeverity.WARNING,
                 message: "Bitrate too low: 150",
             });
-            expect(events.emit).toHaveBeenCalledTimes(1);
-            expect(events.emit).toHaveBeenCalledWith(SystemEventNames.ALERT_CREATE, result[0]);
         });
 
-        it("only emits for matching rules when mixed", async () => {
-            const result = await service.evaluateAndEmit("stream1", 150, undefined, [
+        it("returns only matching rules when mixed", async () => {
+            const result = await service.evaluate("stream1", 150, undefined, [
                 matchingRule,
                 nonMatchingRule,
             ]);
 
             expect(result).toHaveLength(1);
-            expect(events.emit).toHaveBeenCalledTimes(1);
         });
 
-        it("emits once per matching rule when multiple rules match", async () => {
+        it("returns one payload per matching rule when multiple rules match", async () => {
             const secondMatchingRule: RuntimeAlertRule<number, void> = {
                 check: () => true,
                 type: AlertType.LATENCY_HIGH,
@@ -74,13 +64,12 @@ describe("AlertRuleEvaluator", () => {
                 message: () => "Latency high",
             };
 
-            const result = await service.evaluateAndEmit("stream1", 150, undefined, [
+            const result = await service.evaluate("stream1", 150, undefined, [
                 matchingRule,
                 secondMatchingRule,
             ]);
 
             expect(result).toHaveLength(2);
-            expect(events.emit).toHaveBeenCalledTimes(2);
         });
 
         it("passes context to the check function", async () => {
@@ -92,7 +81,7 @@ describe("AlertRuleEvaluator", () => {
                 message: () => "below threshold",
             };
 
-            const result = await service.evaluateAndEmit("stream1", 50, { threshold: 100 }, [
+            const result = await service.evaluate("stream1", 50, { threshold: 100 }, [
                 contextRule,
             ]);
 
@@ -100,10 +89,9 @@ describe("AlertRuleEvaluator", () => {
         });
 
         it("returns empty array when rules list is empty", async () => {
-            const result = await service.evaluateAndEmit("stream1", 200, undefined, []);
+            const result = await service.evaluate("stream1", 200, undefined, []);
 
             expect(result).toHaveLength(0);
-            expect(events.emit).not.toHaveBeenCalled();
         });
     });
 });

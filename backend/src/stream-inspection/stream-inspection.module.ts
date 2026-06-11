@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
+import { AlertsModule } from "@/alerts";
 import { CommonModule } from "@/common";
 import { StreamsModule } from "@/streams";
 import { MediaMtxModule } from "@/infrastructure";
@@ -24,6 +25,7 @@ import {
         MongooseModule.forFeature([
             { name: StreamInspection.name, schema: StreamInspectionSchema },
         ]),
+        AlertsModule,
         MediaMtxModule,
         StreamsModule,
         CommonModule,

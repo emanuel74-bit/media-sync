@@ -3,4 +3,5 @@
  */
 
 export * from "./alert-rule-evaluator.service";
+export * from "./rule-evaluator.service";
 export * from "./sequential-stream-task-runner.service";

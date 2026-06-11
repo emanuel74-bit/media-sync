@@ -5,7 +5,8 @@ import { PodRole } from "@/common";
 import { SystemEventNames } from "@/common";
 import { MediaMtxStreamInfo } from "@/infrastructure";
 import { MediaMtxStreamStatsService } from "@/infrastructure";
-import { StreamInspectionRepository } from "@/stream-inspection";
+
+import { StreamInspectionRepository } from "../../repositories";
 
 import { StreamInspectionRecordFactory } from "./stream-inspection-record.factory";
 

@@ -10,6 +10,7 @@ import { StreamsController } from "./controllers";
 import {
     StreamQueryService,
     StreamAssignmentService,
+    StreamsFacadeService,
     StreamCrudService,
     StreamStatusService,
     StreamProvisioningService,
@@ -26,6 +27,7 @@ import { HashStreamAssignmentPolicy } from "./services/assignment/hash-stream-as
     ],
     providers: [
         StreamQueryService,
+        StreamsFacadeService,
         StreamCrudService,
         StreamProvisioningService,
         StreamAssignmentService,
@@ -36,6 +38,7 @@ import { HashStreamAssignmentPolicy } from "./services/assignment/hash-stream-as
     ],
     controllers: [StreamsController],
     exports: [
+        StreamsFacadeService,
         StreamQueryService,
         StreamProvisioningService,
         StreamAssignmentService,

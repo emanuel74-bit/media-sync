@@ -1,4 +1,4 @@
-import { AlertMetricInput, MetricThresholds } from "@/common";
+import { AlertMetricInput, MetricThresholds } from "../domain";
 
 export function isBitrateLow(
     metric: Pick<AlertMetricInput, "bitrate">,

@@ -1,5 +1,6 @@
-import { Pod } from "@/pods";
 import { PodRole } from "@/common";
+
+import { Pod } from "../domain";
 
 export abstract class PodRepository {
     abstract upsertByPodId(

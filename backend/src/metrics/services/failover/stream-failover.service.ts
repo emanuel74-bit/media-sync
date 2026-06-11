@@ -1,12 +1,12 @@
 import { Injectable, Logger } from "@nestjs/common";
 
 import { PodRole } from "@/common";
-import { Metric } from "@/metrics";
 import { ConfigService } from "@/config";
 import { PodQueryService } from "@/pods";
 import { isMetricDegraded } from "@/common";
-import { StreamQueryService } from "@/streams";
-import { StreamAssignmentService } from "@/streams";
+
+import { Metric } from "../../domain";
+import { MetricFailoverStreamGatewayService } from "./metric-failover-stream-gateway.service";
 
 @Injectable()
 export class StreamFailoverService {
@@ -14,8 +14,7 @@ export class StreamFailoverService {
 
     constructor(
         private readonly config: ConfigService,
-        private readonly streamQuery: StreamQueryService,
-        private readonly streamAssignment: StreamAssignmentService,
+        private readonly failoverStreams: MetricFailoverStreamGatewayService,
         private readonly podsService: PodQueryService,
     ) {}
 
@@ -29,7 +28,7 @@ export class StreamFailoverService {
             return;
         }
 
-        const stream = await this.streamQuery.findAssignedByName(streamName);
+        const stream = await this.failoverStreams.findAssignedStream(streamName);
         if (!stream) {
             return;
         }
@@ -39,7 +38,7 @@ export class StreamFailoverService {
             return;
         }
 
-        const reassigned = await this.streamAssignment.reassign(streamName, candidates);
+        const reassigned = await this.failoverStreams.reassignStream(streamName, candidates);
         if (reassigned.assignedPod !== stream.assignedPod) {
             this.logger.warn(
                 `Reassigned ${streamName} from ${stream.assignedPod} to ${reassigned.assignedPod}`,

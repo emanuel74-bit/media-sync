@@ -1,11 +1,11 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { Pod } from "@/pods";
-import { PodRepository } from "@/pods";
 import { SystemEventNames } from "@/common";
 import { PodRole, PodStatus } from "@/common";
-import { PodRegistrationService } from "@/pods";
+import { Pod } from "@/pods/domain";
+import { PodRepository } from "@/pods/repositories";
+import { PodRegistrationService } from "@/pods/services";
 
 const makePod = (overrides: Partial<Pod> = {}): Pod => ({
     podId: "pod-1",
