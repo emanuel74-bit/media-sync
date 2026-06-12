@@ -40,6 +40,7 @@ Enforced: tooling (`.prettierrc`, eslint-plugin-prettier).
 Enforced: tooling (`tsconfig.json`, `npm run typecheck`).
 
 **TOOL-03** — Rule: Nested folder barrels (`index.ts`) are wildcard re-exports in barrelsby style; **feature-root barrels** (`src/<feature>/index.ts`) are curated by hand with named exports to control each feature's public surface. When adding or moving files, update the affected barrels in the matching style. Do NOT run `npm run barrels:generate` over the whole tree — it currently destroys the curated feature-root barrels (see DEVN-06). `.schema.ts` and `.spec.ts` files never appear in barrels.
+Decision history: [ADR-0004](../docs/adr/0004-curated-feature-root-barrels.md).
 Enforced: review.
 
 **TOOL-04** — Rule: Imports MUST be sorted by the perfectionist scheme: grouped (builtin → external → internal `@/**` → relative), line-length ascending within groups, blank line between groups.
@@ -183,6 +184,7 @@ Example: `StreamsFacadeService` is what `sync/` and `metrics/` import; they neve
 
 **SVC-05** — Rule: A service that delegates to another service MUST change at least one of: vocabulary/abstraction level, module boundary, exposed surface area — or carry at least one decision (guard, transformation, defaulting). If inlining the wrapper loses no concept, inline it. A pure same-module, same-vocabulary forwarder is forbidden, and a wrapper whose tests only assert "calls the delegate with the same arguments" is presumptively one. Facades and boundary gateways (SVC-04) are exempt: their value is the seam itself.
 Example: `MetricAlertReactionService` and `MetricFailoverReactionService` were deleted under this rule — the metric workflow now calls `MetricAlertInvocationService` directly, and the cluster-only guard moved into `StreamFailoverService` where its sibling preconditions live.
+Decision history: [ADR-0005](../docs/adr/0005-no-pass-through-services.md).
 Enforced: review.
 
 ---
@@ -216,6 +218,7 @@ Example: `MediaMtxStreamStatsService.getStreamDetails` returns `StreamDetails`, 
 
 **INT-05** — Rule: V3 track interpretation happens in exactly one place: the `mappers/` folder of `infrastructure/media-mtx/`, driven by the `TRACK_FIELD_MAP` table (which V3 fields each `TrackType` carries into the domain `StreamTrack`). Supporting a new track type = add the `TrackType` enum member + one table row; never add a parser class or a type switch. Unknown track types are dropped by the mapper.
 Example: `track-field-map.const.ts` + `map-v3-track-to-stream-track.mapper.ts`; covered by `test/infrastructure/media-mtx/mappers/`, including a completeness test that every `TrackType` has a field-map row.
+Decision history: [ADR-0003](../docs/adr/0003-data-driven-track-parsing.md).
 Enforced: tests.
 
 ---
@@ -294,6 +297,19 @@ Example: `src/streams/services/assignment/hash-stream-assignment.policy.ts` → 
 **TEST-06** — Rule: Forbidden: order-dependent tests, shared mutable state between cases, committed skipped/commented-out tests.
 
 **TEST-07** — Rule: End-to-end API checks live in the repo-root scripts (`test.ps1`, `test.sh`, `test-pods.ps1`) and run against a live stack; they are not part of `npm test`.
+
+---
+
+## 18. DOC — Documentation & decisions
+
+**DOC-01** — Rule: A decision that changes the architecture, a public contract, or tooling behavior gets an ADR in `docs/adr/` (repo root), numbered, using `docs/adr/template.md`. CONVENTIONS rules born from a decision cite their ADR; the ADR records the why, this file records the current law.
+Example: SVC-05 ← [ADR-0005](../docs/adr/0005-no-pass-through-services.md).
+
+**DOC-02** — Rule: Diagrams in repo markdown are Mermaid (GitHub renders it natively). No new ASCII-art diagrams; convert existing ones on touch. Directory trees and short text flows stay as plain text.
+
+**DOC-03** — Rule: ADRs are append-only. To change a decision, write a new ADR that supersedes the old one and update the old ADR's status line — never rewrite its content.
+
+**DOC-04** — Rule: While the LikeC4 trial runs ([ADR-0006](../docs/adr/0006-documentation-tooling-choices.md)), `docs/architecture/media-sync.c4` MUST be updated in the same change that adds, removes, or renames a container or backend feature module. Requires Node ≥ 22 (`docs/architecture/README.md`).
 
 ---
 
