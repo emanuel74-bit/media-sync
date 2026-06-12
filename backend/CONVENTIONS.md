@@ -98,7 +98,7 @@ Example: `sync/` has no controllers or dto — and therefore no such folders.
 **DIR-03** — Rule: `domain/` holds framework-free business definitions, organized as `domain/types/`, `domain/enums/`, `domain/consts/`. No logic in enum/types/const files; no Nest imports in `domain/`.
 
 **DIR-04** — Rule: When `services/` covers more than one concern, split it into purpose subfolders named after the concern, and move every file dedicated to one concern into its folder.
-Example: `metrics/services/{alerts,collection,failover,persistence,reactions}/`, `streams/services/{assignment,mutation,orchestration,query}/`.
+Example: `metrics/services/{alerts,collection,failover,persistence}/`, `streams/services/{assignment,mutation,orchestration,query}/`.
 
 **DIR-05** — Rule: A file may sit at a feature/purpose root only if it is the feature's public contract or is shared across multiple child concerns.
 Example: `streams/services/streams-facade.service.ts` (cross-module entry point) sits at `services/` root; everything narrower is in a subfolder.
@@ -170,7 +170,7 @@ Example: `StreamsController.create` maps `CreateStreamDto` → `CreateStreamData
 - **query** — reads, no side effects (`StreamQueryService`, `PodQueryService`)
 - **mutation** — state changes (`StreamCrudService`, `StreamStatusService`)
 - **orchestration / lifecycle** — multi-step coordination with side effects (`StreamLifecycleService`, `StreamProvisioningService`, `SyncOrchestratorService`)
-- **reaction** — responds to a produced fact (`MetricAlertReactionService`, `MetricFailoverReactionService`)
+- **reaction** — responds to a produced fact, typically via `@OnEvent` (`StreamTrackAlertService`)
 
 **SVC-02** — Rule: Selection/decision logic is a policy class behind an abstract base used as the DI token, so the algorithm is swappable.
 Example: `StreamAssignmentPolicy` (abstract) ← `HashStreamAssignmentPolicy`, bound in `streams.module.ts`.
@@ -180,6 +180,10 @@ Example: `sync/services/{scheduler,query,orchestration,workflows}/`, token `SYNC
 
 **SVC-04** — Rule: When several services of one feature are consumed together by other modules, expose a facade and have outsiders depend on it only.
 Example: `StreamsFacadeService` is what `sync/` and `metrics/` import; they never touch `StreamCrudService` directly. (Exception: `metrics/failover` wraps `StreamQueryService`/`StreamAssignmentService` in its own gateway service — `MetricFailoverStreamGatewayService` — which is the same pattern one level down.)
+
+**SVC-05** — Rule: A service that delegates to another service MUST change at least one of: vocabulary/abstraction level, module boundary, exposed surface area — or carry at least one decision (guard, transformation, defaulting). If inlining the wrapper loses no concept, inline it. A pure same-module, same-vocabulary forwarder is forbidden, and a wrapper whose tests only assert "calls the delegate with the same arguments" is presumptively one. Facades and boundary gateways (SVC-04) are exempt: their value is the seam itself.
+Example: `MetricAlertReactionService` and `MetricFailoverReactionService` were deleted under this rule — the metric workflow now calls `MetricAlertInvocationService` directly, and the cluster-only guard moved into `StreamFailoverService` where its sibling preconditions live.
+Enforced: review.
 
 ---
 

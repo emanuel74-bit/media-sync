@@ -157,7 +157,6 @@ src/
 │       ├── collection/           # scheduler, workflow, per-stream collector
 │       ├── failover/             # StreamFailoverService + stream gateway
 │       ├── persistence/          # MetricPersistenceService
-│       └── reactions/            # alert + failover reactions to collected metrics
 ├── stream-inspection/
 │   ├── controllers/
 │   ├── domain/                   # STREAM_TRACK_ALERT_RULES const, types
@@ -252,8 +251,8 @@ Internally split by service role; `StreamsFacadeService` is the single entry poi
 1. `MediaMtxStreamListingService.listContextualStreams()` — all ingest + cluster streams with their context
 2. For each stream sequentially (`SequentialStreamTaskRunner`), `MetricCollectionWorkflowService`:
    - `StreamMetricCollectorService` fetches stats and persists a `Metric`
-   - `MetricAlertReactionService` → `MetricAlertInvocationService` evaluates `METRIC_ALERT_RULES`
-   - `MetricFailoverReactionService` → `StreamFailoverService` (cluster context only)
+   - `MetricAlertInvocationService` evaluates `METRIC_ALERT_RULES`
+   - `StreamFailoverService` evaluates failover (cluster context only)
 
 **Failover Logic** (`StreamFailoverService`):
 
@@ -558,9 +557,8 @@ Scheduled Services
 │    └─▶ MetricCollectionWorkflowService
 │          ├─▶ StreamMetricCollectorService ─▶ MediaMtxStreamStatsService,
 │          │                                   MetricPersistenceService
-│          ├─▶ MetricAlertReactionService ─▶ MetricAlertInvocationService
-│          │                                   ─▶ AlertEvaluationService
-│          └─▶ MetricFailoverReactionService ─▶ StreamFailoverService
+│          ├─▶ MetricAlertInvocationService ─▶ AlertEvaluationService
+│          └─▶ StreamFailoverService (cluster context only)
 │                ─▶ PodQueryService, StreamAssignmentService
 └─ StreamInspectionSchedulerService (30s)
      ├─▶ MediaMtxStreamListingService

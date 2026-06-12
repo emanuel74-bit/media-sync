@@ -68,8 +68,20 @@ describe("StreamFailoverService", () => {
         service = module.get<StreamFailoverService>(StreamFailoverService);
     });
 
+    it("ignores metrics from non-cluster contexts even when degraded", async () => {
+        await service.evaluateAndReassignIfDegraded(
+            "stream-1",
+            PodRole.INGEST,
+            makeMetric({ packetLoss: 10, context: PodRole.INGEST }),
+        );
+
+        expect(failoverStreams.findAssignedStream).not.toHaveBeenCalled();
+        expect(podsService.listActivePodIds).not.toHaveBeenCalled();
+        expect(failoverStreams.reassignStream).not.toHaveBeenCalled();
+    });
+
     it("does nothing when the metric is not degraded", async () => {
-        await service.evaluateAndReassignIfDegraded("stream-1", makeMetric());
+        await service.evaluateAndReassignIfDegraded("stream-1", PodRole.CLUSTER, makeMetric());
 
         expect(failoverStreams.findAssignedStream).not.toHaveBeenCalled();
         expect(podsService.listActivePodIds).not.toHaveBeenCalled();
@@ -79,7 +91,11 @@ describe("StreamFailoverService", () => {
     it("stops when no assigned stream is found", async () => {
         failoverStreams.findAssignedStream.mockResolvedValue(null);
 
-        await service.evaluateAndReassignIfDegraded("stream-1", makeMetric({ packetLoss: 10 }));
+        await service.evaluateAndReassignIfDegraded(
+            "stream-1",
+            PodRole.CLUSTER,
+            makeMetric({ packetLoss: 10 }),
+        );
 
         expect(failoverStreams.findAssignedStream).toHaveBeenCalledWith("stream-1");
         expect(podsService.listActivePodIds).not.toHaveBeenCalled();
@@ -90,7 +106,11 @@ describe("StreamFailoverService", () => {
         failoverStreams.findAssignedStream.mockResolvedValue(makeStream());
         podsService.listActivePodIds.mockResolvedValue(["pod-a"]);
 
-        await service.evaluateAndReassignIfDegraded("stream-1", makeMetric({ latency: 150 }));
+        await service.evaluateAndReassignIfDegraded(
+            "stream-1",
+            PodRole.CLUSTER,
+            makeMetric({ latency: 150 }),
+        );
 
         expect(podsService.listActivePodIds).toHaveBeenCalledWith(PodRole.CLUSTER);
         expect(failoverStreams.reassignStream).not.toHaveBeenCalled();
@@ -104,7 +124,11 @@ describe("StreamFailoverService", () => {
         podsService.listActivePodIds.mockResolvedValue(["pod-a", "pod-b", "pod-c"]);
         failoverStreams.reassignStream.mockResolvedValue(reassigned);
 
-        await service.evaluateAndReassignIfDegraded("stream-1", makeMetric({ packetLoss: 10 }));
+        await service.evaluateAndReassignIfDegraded(
+            "stream-1",
+            PodRole.CLUSTER,
+            makeMetric({ packetLoss: 10 }),
+        );
 
         expect(failoverStreams.reassignStream).toHaveBeenCalledWith("stream-1", [
             "pod-a",
@@ -121,7 +145,11 @@ describe("StreamFailoverService", () => {
         podsService.listActivePodIds.mockResolvedValue(["pod-a", "pod-b"]);
         failoverStreams.reassignStream.mockResolvedValue(makeStream({ assignedPod: "pod-a" }));
 
-        await service.evaluateAndReassignIfDegraded("stream-1", makeMetric({ latency: 150 }));
+        await service.evaluateAndReassignIfDegraded(
+            "stream-1",
+            PodRole.CLUSTER,
+            makeMetric({ latency: 150 }),
+        );
 
         expect(failoverStreams.reassignStream).toHaveBeenCalledTimes(1);
         expect(warnSpy).not.toHaveBeenCalled();

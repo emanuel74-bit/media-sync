@@ -18,7 +18,15 @@ export class StreamFailoverService {
         private readonly podsService: PodQueryService,
     ) {}
 
-    async evaluateAndReassignIfDegraded(streamName: string, metric: Metric): Promise<void> {
+    async evaluateAndReassignIfDegraded(
+        streamName: string,
+        context: PodRole,
+        metric: Metric,
+    ): Promise<void> {
+        if (context !== PodRole.CLUSTER) {
+            return;
+        }
+
         if (
             !isMetricDegraded(metric, {
                 alertPacketLossThreshold: this.config.alertPacketLossThreshold,

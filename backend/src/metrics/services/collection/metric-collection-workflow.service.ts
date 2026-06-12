@@ -2,8 +2,9 @@ import { Injectable, Logger } from "@nestjs/common";
 
 import { PodRole } from "@/common";
 
+import { StreamFailoverService } from "../failover";
+import { MetricAlertInvocationService } from "../alerts";
 import { StreamMetricCollectorService } from "./stream-metric-collector.service";
-import { MetricAlertReactionService, MetricFailoverReactionService } from "../reactions";
 
 @Injectable()
 export class MetricCollectionWorkflowService {
@@ -11,15 +12,15 @@ export class MetricCollectionWorkflowService {
 
     constructor(
         private readonly metricCollector: StreamMetricCollectorService,
-        private readonly alertReaction: MetricAlertReactionService,
-        private readonly failoverReaction: MetricFailoverReactionService,
+        private readonly metricAlerts: MetricAlertInvocationService,
+        private readonly streamFailover: StreamFailoverService,
     ) {}
 
     async runStreamMetricWorkflow(streamName: string, context: PodRole): Promise<void> {
         try {
             const metric = await this.metricCollector.collectStreamMetric(streamName, context);
-            await this.alertReaction.handleCollectedMetric(streamName, metric);
-            await this.failoverReaction.handleCollectedMetric(streamName, context, metric);
+            await this.metricAlerts.checkMetricsAndAlert(streamName, metric);
+            await this.streamFailover.evaluateAndReassignIfDegraded(streamName, context, metric);
         } catch (error) {
             this.logger.error(`Failed to process metric for stream ${streamName}`, error);
         }

@@ -12,9 +12,7 @@ import { MongoMetricRepository, Metric, MetricSchema } from "@/infrastructure";
 import { MetricRepository } from "./repositories";
 import { MetricsController } from "./controllers";
 import {
-    MetricAlertReactionService,
     MetricFailoverStreamGatewayService,
-    MetricFailoverReactionService,
     StreamFailoverService,
     MetricAlertInvocationService,
     MetricPersistenceService,
@@ -35,8 +33,6 @@ import {
     ],
     providers: [
         MetricCollectionService,
-        MetricAlertReactionService,
-        MetricFailoverReactionService,
         MetricCollectionWorkflowService,
         StreamMetricCollectorService,
         MetricPersistenceService,

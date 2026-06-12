@@ -2,12 +2,12 @@ import { Test, TestingModule } from "@nestjs/testing";
 
 import { PodRole } from "@/common";
 import { Metric } from "@/metrics/domain";
-import { StreamMetricCollectorService } from "@/metrics/services/collection/stream-metric-collector.service";
 import {
-    MetricAlertReactionService,
-    MetricFailoverReactionService,
-} from "@/metrics/services/reactions";
-import { MetricCollectionWorkflowService } from "@/metrics/services/collection/metric-collection-workflow.service";
+    StreamFailoverService,
+    MetricAlertInvocationService,
+    StreamMetricCollectorService,
+    MetricCollectionWorkflowService,
+} from "@/metrics/services";
 
 const makeMetric = (): Metric => ({
     streamName: "live",
@@ -23,28 +23,28 @@ const makeMetric = (): Metric => ({
 describe("MetricCollectionWorkflowService", () => {
     let service: MetricCollectionWorkflowService;
     let metricCollector: jest.Mocked<StreamMetricCollectorService>;
-    let alertReaction: jest.Mocked<MetricAlertReactionService>;
-    let failoverReaction: jest.Mocked<MetricFailoverReactionService>;
+    let metricAlerts: jest.Mocked<MetricAlertInvocationService>;
+    let streamFailover: jest.Mocked<StreamFailoverService>;
 
     beforeEach(async () => {
         metricCollector = {
             collectStreamMetric: jest.fn(),
         } as unknown as jest.Mocked<StreamMetricCollectorService>;
 
-        alertReaction = {
-            handleCollectedMetric: jest.fn(),
-        } as unknown as jest.Mocked<MetricAlertReactionService>;
+        metricAlerts = {
+            checkMetricsAndAlert: jest.fn(),
+        } as unknown as jest.Mocked<MetricAlertInvocationService>;
 
-        failoverReaction = {
-            handleCollectedMetric: jest.fn(),
-        } as unknown as jest.Mocked<MetricFailoverReactionService>;
+        streamFailover = {
+            evaluateAndReassignIfDegraded: jest.fn(),
+        } as unknown as jest.Mocked<StreamFailoverService>;
 
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 MetricCollectionWorkflowService,
                 { provide: StreamMetricCollectorService, useValue: metricCollector },
-                { provide: MetricAlertReactionService, useValue: alertReaction },
-                { provide: MetricFailoverReactionService, useValue: failoverReaction },
+                { provide: MetricAlertInvocationService, useValue: metricAlerts },
+                { provide: StreamFailoverService, useValue: streamFailover },
             ],
         }).compile();
 
@@ -52,11 +52,11 @@ describe("MetricCollectionWorkflowService", () => {
     });
 
     describe("runStreamMetricWorkflow — success path", () => {
-        it("collects the metric and delegates to both reactions", async () => {
+        it("collects the metric, checks alerts, and evaluates failover", async () => {
             const metric = makeMetric();
             metricCollector.collectStreamMetric.mockResolvedValue(metric);
-            alertReaction.handleCollectedMetric.mockResolvedValue(undefined);
-            failoverReaction.handleCollectedMetric.mockResolvedValue(undefined);
+            metricAlerts.checkMetricsAndAlert.mockResolvedValue(undefined);
+            streamFailover.evaluateAndReassignIfDegraded.mockResolvedValue(undefined);
 
             await service.runStreamMetricWorkflow("live", PodRole.CLUSTER);
 
@@ -64,8 +64,8 @@ describe("MetricCollectionWorkflowService", () => {
                 "live",
                 PodRole.CLUSTER,
             );
-            expect(alertReaction.handleCollectedMetric).toHaveBeenCalledWith("live", metric);
-            expect(failoverReaction.handleCollectedMetric).toHaveBeenCalledWith(
+            expect(metricAlerts.checkMetricsAndAlert).toHaveBeenCalledWith("live", metric);
+            expect(streamFailover.evaluateAndReassignIfDegraded).toHaveBeenCalledWith(
                 "live",
                 PodRole.CLUSTER,
                 metric,
@@ -81,19 +81,19 @@ describe("MetricCollectionWorkflowService", () => {
                 service.runStreamMetricWorkflow("live", PodRole.CLUSTER),
             ).resolves.toBeUndefined();
 
-            expect(alertReaction.handleCollectedMetric).not.toHaveBeenCalled();
-            expect(failoverReaction.handleCollectedMetric).not.toHaveBeenCalled();
+            expect(metricAlerts.checkMetricsAndAlert).not.toHaveBeenCalled();
+            expect(streamFailover.evaluateAndReassignIfDegraded).not.toHaveBeenCalled();
         });
 
-        it("catches reaction errors and does not rethrow", async () => {
+        it("catches alert errors and does not rethrow", async () => {
             metricCollector.collectStreamMetric.mockResolvedValue(makeMetric());
-            alertReaction.handleCollectedMetric.mockRejectedValue(new Error("timeout"));
+            metricAlerts.checkMetricsAndAlert.mockRejectedValue(new Error("timeout"));
 
             await expect(
                 service.runStreamMetricWorkflow("live", PodRole.INGEST),
             ).resolves.toBeUndefined();
 
-            expect(failoverReaction.handleCollectedMetric).not.toHaveBeenCalled();
+            expect(streamFailover.evaluateAndReassignIfDegraded).not.toHaveBeenCalled();
         });
     });
 });
