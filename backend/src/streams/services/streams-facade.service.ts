@@ -3,11 +3,10 @@ import { Injectable } from "@nestjs/common";
 import { MediaMtxPipelineService } from "@/infrastructure";
 
 import { Stream } from "../domain";
-
-import { StreamAssignmentService } from "./assignment";
-import { StreamStatusService } from "./mutation";
-import { StreamProvisioningService } from "./orchestration";
 import { StreamQueryService } from "./query";
+import { StreamStatusService } from "./mutation";
+import { StreamAssignmentService } from "./assignment";
+import { StreamProvisioningService } from "./orchestration";
 
 @Injectable()
 export class StreamsFacadeService {

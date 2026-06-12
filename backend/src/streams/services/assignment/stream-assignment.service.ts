@@ -4,8 +4,8 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { SystemEventNames } from "@/common";
 
 import { Stream } from "../../domain";
-import { StreamRepository } from "../../repositories";
 import { StreamQueryService } from "../query";
+import { StreamRepository } from "../../repositories";
 import { StreamAssignmentPolicy } from "./stream-assignment.policy";
 
 @Injectable()

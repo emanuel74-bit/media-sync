@@ -2,12 +2,12 @@ import { Test, TestingModule } from "@nestjs/testing";
 
 import { PodRole } from "@/common";
 import { Metric } from "@/metrics/domain";
-import { MetricCollectionWorkflowService } from "@/metrics/services/collection/metric-collection-workflow.service";
+import { StreamMetricCollectorService } from "@/metrics/services/collection/stream-metric-collector.service";
 import {
     MetricAlertReactionService,
     MetricFailoverReactionService,
 } from "@/metrics/services/reactions";
-import { StreamMetricCollectorService } from "@/metrics/services/collection/stream-metric-collector.service";
+import { MetricCollectionWorkflowService } from "@/metrics/services/collection/metric-collection-workflow.service";
 
 const makeMetric = (): Metric => ({
     streamName: "live",

@@ -1,9 +1,9 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
+import { Stream, StreamsFacadeService } from "@/streams";
 import { StreamStatus, SystemEventNames } from "@/common";
 import { MediaMtxPipelineService } from "@/infrastructure";
-import { Stream, StreamsFacadeService } from "@/streams";
 import { StreamStalenessService } from "@/sync/services/workflows/stream-staleness.service";
 
 const makeStream = (overrides: Partial<Stream> = {}): Stream => ({

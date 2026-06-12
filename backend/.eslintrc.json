@@ -19,7 +19,16 @@
             {
                 "patterns": [
                     {
-                        "group": ["./*/*", "../*/*", "@/*/*"],
+                        "group": [
+                            "./*/*",
+                            "../*/*",
+                            "@/*/*",
+                            "!../../types",
+                            "!../../domain",
+                            "!../../clients",
+                            "!../../mappers",
+                            "!../../repositories"
+                        ],
                         "message": "Use the folder barrel import (index.ts) instead of deep file imports."
                     }
                 ]
@@ -64,5 +73,13 @@
                 "order": "asc"
             }
         ]
-    }
+    },
+    "overrides": [
+        {
+            "files": ["test/**/*.ts", "src/**/*.spec.ts"],
+            "rules": {
+                "no-restricted-imports": "off"
+            }
+        }
+    ]
 }

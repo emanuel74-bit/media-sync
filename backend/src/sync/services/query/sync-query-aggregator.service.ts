@@ -2,8 +2,8 @@ import { Injectable } from "@nestjs/common";
 
 import { PodRole } from "@/common";
 import { PodQueryService } from "@/pods";
-import { MediaMtxStreamListingService } from "@/infrastructure";
 import { StreamsFacadeService } from "@/streams";
+import { MediaMtxStreamListingService } from "@/infrastructure";
 
 import { SyncContext } from "../../domain";
 

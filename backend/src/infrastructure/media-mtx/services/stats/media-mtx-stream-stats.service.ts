@@ -2,7 +2,9 @@ import { Injectable, Logger } from "@nestjs/common";
 
 import { PodRole } from "@/common";
 import { MediaMtxClientRegistry } from "@/infrastructure";
-import { StreamStats, V3PathItem } from "@/infrastructure";
+import { StreamDetails, StreamStats } from "@/infrastructure";
+
+import { mapV3PathToStreamDetails } from "../../mappers";
 
 /**
  * Fetches runtime statistics and track-level details for individual streams.
@@ -25,10 +27,11 @@ export class MediaMtxStreamStatsService {
         }
     }
 
-    async getStreamDetails(name: string, source: PodRole): Promise<V3PathItem> {
+    async getStreamDetails(name: string, source: PodRole): Promise<StreamDetails> {
         const client = this.registry.getClientForRole(source);
         try {
-            return await client.getPathItem(name);
+            const pathItem = await client.getPathItem(name);
+            return mapV3PathToStreamDetails(name, pathItem);
         } catch (error) {
             this.logger.warn(`Failed to get stream details for ${name} on ${source}`, error);
             throw error;

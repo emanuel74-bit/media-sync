@@ -1,9 +1,9 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
+import { Pod } from "@/pods/domain";
 import { SystemEventNames } from "@/common";
 import { PodRole, PodStatus } from "@/common";
-import { Pod } from "@/pods/domain";
 import { PodRepository } from "@/pods/repositories";
 import { PodRegistrationService } from "@/pods/services";
 

@@ -5,8 +5,8 @@ import { Stream } from "@/streams";
 import { PodQueryService } from "@/pods";
 import { StreamsFacadeService } from "@/streams";
 import { MediaMtxStreamInfo } from "@/infrastructure";
-import { MediaMtxStreamListingService } from "@/infrastructure";
 import { SyncQueryAggregatorService } from "@/sync/services";
+import { MediaMtxStreamListingService } from "@/infrastructure";
 
 const makeStream = (name: string): MediaMtxStreamInfo => ({
     name,

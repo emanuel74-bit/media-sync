@@ -1,8 +1,8 @@
 import { Injectable, Logger } from "@nestjs/common";
 
-import { AlertEvaluationService } from "@/alerts";
 import { ConfigService } from "@/config";
 import { AlertMetricInput } from "@/common";
+import { AlertEvaluationService } from "@/alerts";
 
 import { METRIC_ALERT_RULES, MetricAlertThresholds } from "../../domain";
 
@@ -23,12 +23,7 @@ export class MetricAlertInvocationService {
                 alertLatencyHighThreshold: this.config.alertLatencyHighThreshold,
             };
 
-            await this.alerts.evaluateAndCreate(
-                streamName,
-                metric,
-                thresholds,
-                METRIC_ALERT_RULES,
-            );
+            await this.alerts.evaluateAndCreate(streamName, metric, thresholds, METRIC_ALERT_RULES);
         } catch (error) {
             this.logger.error("Failed during metric alert evaluation", error);
         }

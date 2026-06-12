@@ -1,8 +1,8 @@
 import { ApiTags } from "@nestjs/swagger";
 import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
 
-import { AssignStreamDto, CreateStreamDto, UpdateStreamDto } from "../dto";
 import { Stream, StreamAssignmentInfo } from "../domain";
+import { AssignStreamDto, CreateStreamDto, UpdateStreamDto } from "../dto";
 import {
     StreamAssignmentService,
     StreamCrudService,

@@ -1,8 +1,8 @@
 import { Test, TestingModule } from "@nestjs/testing";
 
 import { StreamStatus } from "@/common";
-import { Stream, StreamAssignmentService, StreamQueryService } from "@/streams";
 import { MetricFailoverStreamGatewayService } from "@/metrics/services";
+import { Stream, StreamAssignmentService, StreamQueryService } from "@/streams";
 
 const makeStream = (overrides: Partial<Stream> = {}): Stream => ({
     name: "stream-1",

@@ -1,9 +1,9 @@
+import { Server } from "socket.io";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EventEmitter2 } from "@nestjs/event-emitter";
-import { Server } from "socket.io";
 
-import { SystemEventNames } from "@/common";
 import { EventsGateway } from "@/gateway";
+import { SystemEventNames } from "@/common";
 
 describe("EventsGateway", () => {
     let gateway: EventsGateway;

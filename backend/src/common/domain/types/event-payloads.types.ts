@@ -1,5 +1,5 @@
-import { StreamTrack } from "./stream-track.types";
 import { PodRole } from "../enums";
+import { StreamTrack } from "./stream-track.types";
 
 /** Emitted after each stream inspection cycle for a single stream. */
 export interface StreamInspectedPayload {

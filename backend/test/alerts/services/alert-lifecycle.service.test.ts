@@ -2,8 +2,8 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 
 import { Alert } from "@/alerts/domain";
 import { AlertRepository } from "@/alerts/repositories";
-import { AlertSeverity, AlertType, SystemEventNames } from "@/common";
 import { AlertLifecycleService } from "@/alerts/services";
+import { AlertSeverity, AlertType, SystemEventNames } from "@/common";
 
 const makeAlert = (overrides: Partial<Alert> = {}): Alert => ({
     id: "alert-1",

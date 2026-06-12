@@ -1,6 +1,6 @@
-import { AlertEvaluationService } from "@/alerts";
-import { AlertMetricInput } from "@/common";
 import { ConfigService } from "@/config";
+import { AlertMetricInput } from "@/common";
+import { AlertEvaluationService } from "@/alerts";
 import { METRIC_ALERT_RULES } from "@/metrics/domain";
 import { MetricAlertInvocationService } from "@/metrics/services";
 

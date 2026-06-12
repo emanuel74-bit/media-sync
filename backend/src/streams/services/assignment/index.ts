@@ -4,3 +4,4 @@
 
 export * from "./stream-assignment.policy";
 export * from "./stream-assignment.service";
+export * from "./hash-stream-assignment.policy";

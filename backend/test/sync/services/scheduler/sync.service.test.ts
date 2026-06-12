@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 
-import { SequentialStreamTaskRunner } from "@/common";
 import { SyncContext } from "@/sync/domain";
+import { SequentialStreamTaskRunner } from "@/common";
 import { SyncOrchestratorService, SyncQueryAggregatorService, SyncService } from "@/sync/services";
 
 const makeContext = (overrides: Partial<SyncContext> = {}): SyncContext => ({

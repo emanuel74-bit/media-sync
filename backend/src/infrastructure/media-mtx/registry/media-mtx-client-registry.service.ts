@@ -5,7 +5,7 @@ import { ConfigService } from "@/config";
 import { MediaMtxClient } from "@/infrastructure";
 import { IngestPodEndpoint } from "@/infrastructure";
 
-import { MediaMtxClientFactory } from "./media-mtx-client-factory.service";
+import { MediaMtxClientFactory } from "./media-mtx-client.factory";
 
 /**
  * Owns and vends MediaMTX HTTP client instances.

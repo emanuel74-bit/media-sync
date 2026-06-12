@@ -1,8 +1,8 @@
 import { Test, TestingModule } from "@nestjs/testing";
 
 import { StreamStatus } from "@/common";
-import { MediaMtxPipelineService } from "@/infrastructure";
 import { Stream } from "@/streams/domain";
+import { MediaMtxPipelineService } from "@/infrastructure";
 import {
     StreamAssignmentService,
     StreamProvisioningService,

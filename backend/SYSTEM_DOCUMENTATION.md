@@ -119,7 +119,7 @@ src/
 │   └── media-mtx/
 │       ├── clients/              # MediaMtxClient (axios wrapper, v3 paths API)
 │       ├── registry/             # client factory (cached) + registry (round-robin)
-│       ├── mappers/              # map-v3-path-to-stream.mapper.ts
+│       ├── mappers/              # v3 → domain mappers + TRACK_FIELD_MAP table
 │       ├── services/
 │       │   ├── listing/          # ingest/cluster listing strategies + fan-out
 │       │   ├── pipeline/         # MediaMtxPipelineService (create/delete paths)
@@ -164,10 +164,8 @@ src/
 │   ├── repositories/             # StreamInspectionRepository (abstract contract)
 │   └── services/
 │       ├── alerts/               # StreamTrackAlertService (@OnEvent stream.inspected)
-│       ├── parsing/              # per-track-type parser strategies (video/audio/
-│       │                         #   data/subtitle) + stream-track-parser.util.ts
 │       ├── query/                # StreamInspectionQueryService
-│       ├── recording/            # recorder service + record factory
+│       ├── recording/            # StreamInspectionRecorderService
 │       └── scheduling/           # StreamInspectionSchedulerService (@Cron 30s)
 ├── sync/
 │   ├── domain/                   # SyncContext/SyncWorkflow types, SYNC_WORKFLOWS token
@@ -294,7 +292,7 @@ Internally split by service role; `StreamsFacadeService` is the single entry poi
 1. List all contextual streams (ingest + cluster)
 2. For each, `StreamInspectionRecorderService.inspectAndRecord`:
    - Fetch `/v3/paths/get/{name}` details (errors recorded in `lastError`, inspection still persisted)
-   - `StreamInspectionRecordFactory.build` parses tracks via per-type parser strategies (video/audio/data/subtitle)
+   - Track parsing happens inside infrastructure: `getStreamDetails` returns a domain `StreamDetails` (tracks mapped via the `TRACK_FIELD_MAP` table in `infrastructure/media-mtx/mappers/`); the recorder assembles the record inline, defaulting to empty tracks/metadata when inspection failed
    - Persist the inspection record and emit `stream.inspected`
 3. `StreamTrackAlertService` listens on `stream.inspected` (`@OnEvent`) and, for error-free inspections, evaluates `STREAM_TRACK_ALERT_RULES` against the stream's metadata expectations
 
@@ -385,7 +383,7 @@ Each feature defines an **abstract repository contract** in its own `repositorie
    StreamInspectionSchedulerService
      └─▶ listContextualStreams() → per stream (sequential):
            ├─ GET /v3/paths/get/{name} (errors recorded as lastError)
-           ├─ parse tracks (video/audio/data/subtitle parser strategies)
+           ├─ tracks parsed in infrastructure (TRACK_FIELD_MAP-driven mapper)
            ├─ persist StreamInspection record
            └─ emit stream.inspected
                  └─▶ StreamTrackAlertService (@OnEvent):

@@ -2,8 +2,8 @@ import { Injectable, Logger } from "@nestjs/common";
 
 import { PodRole } from "@/common";
 
-import { MetricAlertReactionService, MetricFailoverReactionService } from "../reactions";
 import { StreamMetricCollectorService } from "./stream-metric-collector.service";
+import { MetricAlertReactionService, MetricFailoverReactionService } from "../reactions";
 
 @Injectable()
 export class MetricCollectionWorkflowService {

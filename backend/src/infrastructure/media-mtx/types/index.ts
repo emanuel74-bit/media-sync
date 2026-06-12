@@ -3,6 +3,7 @@
  */
 
 export * from "./media-mtx.types";
+export * from "./stream-details.types";
 export * from "./ingest-pod-endpoint.types";
 export * from "./media-mtx-stream-info.types";
 export * from "./contextual-media-mtx-stream.types";

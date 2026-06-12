@@ -1,10 +1,10 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { PodRole } from "@/common";
 import { SystemEventNames } from "@/common";
+import { PodRole, TrackType } from "@/common";
 import { MediaMtxStreamStatsService } from "@/infrastructure";
-import { V3PathItem, MediaMtxStreamInfo } from "@/infrastructure";
+import { StreamDetails, MediaMtxStreamInfo } from "@/infrastructure";
 import { StreamInspectionRepository } from "@/stream-inspection/repositories";
 import { StreamInspectionRecorderService } from "@/stream-inspection/services";
 
@@ -14,12 +14,10 @@ const makeStream = (name = "stream-a"): MediaMtxStreamInfo => ({
     status: "ready",
 });
 
-const makePathItem = (overrides: Partial<V3PathItem> = {}): V3PathItem => ({
-    name: "stream-a",
-    bytesReceived: 1024,
-    bytesSent: 512,
-    readers: 2,
-    tracks: [{ type: "video", codec: "H264", width: 1920, height: 1080, fps: 30 }],
+const makeDetails = (overrides: Partial<StreamDetails> = {}): StreamDetails => ({
+    streamName: "stream-a",
+    tracks: [{ type: TrackType.VIDEO, codec: "H264", width: 1920, height: 1080, fps: 30 }],
+    metadata: { bytesReceived: 1024, bytesSent: 512, readers: 2 },
     ...overrides,
 });
 
@@ -50,7 +48,7 @@ describe("StreamInspectionRecorderService", () => {
 
     describe("inspectAndRecord — happy path", () => {
         it("saves a record with parsed tracks when stats succeed", async () => {
-            mediaMtxStats.getStreamDetails.mockResolvedValue(makePathItem());
+            mediaMtxStats.getStreamDetails.mockResolvedValue(makeDetails());
             repo.save.mockResolvedValue(undefined);
 
             await service.inspectAndRecord(makeStream(), PodRole.INGEST);
@@ -64,7 +62,7 @@ describe("StreamInspectionRecorderService", () => {
         });
 
         it("includes bytesReceived, bytesSent, readers in metadata", async () => {
-            mediaMtxStats.getStreamDetails.mockResolvedValue(makePathItem());
+            mediaMtxStats.getStreamDetails.mockResolvedValue(makeDetails());
             repo.save.mockResolvedValue(undefined);
 
             await service.inspectAndRecord(makeStream(), PodRole.CLUSTER);
@@ -78,7 +76,7 @@ describe("StreamInspectionRecorderService", () => {
         });
 
         it("emits STREAM_INSPECTED after a successful save", async () => {
-            mediaMtxStats.getStreamDetails.mockResolvedValue(makePathItem());
+            mediaMtxStats.getStreamDetails.mockResolvedValue(makeDetails());
             repo.save.mockResolvedValue(undefined);
 
             await service.inspectAndRecord(makeStream(), PodRole.INGEST);

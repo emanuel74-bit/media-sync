@@ -1,10 +1,10 @@
 import { Test, TestingModule } from "@nestjs/testing";
 
-import { PodRole, StreamStatus } from "@/common";
+import { Stream } from "@/streams";
 import { ConfigService } from "@/config";
 import { PodQueryService } from "@/pods";
-import { Stream } from "@/streams";
 import { Metric } from "@/metrics/domain";
+import { PodRole, StreamStatus } from "@/common";
 import { MetricFailoverStreamGatewayService, StreamFailoverService } from "@/metrics/services";
 
 const makeMetric = (overrides: Partial<Metric> = {}): Metric => ({

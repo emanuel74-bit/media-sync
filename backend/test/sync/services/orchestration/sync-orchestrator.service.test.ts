@@ -2,8 +2,8 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
 import { SystemEventNames } from "@/common";
-import { SyncContext, SYNC_WORKFLOWS, SyncWorkflow } from "@/sync/domain";
 import { SyncOrchestratorService } from "@/sync/services";
+import { SyncContext, SYNC_WORKFLOWS, SyncWorkflow } from "@/sync/domain";
 
 const makeContext = (podIds: string[] = ["pod-1"]): SyncContext => ({
     podIds,

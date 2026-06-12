@@ -1,8 +1,8 @@
 import { Test, TestingModule } from "@nestjs/testing";
 
 import { StreamStatus } from "@/common";
-import { Stream, StreamsFacadeService } from "@/streams";
 import { SyncDiscoveredStream } from "@/sync/domain";
+import { Stream, StreamsFacadeService } from "@/streams";
 import { StreamIngestDiscoveryService } from "@/sync/services/workflows/stream-ingest-discovery.service";
 
 const makeStream = (overrides: Partial<Stream> = {}): Stream => ({

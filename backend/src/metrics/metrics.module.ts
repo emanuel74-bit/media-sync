@@ -1,8 +1,8 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
-import { AlertsModule } from "@/alerts";
 import { PodsModule } from "@/pods";
+import { AlertsModule } from "@/alerts";
 import { ConfigModule } from "@/config";
 import { CommonModule } from "@/common";
 import { StreamsModule } from "@/streams";

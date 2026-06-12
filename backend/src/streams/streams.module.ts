@@ -8,6 +8,7 @@ import { MongoStreamRepository, Stream, StreamSchema } from "@/infrastructure";
 import { StreamRepository } from "./repositories";
 import { StreamsController } from "./controllers";
 import {
+    HashStreamAssignmentPolicy,
     StreamQueryService,
     StreamAssignmentService,
     StreamsFacadeService,
@@ -17,7 +18,6 @@ import {
     StreamLifecycleService,
     StreamAssignmentPolicy,
 } from "./services";
-import { HashStreamAssignmentPolicy } from "./services/assignment/hash-stream-assignment.policy";
 
 @Module({
     imports: [

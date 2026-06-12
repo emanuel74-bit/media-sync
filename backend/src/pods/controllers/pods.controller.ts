@@ -3,8 +3,8 @@ import { Body, Controller, Get, Post } from "@nestjs/common";
 
 import { PodRole } from "@/common";
 
-import { RegisterPodDto, HeartbeatDto } from "../dto";
 import { Pod } from "../domain";
+import { RegisterPodDto, HeartbeatDto } from "../dto";
 import { PodRegistrationService, PodQueryService } from "../services";
 
 @ApiTags("pods")

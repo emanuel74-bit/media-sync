@@ -1,10 +1,10 @@
 export { StreamsModule } from "./streams.module";
 export { StreamRepository } from "./repositories";
+export type { Stream, StreamMetadata, StreamAssignmentInfo } from "./domain";
 export {
-    StreamAssignmentService,
-    StreamsFacadeService,
-    StreamProvisioningService,
     StreamQueryService,
     StreamStatusService,
+    StreamsFacadeService,
+    StreamAssignmentService,
+    StreamProvisioningService,
 } from "./services";
-export type { Stream, StreamAssignmentInfo, StreamMetadata } from "./domain";

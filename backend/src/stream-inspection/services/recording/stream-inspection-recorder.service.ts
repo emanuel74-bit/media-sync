@@ -3,12 +3,11 @@ import { Inject, Injectable, Logger, forwardRef } from "@nestjs/common";
 
 import { PodRole } from "@/common";
 import { SystemEventNames } from "@/common";
-import { MediaMtxStreamInfo } from "@/infrastructure";
 import { MediaMtxStreamStatsService } from "@/infrastructure";
+import { MediaMtxStreamInfo, StreamDetails } from "@/infrastructure";
 
+import { NewStreamInspectionData } from "../../domain";
 import { StreamInspectionRepository } from "../../repositories";
-
-import { StreamInspectionRecordFactory } from "./stream-inspection-record.factory";
 
 @Injectable()
 export class StreamInspectionRecorderService {
@@ -23,7 +22,7 @@ export class StreamInspectionRecorderService {
 
     async inspectAndRecord(stream: MediaMtxStreamInfo, source: PodRole): Promise<void> {
         const inspectedAt = new Date();
-        let details = null;
+        let details: StreamDetails | null = null;
         let lastError: string | null = null;
 
         try {
@@ -33,13 +32,14 @@ export class StreamInspectionRecorderService {
             this.logger.error(`Failed to inspect stream ${stream.name}`, error);
         }
 
-        const record = StreamInspectionRecordFactory.build(
-            stream.name,
+        const record: NewStreamInspectionData = {
+            streamName: stream.name,
             source,
-            details,
+            tracks: details?.tracks ?? [],
+            metadata: details ? { ...details.metadata } : {},
             lastError,
             inspectedAt,
-        );
+        };
         await this.streamInspectionRepository.save(record);
 
         if (details) {

@@ -1,5 +1,7 @@
 import { V3PathItem, V3TrackItem, MediaMtxStreamInfo } from "@/infrastructure";
 
+import { mapV3PathToMetadata } from "./map-v3-path-to-metadata.mapper";
+
 export function mapV3PathToStream(path: V3PathItem): MediaMtxStreamInfo {
     const trackList: V3TrackItem[] = Array.isArray(path?.tracks) ? path.tracks : [];
     const videoTrack = trackList.find((track) => track?.type === "video");
@@ -24,10 +26,6 @@ export function mapV3PathToStream(path: V3PathItem): MediaMtxStreamInfo {
                   sampleRate: audioTrack.sampleRate ?? 0,
               }
             : undefined,
-        metadata: {
-            bytesReceived: path?.bytesReceived,
-            bytesSent: path?.bytesSent,
-            readers: path?.readers,
-        },
+        metadata: mapV3PathToMetadata(path),
     };
 }

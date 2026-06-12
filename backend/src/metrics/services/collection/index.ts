@@ -3,5 +3,5 @@
  */
 
 export * from "./metric-collection.service";
-export * from "./metric-collection-workflow.service";
 export * from "./stream-metric-collector.service";
+export * from "./metric-collection-workflow.service";

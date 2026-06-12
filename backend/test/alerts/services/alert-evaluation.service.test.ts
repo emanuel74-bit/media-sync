@@ -1,6 +1,6 @@
+import { RuleEvaluator } from "@/common";
 import { AlertEvaluationService } from "@/alerts";
 import { AlertLifecycleService } from "@/alerts/services";
-import { RuleEvaluator } from "@/common";
 import { AlertSeverity, AlertType, RuntimeAlertRule } from "@/common/domain";
 
 describe("AlertEvaluationService", () => {

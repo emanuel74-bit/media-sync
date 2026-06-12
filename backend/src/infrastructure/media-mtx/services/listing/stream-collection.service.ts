@@ -31,7 +31,9 @@ export class StreamCollectionService {
         try {
             return await client.listPaths();
         } catch (error) {
-            this.logger.warn(`Failed to list paths from client: ${error instanceof Error ? error.message : String(error)}`);
+            this.logger.warn(
+                `Failed to list paths from client: ${error instanceof Error ? error.message : String(error)}`,
+            );
             return [];
         }
     }

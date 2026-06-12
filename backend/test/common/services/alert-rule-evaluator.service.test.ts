@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 
-import { AlertSeverity, AlertType, RuntimeAlertRule } from "@/common/domain";
 import { RuleEvaluator } from "@/common/services";
+import { AlertSeverity, AlertType, RuntimeAlertRule } from "@/common/domain";
 
 describe("RuleEvaluator", () => {
     let service: RuleEvaluator;
@@ -81,9 +81,7 @@ describe("RuleEvaluator", () => {
                 message: () => "below threshold",
             };
 
-            const result = await service.evaluate("stream1", 50, { threshold: 100 }, [
-                contextRule,
-            ]);
+            const result = await service.evaluate("stream1", 50, { threshold: 100 }, [contextRule]);
 
             expect(result).toHaveLength(1);
         });

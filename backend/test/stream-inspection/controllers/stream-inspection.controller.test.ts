@@ -2,8 +2,8 @@ import { Test, TestingModule } from "@nestjs/testing";
 
 import { PodRole } from "@/common";
 import { StreamInspectionRecord } from "@/stream-inspection/domain";
-import { StreamInspectionController } from "@/stream-inspection/controllers";
 import { StreamInspectionQueryService } from "@/stream-inspection/services";
+import { StreamInspectionController } from "@/stream-inspection/controllers";
 
 const makeInspectionRecord = (
     overrides: Partial<StreamInspectionRecord> = {},

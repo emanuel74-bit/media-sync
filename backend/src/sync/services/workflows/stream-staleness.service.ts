@@ -2,8 +2,8 @@ import { Injectable, Logger } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
 import { SystemEventNames } from "@/common";
-import { MediaMtxPipelineService } from "@/infrastructure";
 import { Stream, StreamsFacadeService } from "@/streams";
+import { MediaMtxPipelineService } from "@/infrastructure";
 
 import { SyncContext, SyncWorkflow } from "../../domain";
 

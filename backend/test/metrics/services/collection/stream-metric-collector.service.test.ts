@@ -1,8 +1,8 @@
 import { Test, TestingModule } from "@nestjs/testing";
 
 import { PodRole } from "@/common";
-import { MediaMtxStreamStatsService } from "@/infrastructure";
 import { Metric } from "@/metrics/domain";
+import { MediaMtxStreamStatsService } from "@/infrastructure";
 import { MetricPersistenceService } from "@/metrics/services";
 import { StreamMetricCollectorService } from "@/metrics/services/collection/stream-metric-collector.service";
 
