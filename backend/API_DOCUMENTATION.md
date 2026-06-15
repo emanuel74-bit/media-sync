@@ -660,6 +660,8 @@ interface StreamTrack {
 | `CLUSTER_MEDIAMTX_BASE_URLS`   | string | falls back to CLUSTER_MEDIAMTX_BASE_URL | Comma-separated cluster URLs                                 |
 | `POD_HEALTH_TOLERANCE_SECONDS` | number | `120`                                   | Max seconds without heartbeat before pod considered inactive |
 | `INGEST_POD_MEDIAMTX_PORT`     | number | `9000`                                  | MediaMTX API port used when querying registered ingest pods  |
+| `CLUSTER_POD_MEDIAMTX_PORT`    | number | `9000`                                  | MediaMTX API port used when building per-pod cluster clients  |
+| `INGEST_RTSP_URL`              | string | `rtsp://mediamtx-ingest:8554`           | RTSP base the cluster pulls relayed paths from (include creds for ingest read auth) |
 | `ALERT_BITRATE_LOW`            | number | `500`                                   | Bitrate-low alert threshold (warning)                        |
 | `ALERT_PACKET_LOSS`            | number | `2`                                     | Packet-loss alert threshold % (critical; also triggers failover) |
 | `ALERT_LATENCY_HIGH`           | number | `1000`                                  | High-latency alert threshold ms (warning; also triggers failover) |
@@ -675,10 +677,10 @@ interface StreamTrack {
 
 ## Docker Deployment
 
-There is no default `docker-compose.yml`; pass the compose file explicitly:
+Compose files live under `deploy/docker/`; pass them explicitly (or use the `stack:*` npm scripts):
 
 ```bash
-docker-compose -f docker-compose.local up --build
+docker-compose -f deploy/docker/compose.local.yml up --build
 ```
 
 Services:
@@ -693,14 +695,14 @@ Services:
 For multiple cluster instances:
 
 ```bash
-docker-compose -f docker-compose.local -f docker-compose.cluster up --build
+docker-compose -f deploy/docker/compose.local.yml -f deploy/docker/compose.cluster.yml up --build
 ```
 
 The MediaMTX cluster instances automatically register themselves with the sync service on startup and send periodic heartbeats. No manual pod configuration required.
 
 ## OpenShift/Kubernetes Deployment
 
-For production deployment on OpenShift/Kubernetes, use the provided `k8s-pod-template-mediamtx.yaml` and `k8s-configmap-mediamtx.yaml` files. This approach provides:
+For production deployment on OpenShift/Kubernetes, use the manifests in `deploy/k8s/`. This approach provides:
 
 - **Automatic restarts** when MediaMTX crashes
 - **Health monitoring** via Kubernetes probes
@@ -712,13 +714,13 @@ For production deployment on OpenShift/Kubernetes, use the provided `k8s-pod-tem
 1. Create the ConfigMap:
 
 ```bash
-kubectl apply -f k8s-configmap-mediamtx.yaml
+kubectl apply -f deploy/k8s/mediamtx-configmap.yaml
 ```
 
 2. Deploy the MediaMTX cluster:
 
 ```bash
-kubectl apply -f k8s-pod-template-mediamtx.yaml
+kubectl apply -f deploy/k8s/mediamtx-cluster-deployment.yaml
 ```
 
 3. Scale as needed:
@@ -737,14 +739,11 @@ The deployment includes:
 
 ## Testing
 
-Run the included test scripts against a running stack:
+Run the included smoke test against a running stack:
 
-```bash
-# PowerShell
-.\test.ps1
-
-# Or bash (requires curl and jq)
-./test.sh
+```powershell
+.\test.ps1          # against an already-running stack
+.\test.ps1 -Up      # starts the compose stack first
 ```
 
-This will test all endpoints and report results. Unit tests run with `npm test` (Jest).
+This exercises all endpoints (including a create/assign/unassign/delete stream lifecycle with cleanup) and reports pass/fail counts. Unit tests run with `npm test` (Jest).

@@ -1,9 +1,9 @@
 import { Injectable, Logger } from "@nestjs/common";
 
 import { PodRole } from "@/common";
-import { MediaMtxClientRegistry } from "@/infrastructure";
-import { StreamDetails, StreamStats } from "@/infrastructure";
 
+import { MediaMtxClientRegistry } from "../../registry";
+import { StreamDetails, StreamStats } from "../../types";
 import { mapV3PathToStreamDetails } from "../../mappers";
 
 /**

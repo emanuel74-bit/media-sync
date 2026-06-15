@@ -112,6 +112,10 @@ Example: `infrastructure/media-mtx/services/listing/{ingest,cluster}/` with `str
 **DIR-08** — Rule: A small module MAY stay flat until a second concern appears.
 Example: `gateway/` is just `events.gateway.ts` + `gateway.module.ts`; `config/` is service + module.
 
+**DIR-09** — Rule: Deployment artifacts live under `deploy/`, grouped by tool and named for what they are: `deploy/docker/` (Dockerfiles `<purpose>.Dockerfile`, compose files `compose.<variant>.yml`), `deploy/k8s/` (real Kubernetes manifests only), `deploy/mediamtx/` (MediaMTX runtime configs — these are NOT k8s manifests), `deploy/scripts/` (pod runtime shell scripts). Nothing deployment-related sits at the backend root. Compose build context is `backend/`.
+Decision history: [ADR-0007](../docs/adr/0007-backend-deploy-layout.md).
+Enforced: review.
+
 ---
 
 ## 5. ARCH — Architecture & layering
@@ -123,7 +127,7 @@ Example: every controller in the repo is < 75 lines.
 
 **ARCH-03** — Rule: External systems are reachable only through `infrastructure/` services. Feature code never constructs an HTTP client.
 
-**ARCH-04** — Rule: No circular dependencies between features. If two features need each other, the shared part moves to `common/` or communication switches to events. (`forwardRef` is a last resort and currently appears once — see Known Deviations DEVN-04.)
+**ARCH-04** — Rule: No circular dependencies between features. If two features need each other, the shared part moves to `common/` or communication switches to events. (`forwardRef` is a last resort, all instances rooted in the `infrastructure/` ↔ `@/pods` barrel cycle from hosting Mongo repositories in `infrastructure/`: the `MediaMtxModule` ↔ `PodsModule` module seam, plus the `PodQueryService` injections in `ClusterNodeResolverService` and `IngestStreamListingStrategy` — see [ADR-0008](../docs/adr/0008-runtime-safe-barrel-imports.md), [ADR-0009](../docs/adr/0009-pod-derived-cluster-topology.md). Removing the repository placement would remove all of them.)
 
 **ARCH-05** — Rule: No global mutable state. The only in-memory state is owned by injectable singletons with a clear reason (client cache in `MediaMtxClientFactory`, round-robin index in `MediaMtxClientRegistry`).
 
@@ -131,13 +135,18 @@ Example: every controller in the repo is < 75 lines.
 
 ## 6. IMP — Imports & barrels
 
-**IMP-01** — Rule: Deep **file** imports are forbidden: import from a folder's barrel. Allowed forms: same-folder sibling (`./stream-assignment.policy`), one-level (`../query`), feature alias (`@/streams`), and ancestor **layer-barrel** imports inside a feature (`../../domain`, `../../types`, `../../clients`, `../../mappers`, `../../repositories` — these are folder barrels, which is the rule's whole point). Test files are exempt: white-box tests legitimately import internals the curated feature barrels don't expose.
-Enforced: tooling (`no-restricted-imports` bans `./*/*`, `../*/*`, `@/*/*` with explicit `!`-negations for the layer barrels; override disables the rule for `test/**` and legacy `src/**/*.spec.ts`).
+**IMP-01** — Rule: Deep **file** imports are forbidden: import from a folder's barrel. Allowed forms: same-folder sibling (`./stream-assignment.policy`), one-level (`../query`), feature alias (`@/streams`), and ancestor **folder-barrel** imports inside a package (`../../domain`, `../../../registry`, … — these are barrels, which is the rule's whole point). Test files are exempt: white-box tests legitimately import internals the curated feature barrels don't expose.
+Enforced: tooling (`no-restricted-imports` group `["./*/*", "../*/*", "@/*/*", "!../../**"]`; the broad `!../../**` negation exists because ESLint's matcher ignores more precise forms — so at two-plus levels up, "barrel, not file" is enforced by review; override disables the rule for `test/**` and legacy `src/**/*.spec.ts`). Decision history: [ADR-0008](../docs/adr/0008-runtime-safe-barrel-imports.md).
 
 **IMP-02** — Rule: Cross-feature imports MUST use the `@/<feature>` alias, never relative `../../` paths.
 Enforced: tooling + review.
 
 **IMP-03** — Rule: Every folder has a barrel re-exporting its public members (see TOOL-03 for the nested-vs-feature-root styles). Keeping something internal to a feature is done at the **feature-root** barrel (curated named exports); nested barrels export everything in their folder.
+
+**IMP-04** — Rule: Barrels are runtime cycle hazards (CJS getter re-exports only exist after their line executes). Therefore: (a) curated feature-root barrels MUST export leaf members first and the **module last**, so cyclic re-entry during module evaluation still resolves services; (b) inside a package, **runtime values** MUST be imported via relative paths — the package's own `@/...` barrel is allowed only for type-only imports (erased at compile); (c) inherent module-level cycles use `forwardRef(() => Module)` on the importing side. Unit tests never boot `AppModule`, so violations surface only at deploy time — treat any "undefined dependency" Nest boot error as this rule's signature.
+Example: `MediaMtxClientRegistry` is imported as `../../registry` inside `infrastructure/media-mtx/services/`, never as `@/infrastructure`; `MediaMtxModule` imports `forwardRef(() => PodsModule)`.
+Decision history: [ADR-0008](../docs/adr/0008-runtime-safe-barrel-imports.md).
+Enforced: review (boot smoke test pending — see ADR-0008 consequences).
 
 ---
 
@@ -221,6 +230,11 @@ Example: `track-field-map.const.ts` + `map-v3-track-to-stream-track.mapper.ts`; 
 Decision history: [ADR-0003](../docs/adr/0003-data-driven-track-parsing.md).
 Enforced: tests.
 
+**INT-06** — Rule: Cluster MediaMTX nodes are addressed by the live pod registry, not a static URL: `ClusterNodeResolverService` builds one client per registered cluster pod and a pull pipeline is created on the pod the stream is **assigned to** (`createClusterPullPipeline(stream, assignedPod)`), falling back to the static pool / a round-robin pick only when no pod is registered or the assigned pod is gone. The cluster relay's pull source is a real protocol URL — `${INGEST_RTSP_URL}/${name}` for ingest-relayed streams, or the stream's stored source when it is already a pullable URL — never the v3 reported `source` (which is a description, mapped to a string for display only).
+Example: `cluster-node-resolver.service.ts`, `media-mtx-pipeline.service.ts`; covered by `test/infrastructure/media-mtx/{registry,services/pipeline}`.
+Decision history: [ADR-0009](../docs/adr/0009-pod-derived-cluster-topology.md).
+Enforced: review + tests.
+
 ---
 
 ## 12. EVT — Events & realtime
@@ -296,7 +310,7 @@ Example: `src/streams/services/assignment/hash-stream-assignment.policy.ts` → 
 
 **TEST-06** — Rule: Forbidden: order-dependent tests, shared mutable state between cases, committed skipped/commented-out tests.
 
-**TEST-07** — Rule: End-to-end API checks live in the repo-root scripts (`test.ps1`, `test.sh`, `test-pods.ps1`) and run against a live stack; they are not part of `npm test`.
+**TEST-07** — Rule: End-to-end API checks live in the single backend-root smoke script (`test.ps1`, with an `-Up` switch to start the stack) and run against a live stack; they are not part of `npm test`. Smoke checks must clean up what they create.
 
 ---
 

@@ -42,8 +42,8 @@ The system solves the problem of coordinating media stream ingestion and distrib
 
 ### Deployment Models
 
-- **Docker Compose** (`docker-compose.local`): Local development and single-machine deployments
-- **Docker Compose Scale** (`docker-compose.local` + `docker-compose.cluster`): Multi-instance cluster with automatic pod registration
+- **Docker Compose** (`deploy/docker/compose.local.yml`): Local development and single-machine deployments
+- **Docker Compose Scale** (+ `deploy/docker/compose.cluster.yml` override): Multi-instance cluster with automatic pod registration
 - **Kubernetes**: Production deployments with health probes and automatic restarts
 
 ---
@@ -299,12 +299,13 @@ Internally split by service role; `StreamsFacadeService` is the single entry poi
 
 - `MediaMtxClient` (client): thin axios wrapper per endpoint URL (8s timeout) —
   `listPaths()` → `GET /v3/paths/list`, `getPathItem(name)` → `GET /v3/paths/get/{name}`,
-  `addPath(name, source)` → `POST /v3/config/paths/add/{name}`, `removePath(name)` → `POST /v3/config/paths/remove/{name}`.
+  `addPath(name, source)` → `POST /v3/config/paths/add/{name}`, `removePath(name)` → `DELETE /v3/config/paths/delete/{name}`.
   Raw `V3PathItem`s are mapped to domain shapes (`mapV3PathToStream`) before leaving the client. No error handling — errors propagate.
 - `MediaMtxClientFactory` (registry): creates and **caches** one client per base URL
-- `MediaMtxClientRegistry` (registry): owns the ingest client and the cluster client pool; round-robin `pickClusterClient()`; builds ingest-pod clients at `http://{host||podId}:{INGEST_POD_MEDIAMTX_PORT}`
-- `MediaMtxStreamListingService` (service): ingest listing (primary endpoint with fallback to registered ingest pods) and cluster listing (fan-out over all cluster nodes with per-node error isolation via `StreamCollectionService`)
-- `MediaMtxPipelineService` (service): create cluster pull pipelines (source URI from the stream, falling back to `rtsp://{ingest-host}/{name}`; treats HTTP 409 as already-exists) and delete pipelines from all cluster nodes
+- `MediaMtxClientRegistry` (registry): owns the ingest client and the *static* cluster pool (fallback); builds per-pod clients at `http://{host||podId}:{INGEST_POD_MEDIAMTX_PORT | CLUSTER_POD_MEDIAMTX_PORT}`
+- `ClusterNodeResolverService` (registry): resolves the **live** cluster client set from the pod registry — all active cluster pods for fan-out, or the client for a specific assigned pod — falling back to the static pool / round-robin pick when none are registered (see ADR-0009)
+- `MediaMtxStreamListingService` (service): ingest listing (primary endpoint with fallback to registered ingest pods) and cluster listing (fan-out over all registered cluster nodes with per-node error isolation via `StreamCollectionService`)
+- `MediaMtxPipelineService` (service): create a cluster pull pipeline **on the pod the stream is assigned to**, pulling from `${INGEST_RTSP_URL}/{name}` (or the stream's stored source when it is already a pullable protocol URL; treats HTTP 409 as already-exists); delete fans out across all active cluster nodes
 - `MediaMtxStreamStatsService` (service): `getStreamStats(context, name)` and `getStreamDetails(name, source)` — public methods, selected by pod role
 
 ---
@@ -395,7 +396,7 @@ sequenceDiagram
 
 ### Docker Compose (Single Machine)
 
-`docker-compose -f docker-compose.local up --build`
+`npm run stack:up` (= `docker-compose -f deploy/docker/compose.local.yml up --build`)
 
 ```mermaid
 flowchart LR
@@ -409,7 +410,7 @@ flowchart LR
     App -- "v3 API" --> Ingest
     App -- "v3 API" --> Cluster
     Cluster -- "RTSP pull" --> Ingest
-    Ingest -. "register + heartbeat<br/>(script-pod-heartbeat.sh)" .-> App
+    Ingest -. "register + heartbeat<br/>(pod-heartbeat-monitor.sh)" .-> App
     Cluster -. "register + heartbeat" .-> App
 ```
 
@@ -418,7 +419,8 @@ Compose healthcheck on MediaMTX containers: `GET /v3/paths/list`.
 ### Docker Compose Scale (Multiple Cluster Instances)
 
 ```
-docker-compose -f docker-compose.local -f docker-compose.cluster up --build
+npm run stack:up:scaled
+# = docker-compose -f deploy/docker/compose.local.yml -f deploy/docker/compose.cluster.yml up --build
 ```
 
 The override sets `scale: 3` on `mediamtx-cluster`; instances self-register via `POST /api/pods/register` with `type: cluster`.
@@ -447,7 +449,7 @@ flowchart TB
 
 Scaling: `kubectl scale deployment mediamtx-cluster --replicas=5` — new pods auto-register via the heartbeat script.
 
-Manifests: `k8s-configmap-mediamtx.yaml`, `k8s-pod-template-mediamtx.yaml`, `k8s-deployment-mediamtx-cluster.yaml`, `k8s-deployment-mediamtx-ingest.yaml`.
+Manifests: `deploy/k8s/mediamtx-configmap.yaml`, `deploy/k8s/mediamtx-cluster-deployment.yaml`. (The MediaMTX runtime configs mounted by compose live in `deploy/mediamtx/` — they are not k8s manifests.)
 
 ---
 
@@ -707,7 +709,7 @@ Previously documented limitations that are now fixed: route shadowing of `GET /a
 3. **Run Supporting Services**:
 
     ```bash
-    docker-compose -f docker-compose.local up
+    npm run stack:up
     ```
 
 4. **Start Dev Server**:
@@ -739,9 +741,7 @@ Follow `CONVENTIONS.md` (file suffixes, folder structure, service roles). In sho
 ```bash
 npm test               # Jest unit tests (test/ mirrors src/)
 npm run verify         # typecheck + lint + build + test
-./test.ps1             # API integration script (PowerShell, stack must run)
-./test.sh              # API integration script (bash)
-./test-pods.ps1        # Pod registration integration script
+./test.ps1             # E2E API smoke test (PowerShell; -Up starts the stack)
 ```
 
 ### Debugging

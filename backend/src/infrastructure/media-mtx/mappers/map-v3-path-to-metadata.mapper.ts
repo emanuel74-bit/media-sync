@@ -4,6 +4,7 @@ export function mapV3PathToMetadata(path: V3PathItem): StreamPathMetadata {
     return {
         bytesReceived: path?.bytesReceived,
         bytesSent: path?.bytesSent,
-        readers: path?.readers,
+        // Real v3 reports readers as an array; normalize to a count.
+        readers: Array.isArray(path?.readers) ? path.readers.length : path?.readers,
     };
 }

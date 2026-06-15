@@ -23,3 +23,9 @@ srt: true
 srtAddress: :8890
 
 record: false
+
+# Catch-all so readers can pull relayed paths. The sync service also adds
+# specific pull pipelines via the API (POST /v3/config/paths/add/{name}),
+# which take precedence over this default.
+paths:
+    all_others:

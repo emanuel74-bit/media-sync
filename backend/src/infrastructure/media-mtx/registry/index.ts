@@ -3,4 +3,5 @@
  */
 
 export * from "./media-mtx-client.factory";
+export * from "./cluster-node-resolver.service";
 export * from "./media-mtx-client-registry.service";

@@ -1,3 +1,7 @@
+# Local stack: MongoDB, MediaMTX ingest, MediaMTX cluster, sync app.
+# Run from backend/:  docker-compose -f deploy/docker/compose.local.yml up --build
+# (or: npm run stack:up)
+
 services:
     mongodb:
         image: mongodb/mongodb-community-server:latest
@@ -11,14 +15,14 @@ services:
 
     mediamtx-ingest:
         build:
-            context: .
-            dockerfile: Dockerfile.mediamtx-pod
+            context: ../..
+            dockerfile: deploy/docker/mediamtx-pod.Dockerfile
         ports:
             - "8554:8554" # RTSP
             - "8888:8888" # HLS
             - "9000:9000" # API
         volumes:
-            - ./k8s-deployment-mediamtx-ingest.yaml:/mediamtx.yml
+            - ../mediamtx/mediamtx-ingest.yml:/mediamtx.yml
         environment:
             - POD_ID=ingest-pod-${POD_INDEX:-1}
             - POD_TYPE=ingest
@@ -27,14 +31,14 @@ services:
 
     mediamtx-cluster:
         build:
-            context: .
-            dockerfile: Dockerfile.mediamtx-pod
+            context: ../..
+            dockerfile: deploy/docker/mediamtx-pod.Dockerfile
         ports:
             - "8555:8554" # RTSP
             - "8889:8888" # HLS
             - "9001:9000" # API
         volumes:
-            - ./k8s-deployment-mediamtx-cluster.yaml:/mediamtx.yml
+            - ../mediamtx/mediamtx-cluster.yml:/mediamtx.yml
         environment:
             - POD_ID=cluster-pod-${POD_INDEX:-1}
             - MEDIA_SYNC_API=http://app:3000
@@ -66,12 +70,12 @@ services:
 
     app:
         build:
-            context: .
-            dockerfile: Dockerfile.app
+            context: ../..
+            dockerfile: deploy/docker/app.Dockerfile
         ports:
             - "3000:3000"
         env_file:
-            - .env
+            - ../../.env
         depends_on:
             - mongodb
             - mediamtx-ingest

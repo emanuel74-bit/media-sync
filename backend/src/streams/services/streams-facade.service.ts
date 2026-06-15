@@ -35,11 +35,14 @@ export class StreamsFacadeService {
     }
 
     async createClusterPipeline(stream: Stream): Promise<void> {
-        await this.mediaMtxPipeline.createClusterPullPipeline({
-            name: stream.name,
-            source: stream.source,
-            status: stream.status,
-        });
+        await this.mediaMtxPipeline.createClusterPullPipeline(
+            {
+                name: stream.name,
+                source: stream.source,
+                status: stream.status,
+            },
+            stream.assignedPod,
+        );
     }
 
     async markStale(name: string): Promise<void> {

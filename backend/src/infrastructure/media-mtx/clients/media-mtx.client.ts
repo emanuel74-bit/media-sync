@@ -1,8 +1,7 @@
 import axios, { AxiosInstance } from "axios";
 
-import { MediaMtxStreamInfo, V3PathItem, PipelineCreateResult } from "@/infrastructure";
-
 import { mapV3PathToStream } from "../mappers";
+import { MediaMtxStreamInfo, V3PathItem, PipelineCreateResult } from "../types";
 
 /**
  * Thin HTTP adapter for a single MediaMTX node.
@@ -38,6 +37,6 @@ export class MediaMtxClient {
     }
 
     async removePath(pathName: string): Promise<void> {
-        await this.http.post(`/v3/config/paths/remove/${encodeURIComponent(pathName)}`);
+        await this.http.delete(`/v3/config/paths/delete/${encodeURIComponent(pathName)}`);
     }
 }

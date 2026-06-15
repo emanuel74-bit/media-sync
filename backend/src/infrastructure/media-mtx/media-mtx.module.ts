@@ -1,9 +1,13 @@
-import { Module } from "@nestjs/common";
+import { Module, forwardRef } from "@nestjs/common";
 
 import { PodsModule } from "@/pods";
 import { ConfigModule } from "@/config";
 
-import { MediaMtxClientFactory, MediaMtxClientRegistry } from "./registry";
+import {
+    MediaMtxClientFactory,
+    MediaMtxClientRegistry,
+    ClusterNodeResolverService,
+} from "./registry";
 import {
     MediaMtxPipelineService,
     MediaMtxStreamStatsService,
@@ -14,10 +18,14 @@ import {
 } from "./services";
 
 @Module({
-    imports: [ConfigModule, PodsModule],
+    // forwardRef: PodsModule's file imports infrastructure schema/repo classes
+    // through the @/infrastructure barrel, which evaluates this module first —
+    // without the deferred reference PodsModule is undefined at scan time.
+    imports: [ConfigModule, forwardRef(() => PodsModule)],
     providers: [
         MediaMtxClientFactory,
         MediaMtxClientRegistry,
+        ClusterNodeResolverService,
         IngestStreamListingStrategy,
         ClusterStreamListingStrategy,
         StreamCollectionService,

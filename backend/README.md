@@ -36,34 +36,34 @@ NestJS backend for synchronizing streams between ingest and cluster MediaMTX ins
 
 ## Docker Testing
 
-There is no default `docker-compose.yml`; use the provided files explicitly:
+All deployment artifacts live under `deploy/` (see `deploy/README.md` for the full map):
 
 ```bash
 # Local stack: MongoDB, MediaMTX ingest, MediaMTX cluster, app
-docker-compose -f docker-compose.local up --build
+npm run stack:up
 
 # Scale the cluster to 3 instances
-docker-compose -f docker-compose.local -f docker-compose.cluster up --build
+npm run stack:up:scaled
+
+# Tear down
+npm run stack:down
 ```
+
+(Equivalent raw commands: `docker-compose -f deploy/docker/compose.local.yml [-f deploy/docker/compose.cluster.yml] up --build`.)
 
 Requirements: Docker and Docker Compose installed, Docker Desktop running.
 
-The MediaMTX pods (built from `Dockerfile.mediamtx-pod`) automatically register themselves with the sync service on startup (`POST /api/pods/register`) and maintain heartbeats via the `script-pod-heartbeat*.sh` scripts. Streams are dynamically assigned to available cluster pods.
+The MediaMTX pods (built from `deploy/docker/mediamtx-pod.Dockerfile`) automatically register themselves with the sync service on startup (`POST /api/pods/register`) and maintain heartbeats via `deploy/scripts/pod-heartbeat-monitor.sh`. Streams are dynamically assigned to available cluster pods.
 
 ## Testing
 
-```bash
+```powershell
 # Unit tests (Jest)
 npm test
 
-# PowerShell - Full API integration tests (stack must be running)
-.\test.ps1
-
-# PowerShell - Pod registration tests
-.\test-pods.ps1
-
-# Bash equivalent (requires curl and jq)
-./test.sh
+# E2E API smoke test (streams, pods, alerts, metrics, inspection lifecycle)
+.\test.ps1          # against an already-running stack
+.\test.ps1 -Up      # starts the compose stack first
 ```
 
 ## API Documentation
@@ -99,6 +99,6 @@ WebSocket: connect via Socket.IO and listen for `stream.synced`, `stream.removed
 
 ## Notes
 
-- The backend talks to the real MediaMTX v3 HTTP API: `/v3/paths/list`, `/v3/paths/get/{name}`, `/v3/config/paths/add/{name}`, `/v3/config/paths/remove/{name}`.
+- The backend talks to the real MediaMTX v3 HTTP API: `/v3/paths/list`, `/v3/paths/get/{name}`, `POST /v3/config/paths/add/{name}`, `DELETE /v3/config/paths/delete/{name}`.
 - Pipeline creation logic lives in `src/infrastructure/media-mtx/services/pipeline/media-mtx-pipeline.service.ts` (`createClusterPullPipeline`); adjust it if your cluster MediaMTX configuration differs.
 - Scheduling intervals (sync every 10s, metrics every 10s, inspection every 30s) are hard-coded in `@Cron` decorators; the corresponding `*_INTERVAL` env vars are currently not consumed.

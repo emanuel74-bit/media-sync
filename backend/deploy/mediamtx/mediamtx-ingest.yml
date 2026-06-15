@@ -23,3 +23,9 @@ srt: true
 srtAddress: :8890
 
 record: false
+
+# Accept publishers (and readers) on any path name. Without a catch-all path
+# MediaMTX rejects every publish with "path is not configured", so the sync
+# service would never discover any ingest stream.
+paths:
+    all_others:

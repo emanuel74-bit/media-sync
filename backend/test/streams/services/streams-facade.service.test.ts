@@ -115,17 +115,20 @@ describe("StreamsFacadeService", () => {
         expect(streamProvisioning.provisionClusterPipeline).toHaveBeenCalledWith(stream);
     });
 
-    it("delegates createClusterPipeline to MediaMtxPipelineService", async () => {
-        const stream = makeStream();
+    it("delegates createClusterPipeline to MediaMtxPipelineService, targeting the assigned pod", async () => {
+        const stream = makeStream({ assignedPod: "pod-2" });
         mediaMtxPipeline.createClusterPullPipeline.mockResolvedValue({} as never);
 
         await service.createClusterPipeline(stream);
 
-        expect(mediaMtxPipeline.createClusterPullPipeline).toHaveBeenCalledWith({
-            name: stream.name,
-            source: stream.source,
-            status: stream.status,
-        });
+        expect(mediaMtxPipeline.createClusterPullPipeline).toHaveBeenCalledWith(
+            {
+                name: stream.name,
+                source: stream.source,
+                status: stream.status,
+            },
+            "pod-2",
+        );
     });
 
     it("delegates markStale to StreamStatusService", async () => {

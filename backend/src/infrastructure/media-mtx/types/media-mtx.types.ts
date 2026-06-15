@@ -15,14 +15,22 @@ export interface V3TrackItem {
     language?: string;
 }
 
+/**
+ * The `source` field of a V3 path. The real MediaMTX v3 API returns an object
+ * (`{ type, id }`) describing what feeds the path, or `null` when not ready.
+ * The string form is tolerated for older shapes and test fixtures.
+ */
+export type V3PathSource = string | { type?: string; id?: string } | null;
+
 /** A single item from the `/v3/paths/list` response. */
 export interface V3PathItem {
     name?: string;
-    source?: string;
+    source?: V3PathSource;
     ready?: boolean;
     bytesReceived?: number;
     bytesSent?: number;
-    readers?: number;
+    // Real v3 returns an array of reader descriptors; older/mocked shapes use a count.
+    readers?: number | unknown[];
     tracks?: V3TrackItem[];
 }
 

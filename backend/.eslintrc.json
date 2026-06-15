@@ -19,16 +19,7 @@
             {
                 "patterns": [
                     {
-                        "group": [
-                            "./*/*",
-                            "../*/*",
-                            "@/*/*",
-                            "!../../types",
-                            "!../../domain",
-                            "!../../clients",
-                            "!../../mappers",
-                            "!../../repositories"
-                        ],
+                        "group": ["./*/*", "../*/*", "@/*/*", "!../../**"],
                         "message": "Use the folder barrel import (index.ts) instead of deep file imports."
                     }
                 ]

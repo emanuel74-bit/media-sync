@@ -15,3 +15,6 @@ number, then add a row here.
 | [0004](0004-curated-feature-root-barrels.md) | Curated feature-root barrels, wildcard nested barrels | Accepted | TOOL-03, IMP-01, IMP-03 |
 | [0005](0005-no-pass-through-services.md) | No pure pass-through services | Accepted | SVC-05 |
 | [0006](0006-documentation-tooling-choices.md) | Documentation tooling — ADRs + Mermaid now, LikeC4 on trial, no Backstage | Accepted | DOC-01..04 |
+| [0007](0007-backend-deploy-layout.md) | Backend deployment artifacts live under deploy/{docker,k8s,mediamtx,scripts} | Accepted | DIR-09 |
+| [0008](0008-runtime-safe-barrel-imports.md) | Runtime-safe barrel imports (module-last barrels, no self-barrel value imports) | Accepted | IMP-01, IMP-04 |
+| [0009](0009-pod-derived-cluster-topology.md) | Pod-derived cluster topology, assigned-pod pipeline targeting, RTSP pull source | Accepted | INT-06 |

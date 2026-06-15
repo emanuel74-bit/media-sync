@@ -16,7 +16,10 @@
         "test": "jest",
         "test:watch": "jest --watch",
         "typecheck": "tsc --noEmit",
-        "verify": "npm run typecheck && npm run lint && npm run build && npm test -- --forceExit"
+        "verify": "npm run typecheck && npm run lint && npm run build && npm test -- --forceExit",
+        "stack:up": "docker-compose -f deploy/docker/compose.local.yml up --build",
+        "stack:up:scaled": "docker-compose -f deploy/docker/compose.local.yml -f deploy/docker/compose.cluster.yml up --build",
+        "stack:down": "docker-compose -f deploy/docker/compose.local.yml down"
     },
     "dependencies": {
         "@nestjs/axios": "^2.0.0",

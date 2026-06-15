@@ -1,10 +1,10 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Inject, Injectable, Logger, forwardRef } from "@nestjs/common";
 
 import { PodRole } from "@/common";
 import { PodQueryService } from "@/pods";
-import { MediaMtxStreamInfo } from "@/infrastructure";
-import { MediaMtxClientRegistry } from "@/infrastructure";
 
+import { MediaMtxStreamInfo } from "../../../types";
+import { MediaMtxClientRegistry } from "../../../registry";
 import { StreamCollectionService } from "../stream-collection.service";
 
 /**
@@ -17,6 +17,9 @@ export class IngestStreamListingStrategy {
 
     constructor(
         private readonly registry: MediaMtxClientRegistry,
+        // forwardRef: infra consumers of PodQueryService capture an undefined token
+        // if they decorate while the infra↔pods barrel cycle is mid-evaluation (ADR-0008).
+        @Inject(forwardRef(() => PodQueryService))
         private readonly podsService: PodQueryService,
         private readonly streamCollection: StreamCollectionService,
     ) {}

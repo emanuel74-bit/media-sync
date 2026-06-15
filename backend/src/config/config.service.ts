@@ -56,4 +56,17 @@ export class ConfigService {
     get ingestPodMediaMtxPort(): number {
         return Number(process.env.INGEST_POD_MEDIAMTX_PORT ?? 9000);
     }
+
+    get clusterPodMediaMtxPort(): number {
+        return Number(process.env.CLUSTER_POD_MEDIAMTX_PORT ?? 9000);
+    }
+
+    /**
+     * RTSP base the cluster nodes pull from to relay an ingest stream.
+     * The pull source for a path is `${ingestRtspBaseUrl}/${pathName}`.
+     * Include credentials here if the ingest enforces RTSP auth.
+     */
+    get ingestRtspBaseUrl(): string {
+        return (process.env.INGEST_RTSP_URL ?? "rtsp://mediamtx-ingest:8554").replace(/\/+$/, "");
+    }
 }

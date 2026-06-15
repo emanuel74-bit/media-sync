@@ -20,11 +20,14 @@ export class StreamProvisioningService {
 
     async provisionClusterPipeline(stream: Stream): Promise<Stream> {
         try {
-            await this.mediaMtxService.createClusterPullPipeline({
-                name: stream.name,
-                source: stream.source,
-                status: stream.status,
-            });
+            await this.mediaMtxService.createClusterPullPipeline(
+                {
+                    name: stream.name,
+                    source: stream.source,
+                    status: stream.status,
+                },
+                stream.assignedPod,
+            );
             const updated = await this.streamCrud.patch(stream.name, {
                 status: StreamStatus.SYNCED,
                 lastSyncedAt: new Date(),

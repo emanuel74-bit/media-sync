@@ -1,103 +1,114 @@
-# Test script for media-sync system using PowerShell
+# E2E API smoke test for the media-sync stack (PowerShell 5.1 compatible).
+# The stack must be running; start it with:  npm run stack:up
+# Or let this script start it:               .\test.ps1 -Up
 
-Write-Host "Starting Docker Compose..."
-docker-compose up -d
+param(
+    [switch]$Up
+)
 
-Write-Host "Waiting for services to be ready..."
-Start-Sleep -Seconds 30
+$ErrorActionPreference = "Stop"
+$baseUrl = "http://localhost:3000"
+$mediamtxAuth = @{ Authorization = "Basic " + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("sync:syncpass")) }
 
-Write-Host "Testing MongoDB connection..."
-# Add MongoDB test if needed
-
-Write-Host "Testing MediaMTX ingest API..."
-try {
-    $response = Invoke-WebRequest -Uri "http://localhost:9000/api/streams" -Method GET
-    $json = $response.Content | ConvertFrom-Json
-    Write-Host "Ingest streams:" $json
-} catch {
-    Write-Host "Failed to get ingest streams: $($_.Exception.Message)"
+if ($Up) {
+    Write-Host "Starting Docker Compose stack..."
+    docker-compose -f deploy/docker/compose.local.yml up -d --build
+    Write-Host "Waiting for services to be ready..."
+    Start-Sleep -Seconds 30
 }
 
-Write-Host "Testing MediaMTX cluster API..."
-try {
-    $response = Invoke-WebRequest -Uri "http://localhost:9001/api/streams" -Method GET
-    $json = $response.Content | ConvertFrom-Json
-    Write-Host "Cluster streams:" $json
-} catch {
-    Write-Host "Failed to get cluster streams: $($_.Exception.Message)"
+$script:passed = 0
+$script:failed = 0
+
+function Invoke-Check {
+    param(
+        [string]$Name,
+        [scriptblock]$Action
+    )
+    try {
+        $result = & $Action
+        $script:passed++
+        Write-Host "[PASS] $Name" -ForegroundColor Green
+        return $result
+    } catch {
+        $script:failed++
+        Write-Host "[FAIL] $Name -- $($_.Exception.Message)" -ForegroundColor Red
+        return $null
+    }
 }
 
-Write-Host "Testing NestJS app health..."
-try {
-    $response = Invoke-WebRequest -Uri "http://localhost:3000/api/streams" -Method GET
-    $json = $response.Content | ConvertFrom-Json
-    Write-Host "App streams:" $json
-} catch {
-    Write-Host "Failed to get streams from app: $($_.Exception.Message)"
+# --- MediaMTX nodes (v3 API, internal auth) ---------------------------------
+
+Invoke-Check "MediaMTX ingest v3 API (:9000)" {
+    Invoke-RestMethod -Uri "http://localhost:9000/v3/paths/list" -Headers $mediamtxAuth
+} | Out-Null
+
+# Cluster pods are not reached on a fixed host port (scaled mode publishes none);
+# their health is verified via pod registration in GET /api/pods/active below.
+
+# --- Sync service read endpoints ---------------------------------------------
+
+Invoke-Check "GET /api/streams" { Invoke-RestMethod -Uri "$baseUrl/api/streams" } | Out-Null
+Invoke-Check "GET /api/streams/assignment" { Invoke-RestMethod -Uri "$baseUrl/api/streams/assignment" } | Out-Null
+Invoke-Check "GET /api/alerts" { Invoke-RestMethod -Uri "$baseUrl/api/alerts" } | Out-Null
+Invoke-Check "GET /api/metrics/stream/test" { Invoke-RestMethod -Uri "$baseUrl/api/metrics/stream/test" } | Out-Null
+Invoke-Check "GET /api/stream-inspection" { Invoke-RestMethod -Uri "$baseUrl/api/stream-inspection" } | Out-Null
+Invoke-Check "GET /api/docs (Swagger UI)" { Invoke-WebRequest -Uri "$baseUrl/api/docs" -UseBasicParsing } | Out-Null
+
+# --- Pod registration lifecycle ----------------------------------------------
+
+$podBody = @{ podId = "smoke-test-pod"; host = "127.0.0.1"; type = "cluster" } | ConvertTo-Json
+Invoke-Check "POST /api/pods/register" {
+    Invoke-RestMethod -Uri "$baseUrl/api/pods/register" -Method POST -Body $podBody -ContentType "application/json"
+} | Out-Null
+
+Invoke-Check "POST /api/pods/heartbeat" {
+    $hb = @{ podId = "smoke-test-pod" } | ConvertTo-Json
+    Invoke-RestMethod -Uri "$baseUrl/api/pods/heartbeat" -Method POST -Body $hb -ContentType "application/json"
+} | Out-Null
+
+$activePods = Invoke-Check "GET /api/pods/active (MediaMTX pods self-registered)" {
+    $pods = Invoke-RestMethod -Uri "$baseUrl/api/pods/active"
+    if ($pods.Count -lt 1) { throw "no active pods registered" }
+    $pods | ForEach-Object { Write-Host ("    - {0} ({1}, {2})" -f $_.podId, $_.type, $_.status) }
+    return $pods
 }
 
-Write-Host "Testing stream assignment..."
-try {
-    $response = Invoke-WebRequest -Uri "http://localhost:3000/api/streams/assignment" -Method GET
-    $json = $response.Content | ConvertFrom-Json
-    Write-Host "Assignments:" $json
-} catch {
-    Write-Host "Failed to get assignments: $($_.Exception.Message)"
+# --- Stream CRUD + assignment lifecycle ---------------------------------------
+
+$streamName = "smoke-test-stream"
+
+Invoke-Check "POST /api/streams (create $streamName)" {
+    $body = @{ name = $streamName; source = "rtsp://example.com/test"; isEnabled = $false } | ConvertTo-Json
+    Invoke-RestMethod -Uri "$baseUrl/api/streams" -Method POST -Body $body -ContentType "application/json"
+} | Out-Null
+
+Invoke-Check "GET /api/streams/$streamName" {
+    Invoke-RestMethod -Uri "$baseUrl/api/streams/$streamName"
+} | Out-Null
+
+if ($activePods -and $activePods.Count -gt 0) {
+    $targetPod = $activePods[0].podId
+    Invoke-Check "PATCH /api/streams/$streamName/assign -> $targetPod" {
+        $body = @{ podId = $targetPod } | ConvertTo-Json
+        $assigned = Invoke-RestMethod -Uri "$baseUrl/api/streams/$streamName/assign" -Method PATCH -Body $body -ContentType "application/json"
+        if ($assigned.assignedPod -ne $targetPod) { throw "assignedPod is '$($assigned.assignedPod)', expected '$targetPod'" }
+    } | Out-Null
+
+    Invoke-Check "PATCH /api/streams/$streamName/unassign" {
+        Invoke-RestMethod -Uri "$baseUrl/api/streams/$streamName/unassign" -Method PATCH
+    } | Out-Null
 }
 
-Write-Host "Testing alerts..."
-try {
-    $response = Invoke-WebRequest -Uri "http://localhost:3000/api/alerts" -Method GET
-    $json = $response.Content | ConvertFrom-Json
-    Write-Host "Alerts:" $json
-} catch {
-    Write-Host "Failed to get alerts: $($_.Exception.Message)"
-}
+Invoke-Check "DELETE /api/streams/$streamName (cleanup)" {
+    Invoke-RestMethod -Uri "$baseUrl/api/streams/$streamName" -Method DELETE
+} | Out-Null
 
-Write-Host "Testing metrics..."
-try {
-    $response = Invoke-WebRequest -Uri "http://localhost:3000/api/metrics/stream/test" -Method GET
-    $json = $response.Content | ConvertFrom-Json
-    Write-Host "Metrics:" $json
-} catch {
-    Write-Host "Failed to get metrics: $($_.Exception.Message)"
-}
+# --- Summary -------------------------------------------------------------------
 
-Write-Host "Testing stream inspection..."
-try {
-    $response = Invoke-WebRequest -Uri "http://localhost:3000/api/stream-inspection" -Method GET
-    $json = $response.Content | ConvertFrom-Json
-    Write-Host "Stream inspections:" $json.Length "inspections found"
-} catch {
-    Write-Host "Failed to get stream inspections: $($_.Exception.Message)"
-}
+Write-Host ""
+Write-Host ("Smoke test finished: {0} passed, {1} failed" -f $script:passed, $script:failed)
+if ($script:failed -gt 0) { exit 1 }
+exit 0
 
-Write-Host "Testing create stream..."
-try {
-    $body = @{
-        name = "test-stream"
-        source = "rtsp://example.com/test"
-        enabled = $true
-    } | ConvertTo-Json
-    $response = Invoke-WebRequest -Uri "http://localhost:3000/api/streams" -Method POST -Body $body -ContentType "application/json"
-    $json = $response.Content | ConvertFrom-Json
-    Write-Host "Created stream:" $json.name
-} catch {
-    Write-Host "Failed to create stream: $($_.Exception.Message)"
-}
-
-Write-Host "Testing assign stream..."
-try {
-    $body = @{
-        podId = "pod1"
-    } | ConvertTo-Json
-    $response = Invoke-WebRequest -Uri "http://localhost:3000/api/streams/test-stream/assign" -Method PATCH -Body $body -ContentType "application/json"
-    $json = $response.Content | ConvertFrom-Json
-    Write-Host "Assigned stream:" $json.assignedPod
-} catch {
-    Write-Host "Failed to assign stream: $($_.Exception.Message)"
-}
-
-Write-Host "All tests completed. Check output above."
-
-# To stop: docker-compose down
+# To stop the stack: npm run stack:down

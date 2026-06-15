@@ -13,8 +13,8 @@ FROM base
 COPY --from=mediamtx /mediamtx /mediamtx
 COPY --from=mediamtx /mediamtx.yml /mediamtx.yml
 
-# Copy the heartbeat script
-COPY script-pod-heartbeat-monitor.sh /usr/local/bin/pod-heartbeat.sh
+# Copy the heartbeat script (path relative to the build context: backend/)
+COPY deploy/scripts/pod-heartbeat-monitor.sh /usr/local/bin/pod-heartbeat.sh
 RUN chmod +x /usr/local/bin/pod-heartbeat.sh
 
 # Set default environment variables
