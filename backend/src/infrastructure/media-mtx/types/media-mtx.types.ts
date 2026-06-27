@@ -41,16 +41,6 @@ export interface StreamPathMetadata {
     readers?: number;
 }
 
-/** Runtime statistics for a stream (bitrate, fps, latency, etc.). */
-export interface StreamStats {
-    bitrate?: number;
-    fps?: number;
-    latency?: number;
-    jitter?: number;
-    packetLoss?: number;
-    consumers?: number;
-}
-
 /** Result returned when creating a cluster pull pipeline. */
 export interface PipelineCreateResult {
     alreadyExists?: boolean;

@@ -1,39 +1,29 @@
 import { Injectable } from "@nestjs/common";
 
-import { AlertSeverity, AlertType, RuntimeAlertRule } from "../domain";
-
-export interface EvaluatedAlert {
-    streamName: string;
-    type: AlertType;
-    severity: AlertSeverity;
-    message: string;
-}
+import { AlertSignal, RuntimeAlertRule } from "../domain";
 
 @Injectable()
 export class RuleEvaluator {
-    async evaluate<TInput, TContext>(
-        streamName: string,
+    evaluate<TInput, TContext>(
+        subject: string,
         input: TInput,
         context: TContext,
         rules: readonly RuntimeAlertRule<TInput, TContext>[],
-    ): Promise<EvaluatedAlert[]> {
-        const payloads: EvaluatedAlert[] = [];
+    ): AlertSignal[] {
+        const signals: AlertSignal[] = [];
 
         for (const rule of rules) {
             if (!rule.check(input, context)) {
                 continue;
             }
-
-            const payload: EvaluatedAlert = {
-                streamName,
+            signals.push({
+                subject,
                 type: rule.type,
                 severity: rule.severity,
                 message: rule.message(input),
-            };
-
-            payloads.push(payload);
+            });
         }
 
-        return payloads;
+        return signals;
     }
 }

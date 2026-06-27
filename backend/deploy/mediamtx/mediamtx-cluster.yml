@@ -1,12 +1,16 @@
 api: true
 apiAddress: :9000
 
+metrics: true
+metricsAddress: :9998
+
 authMethod: internal
 authInternalUsers:
     - user: sync
       pass: syncpass
       permissions:
           - action: api
+          - action: metrics
           - action: read
           - action: publish
 

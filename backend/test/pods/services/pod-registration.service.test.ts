@@ -102,7 +102,7 @@ describe("PodRegistrationService", () => {
             const pod = makePod();
             podRepository.upsertByPodId.mockResolvedValue(pod);
 
-            const result = await service.heartbeat("pod-1");
+            const result = await service.heartbeat({ podId: "pod-1" });
 
             expect(podRepository.upsertByPodId).toHaveBeenCalledWith(
                 "pod-1",
@@ -111,12 +111,26 @@ describe("PodRegistrationService", () => {
             expect(result).toBe(pod);
         });
 
-        it("does not emit an event", async () => {
+        it("does not emit an event when no resources are reported", async () => {
             podRepository.upsertByPodId.mockResolvedValue(makePod());
 
-            await service.heartbeat("pod-1");
+            await service.heartbeat({ podId: "pod-1" });
 
             expect(events.emit).not.toHaveBeenCalled();
+        });
+
+        it("emits node.sampled when the heartbeat carries host resources", async () => {
+            podRepository.upsertByPodId.mockResolvedValue(makePod());
+
+            await service.heartbeat({
+                podId: "pod-1",
+                resources: { cpu: 92, memory: 40, disk: 30 },
+            });
+
+            expect(events.emit).toHaveBeenCalledWith(
+                SystemEventNames.NODE_SAMPLED,
+                expect.objectContaining({ podId: "pod-1", cpu: 92 }),
+            );
         });
     });
 });

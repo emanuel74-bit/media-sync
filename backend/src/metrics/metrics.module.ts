@@ -1,45 +1,37 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
-import { PodsModule } from "@/pods";
-import { AlertsModule } from "@/alerts";
 import { ConfigModule } from "@/config";
 import { CommonModule } from "@/common";
-import { StreamsModule } from "@/streams";
 import { MediaMtxModule } from "@/infrastructure";
-import { MongoMetricRepository, Metric, MetricSchema } from "@/infrastructure";
-
-import { MetricRepository } from "./repositories";
-import { MetricsController } from "./controllers";
 import {
-    MetricFailoverStreamGatewayService,
-    StreamFailoverService,
-    MetricAlertInvocationService,
-    MetricPersistenceService,
-    MetricCollectionService,
-    MetricCollectionWorkflowService,
-    StreamMetricCollectorService,
-} from "./services";
+    NodeMetric,
+    PathMetric,
+    NodeMetricSchema,
+    PathMetricSchema,
+    MongoNodeMetricRepository,
+    MongoPathMetricRepository,
+} from "@/infrastructure";
+
+import { MetricsController } from "./controllers";
+import { NodeMetricRepository, PathMetricRepository } from "./repositories";
+import { MetricCollectionService, MetricPersistenceService } from "./services";
 
 @Module({
     imports: [
-        MongooseModule.forFeature([{ name: Metric.name, schema: MetricSchema }]),
+        MongooseModule.forFeature([
+            { name: NodeMetric.name, schema: NodeMetricSchema },
+            { name: PathMetric.name, schema: PathMetricSchema },
+        ]),
         MediaMtxModule,
-        AlertsModule,
-        PodsModule,
         ConfigModule,
-        StreamsModule,
         CommonModule,
     ],
     providers: [
         MetricCollectionService,
-        MetricCollectionWorkflowService,
-        StreamMetricCollectorService,
         MetricPersistenceService,
-        MetricAlertInvocationService,
-        MetricFailoverStreamGatewayService,
-        StreamFailoverService,
-        { provide: MetricRepository, useClass: MongoMetricRepository },
+        { provide: NodeMetricRepository, useClass: MongoNodeMetricRepository },
+        { provide: PathMetricRepository, useClass: MongoPathMetricRepository },
     ],
     controllers: [MetricsController],
     exports: [MetricPersistenceService],

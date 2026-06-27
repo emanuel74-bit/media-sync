@@ -18,3 +18,5 @@ number, then add a row here.
 | [0007](0007-backend-deploy-layout.md) | Backend deployment artifacts live under deploy/{docker,k8s,mediamtx,scripts} | Accepted | DIR-09 |
 | [0008](0008-runtime-safe-barrel-imports.md) | Runtime-safe barrel imports (module-last barrels, no self-barrel value imports) | Accepted | IMP-01, IMP-04 |
 | [0009](0009-pod-derived-cluster-topology.md) | Pod-derived cluster topology, assigned-pod pipeline targeting, RTSP pull source | Accepted | INT-06 |
+| [0010](0010-event-driven-alert-pipeline.md) | Event-driven alert pipeline — producers emit, rulers evaluate, alerts reconcile | Accepted | RULE-01..04, ALRT-01..02 |
+| [0011](0011-node-resource-alerts-third-producer.md) | Node resource alerts — pods self-report CPU/memory/disk as a third producer | Accepted | ALRT-01..02 |

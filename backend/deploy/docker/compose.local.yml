@@ -21,6 +21,7 @@ services:
             - "8554:8554" # RTSP
             - "8888:8888" # HLS
             - "9000:9000" # API
+            - "9998:9998" # Prometheus metrics
         volumes:
             - ../mediamtx/mediamtx-ingest.yml:/mediamtx.yml
         environment:

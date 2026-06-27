@@ -4,3 +4,4 @@
 
 export * from "./heartbeat.dto";
 export * from "./register-pod.dto";
+export * from "./pod-resources.dto";

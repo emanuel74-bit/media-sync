@@ -32,11 +32,12 @@ export class PodsController {
             host: dto.host,
             tags: dto.tags ?? [],
             type: dto.type ?? PodRole.CLUSTER,
+            resources: dto.resources,
         });
     }
 
     @Post("heartbeat")
     async heartbeat(@Body() dto: HeartbeatDto): Promise<Pod> {
-        return this.podRegistration.heartbeat(dto.podId);
+        return this.podRegistration.heartbeat({ podId: dto.podId, resources: dto.resources });
     }
 }

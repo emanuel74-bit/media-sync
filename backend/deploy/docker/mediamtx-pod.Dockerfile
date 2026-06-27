@@ -22,7 +22,7 @@ ENV MEDIA_SYNC_API=http://media-sync:3000
 ENV HEARTBEAT_INTERVAL=20
 
 # Expose MediaMTX ports
-EXPOSE 8554 8888 8889 8890 9000
+EXPOSE 8554 8888 8889 8890 9000 9998
 
 # Run the heartbeat script which monitors MediaMTX health
 CMD ["/usr/local/bin/pod-heartbeat.sh"]

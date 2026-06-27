@@ -143,7 +143,8 @@ Enforced: tooling + review.
 
 **IMP-03** — Rule: Every folder has a barrel re-exporting its public members (see TOOL-03 for the nested-vs-feature-root styles). Keeping something internal to a feature is done at the **feature-root** barrel (curated named exports); nested barrels export everything in their folder.
 
-**IMP-04** — Rule: Barrels are runtime cycle hazards (CJS getter re-exports only exist after their line executes). Therefore: (a) curated feature-root barrels MUST export leaf members first and the **module last**, so cyclic re-entry during module evaluation still resolves services; (b) inside a package, **runtime values** MUST be imported via relative paths — the package's own `@/...` barrel is allowed only for type-only imports (erased at compile); (c) inherent module-level cycles use `forwardRef(() => Module)` on the importing side. Unit tests never boot `AppModule`, so violations surface only at deploy time — treat any "undefined dependency" Nest boot error as this rule's signature.
+**IMP-04** — Rule: Barrels are runtime cycle hazards (CJS getter re-exports only exist after their line executes). The two mechanisms that actually keep boot safe: (a) inside a package, **runtime values** are imported via relative paths — the package's own `@/...` barrel is allowed only for type-only imports (erased at compile), and abstract repositories are referenced only via `implements`/types (also erased); (b) an inherent module/provider cycle (e.g. `MediaMtxModule` ↔ `PodsModule`, or any infra service injecting `PodQueryService`) uses `forwardRef(() => …)` on the importing side. Barrel export ORDER is **not** a safety mechanism — the perfectionist lint rule sorts exports by line length, so a "module last" ordering cannot be relied on; do not write comments claiming it. Unit tests never boot `AppModule`, so violations surface only at deploy time — treat any Nest "undefined dependency" boot error as this rule's signature, and confirm with a boot DI-scan (`node dist/main.js` against an unreachable Mongo).
+Decision history: [ADR-0008](../docs/adr/0008-runtime-safe-barrel-imports.md) (note: that ADR's "module-last" point was superseded by this rule — forwardRef + erased imports are the operative fix).
 Example: `MediaMtxClientRegistry` is imported as `../../registry` inside `infrastructure/media-mtx/services/`, never as `@/infrastructure`; `MediaMtxModule` imports `forwardRef(() => PodsModule)`.
 Decision history: [ADR-0008](../docs/adr/0008-runtime-safe-barrel-imports.md).
 Enforced: review (boot smoke test pending — see ADR-0008 consequences).
@@ -264,12 +265,24 @@ Example: `StreamTrackAlertService` reacts to `stream.inspected`.
 
 ## 14. RULE — Declarative alert rules
 
-**RULE-01** — Rule: Alert conditions are data: an exported `*_ALERT_RULES` const array in the owning feature's `domain/consts/`, each entry `{ check(input, context), type: AlertType, severity: AlertSeverity, message(input) }`.
+**RULE-01** — Rule: Alert conditions are data: an exported `*_ALERT_RULES` const array in `alerts/domain/consts/`, each entry `{ check(input, context), type: AlertType, severity: AlertSeverity, message(input) }`. Rules live with the **alerts** feature, never in the producer feature whose data they inspect (ADR-0010).
+Example: `METRIC_ALERT_RULES`, `STREAM_TRACK_ALERT_RULES` in `alerts/domain/consts/`.
 
-**RULE-02** — Rule: Rule evaluation and persistence are generic and shared: `RuleEvaluator` (common) evaluates any rule list; `AlertEvaluationService` persists hits; `AlertLifecycleService.findOrCreateAlert` dedupes on unresolved `{streamName, type}` and emits `alert.created` only for new alerts. New alert kinds = new rule entry + new `AlertType` enum member; no new evaluation plumbing.
+**RULE-02** — Rule: Rule evaluation is generic and shared: `RuleEvaluator` (common) maps any rule list + input → `AlertSignal[]`. A new alert kind = a new rule entry + a new `AlertType` member; no new evaluation plumbing.
 
-**RULE-03** — Rule: Threshold values come from `ConfigService` getters (env-overridable), passed into rules as a context object — never inlined in the rule's check.
-Example: `MetricAlertInvocationService` builds `MetricAlertThresholds` from `ALERT_BITRATE_LOW` / `ALERT_PACKET_LOSS` / `ALERT_LATENCY_HIGH`.
+**RULE-03** — Rule: A rule's `check`/`message` operate only on their typed input (and optional context); no service calls, persistence, or config reads inside a rule. Context the rule needs (e.g. a stream's track expectations) is gathered by the ruler and passed in.
+
+**RULE-04** — Rule: The input shapes rules evaluate live in `common/domain/types/` (`PathMetricSample`, `StreamTrack`, …) so the producer that emits them and the alerts ruler that consumes them share one definition (TYPE-03).
+
+---
+
+## 14b. ALRT — Alert pipeline (producer → ruler → reconcile)
+
+**ALRT-01** — Rule: Producers emit a data event and nothing more — they do not import `@/alerts`, evaluate rules, or create alerts. A **ruler** in the alerts feature reacts (`@OnEvent`), evaluates rules into `AlertSignal[]`, and calls `AlertReconcileService` directly (cross-feature hop = event; intra-feature hop = call, per EVT-04). An alert's `subject` is whatever its source alerts on — a stream name or a pod id.
+Example (three producers, one pipeline): `metrics.collected` → `MetricAlertRuler`; `stream.inspected` → `TrackAlertRuler`; `node.sampled` (pods feature) → `NodeResourceRuler`.
+
+**ALRT-02** — Rule: Alert lifecycle is reconciliation, scoped by `AlertSource`: given the signals currently firing for a (source, subject), `AlertReconcileService` adds new, refreshes unchanged (`lastSeenAt`), updates changed (`alert.updated`), and resolves any open alert with no matching signal. A ruler holding a complete cross-subject batch uses `reconcileSource` (auto-resolves vanished subjects); a per-subject ruler uses `reconcileSubject`. Adding a producer = data event + ruler + rule set + `AlertSource` value; no lifecycle changes.
+Decision history: [ADR-0010](../docs/adr/0010-event-driven-alert-pipeline.md).
 
 ---
 

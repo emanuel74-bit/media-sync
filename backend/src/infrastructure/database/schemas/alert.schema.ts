@@ -1,14 +1,17 @@
 import { Document } from "mongoose";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 
-import { AlertSeverity, AlertType } from "@/common";
+import { AlertType, AlertSource, AlertSeverity } from "@/common";
 
 export type AlertDocument = Alert & Document;
 
 @Schema({ timestamps: true })
 export class Alert {
+    @Prop({ required: true, enum: Object.values(AlertSource) })
+    source!: AlertSource;
+
     @Prop({ required: true })
-    streamName!: string;
+    subject!: string;
 
     @Prop({ required: true, enum: Object.values(AlertType) })
     type!: AlertType;
@@ -21,6 +24,9 @@ export class Alert {
 
     @Prop({ default: false })
     isResolved!: boolean;
+
+    @Prop({ type: Date, default: Date.now })
+    lastSeenAt!: Date;
 
     @Prop({ default: null })
     resolvedAt?: Date;

@@ -1,12 +1,5 @@
 import { PodRole, StreamTrack } from "@/common";
 
-export interface StreamTrackAlertContext {
-    metadata?: {
-        hasExpectedVideo?: boolean;
-        hasExpectedAudio?: boolean;
-    };
-}
-
 export interface StreamInspectionRecord {
     streamName: string;
     source: PodRole;

@@ -3,6 +3,5 @@
  */
 
 export * from "./query";
-export * from "./alerts";
 export * from "./recording";
 export * from "./scheduling";

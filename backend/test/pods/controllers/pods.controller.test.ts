@@ -106,6 +106,9 @@ describe("PodsController", () => {
         const result = await controller.heartbeat({ podId: "pod-1" });
 
         expect(result).toBe(pod);
-        expect(podRegistration.heartbeat).toHaveBeenCalledWith("pod-1");
+        expect(podRegistration.heartbeat).toHaveBeenCalledWith({
+            podId: "pod-1",
+            resources: undefined,
+        });
     });
 });

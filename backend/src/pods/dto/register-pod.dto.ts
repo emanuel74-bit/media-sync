@@ -1,6 +1,9 @@
-import { IsArray, IsEnum, IsOptional, IsString } from "class-validator";
+import { Type } from "class-transformer";
+import { IsArray, IsEnum, IsObject, IsOptional, IsString, ValidateNested } from "class-validator";
 
 import { PodRole } from "@/common";
+
+import { PodResourcesDto } from "./pod-resources.dto";
 
 export class RegisterPodDto {
     @IsString()
@@ -18,4 +21,10 @@ export class RegisterPodDto {
     @IsOptional()
     @IsEnum(PodRole)
     type?: PodRole;
+
+    @IsOptional()
+    @IsObject()
+    @ValidateNested()
+    @Type(() => PodResourcesDto)
+    resources?: PodResourcesDto;
 }

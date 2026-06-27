@@ -137,24 +137,24 @@ src/
 │       └── streams-facade.service.ts  # public entry point for other modules
 ├── alerts/
 │   ├── controllers/
-│   ├── domain/types/
+│   ├── domain/
+│   │   ├── consts/               # METRIC_ALERT_RULES, STREAM_TRACK_ALERT_RULES
+│   │   └── types/                # Alert, rule + context types
 │   ├── repositories/             # AlertRepository (abstract contract)
-│   └── services/                 # AlertEvaluationService, AlertLifecycleService
-├── metrics/
+│   └── services/                 # AlertReconcileService, MetricAlertRuler,
+│                                 #   TrackAlertRuler (@OnEvent), AlertLifecycleService
+├── metrics/                      # MediaMTX operational metrics (no rules/alerts)
 │   ├── controllers/
-│   ├── domain/                   # METRIC_ALERT_RULES const, metric types
-│   ├── repositories/             # MetricRepository (abstract contract)
+│   ├── domain/types/             # NodeMetric, PathMetric
+│   ├── repositories/             # NodeMetricRepository, PathMetricRepository
 │   └── services/
-│       ├── alerts/               # MetricAlertInvocationService
-│       ├── collection/           # scheduler, workflow, per-stream collector
-│       ├── failover/             # StreamFailoverService + stream gateway
-│       ├── persistence/          # MetricPersistenceService
-├── stream-inspection/
+│       ├── collection/           # scheduler: scrape → persist → emit metrics.collected
+│       └── persistence/          # MetricPersistenceService (node + path)
+├── stream-inspection/            # emits stream.inspected; no alert logic
 │   ├── controllers/
-│   ├── domain/                   # STREAM_TRACK_ALERT_RULES const, types
+│   ├── domain/types/             # StreamInspectionRecord
 │   ├── repositories/             # StreamInspectionRepository (abstract contract)
 │   └── services/
-│       ├── alerts/               # StreamTrackAlertService (@OnEvent stream.inspected)
 │       ├── query/                # StreamInspectionQueryService
 │       ├── recording/            # StreamInspectionRecorderService
 │       └── scheduling/           # StreamInspectionSchedulerService (@Cron 30s)
@@ -182,7 +182,8 @@ Every folder has a barrelsby-generated `index.ts`; imports between features go t
 **Services**:
 
 - `PodRegistrationService.registerPod(data)`: Upsert by `podId`, set status `active`, refresh `lastHeartbeatAt`, emit `pod.registered`
-- `PodRegistrationService.heartbeat(podId)`: Refresh heartbeat only (no event)
+- `PodRegistrationService.heartbeat(podId)`: Refresh heartbeat only (no `pod.registered`)
+- Both register/heartbeat accept optional `resources` (CPU/memory/disk %); when present, emit `node.sampled` for the alerts `NodeResourceRuler` (the pods feature is a node-alert producer)
 - `PodQueryService.getActivePods(role?)`: Pods with a heartbeat within `POD_HEALTH_TOLERANCE_SECONDS`
 - `PodQueryService.listActivePodRefs(role?)` / `listActivePodIds(role?)`: Lightweight projections used by sync/metrics/infrastructure
 
@@ -219,38 +220,38 @@ Internally split by service role; `StreamsFacadeService` is the single entry poi
 
 ### Alerts Module
 
-**Responsibility**: Alert persistence, deduplication, and rule-based evaluation.
+**Responsibility**: Own the rule sets, evaluate producer data into alerts, and run the alert lifecycle (ADR-0010).
 
-**Services**:
+**Rulers** (event listeners that evaluate rules → signals → reconcile):
 
-- `AlertEvaluationService.evaluateAndCreate(streamName, input, context, rules)`: Generic — runs any list of `RuntimeAlertRule`s through the shared `RuleEvaluator` and persists hits
-- `AlertLifecycleService.findOrCreateAlert(data)`: Deduplicates on unresolved `{streamName, type}`; emits `alert.created` only for new alerts
-- `AlertLifecycleService.resolveAlert(id)`: Marks resolved, emits `alert.resolved`
+- `MetricAlertRuler` (`@OnEvent metrics.collected`): runs `METRIC_ALERT_RULES` over every path sample → per-stream signals → `reconcileSource(metrics, …)`
+- `TrackAlertRuler` (`@OnEvent stream.inspected`): runs `STREAM_TRACK_ALERT_RULES` over the inspected tracks (with the stream's expectations as context) → `reconcileSubject(inspection, stream, …)`
+- `NodeResourceRuler` (`@OnEvent node.sampled`): runs `NODE_RESOURCE_RULES` over a pod's reported CPU/memory/disk (thresholds from config) → `reconcileSubject(node, podId, …)`
 
-**Rule sources** (data-driven, declared as consts):
+An alert's **subject** is whatever the source alerts on — a stream name (metrics/inspection) or a pod id (node). Reconcile is scoped by `(source, subject, type)`.
 
-- `METRIC_ALERT_RULES` (metrics domain): bitrate < `ALERT_BITRATE_LOW` (warning), packet loss > `ALERT_PACKET_LOSS` (critical), latency > `ALERT_LATENCY_HIGH` (warning) — thresholds read from `ConfigService`
-- `STREAM_TRACK_ALERT_RULES` (inspection domain): missing video/audio track (warning, unless `metadata.hasExpectedVideo/Audio === false`), unexpected track types (info)
+**Reconcile** (`AlertReconcileService`, scoped by `AlertSource`): diffs current signals against open alerts of that source — add (`alert.created`), refresh (`lastSeenAt`), update (`alert.updated`), resolve (`alert.resolved`). `reconcileSource` auto-resolves subjects absent from a cycle; duplicate-type signals (same stream on multiple nodes) collapse to one.
+
+**Read/manual surface** (`AlertLifecycleService`): `listAlerts`, `resolveAlert(id)` — backs the REST controller.
+
+**Rule sets** (`alerts/domain/consts/`, evaluated via the shared `RuleEvaluator`):
+
+- `METRIC_ALERT_RULES`: `stream_not_ready` (path not ready, warning), `frames_in_error` (frames-in-error > 0, warning)
+- `STREAM_TRACK_ALERT_RULES`: missing video/audio track (warning, unless `metadata.hasExpectedVideo/Audio === false`), unexpected track types (info)
 
 ---
 
 ### Metrics Module
 
-**Responsibility**: Collect performance samples, trigger alerts and failover.
+**Responsibility**: Monitor MediaMTX-as-a-service — scrape node + path operational metrics and emit them. No rules, no alerts, no failover (those moved out; per-stream quality is the inspection feature's job).
 
 **Flow** (`MetricCollectionService`, `@Cron` every 10 seconds):
 
-1. `MediaMtxStreamListingService.listContextualStreams()` — all ingest + cluster streams with their context
-2. For each stream sequentially (`SequentialStreamTaskRunner`), `MetricCollectionWorkflowService`:
-   - `StreamMetricCollectorService` fetches stats and persists a `Metric`
-   - `MetricAlertInvocationService` evaluates `METRIC_ALERT_RULES`
-   - `StreamFailoverService` evaluates failover (cluster context only)
+1. `MediaMtxMetricsService.collect()` scrapes every ingest + cluster node's Prometheus `/metrics` (nodes resolved from the live pod registry, fallback to configured URLs; per-node failures isolated) → `MediaMtxMetricsSnapshot[]` (a `NodeMetric` + `PathMetric[]` per node)
+2. Persist all node + path samples (`MetricPersistenceService` → `nodemetrics` / `pathmetrics`)
+3. Emit `metrics.collected` `{ nodes, paths, collectedAt }` — the alerts `MetricAlertRuler` consumes it
 
-**Failover Logic** (`StreamFailoverService`):
-
-- Degraded = packet loss or latency above the configured thresholds (`isMetricDegraded`)
-- Only applies to streams that are currently assigned; requires ≥ 2 active cluster pods
-- Reassigns via `StreamAssignmentService.reassign`, excluding the current pod
+**Failover**: removed from this feature. Pod-death reassignment in the sync loop (`ensureAssigned` dropping a vanished pod) is the failover mechanism that has real data.
 
 ---
 
@@ -285,7 +286,7 @@ Internally split by service role; `StreamsFacadeService` is the single entry poi
    - Fetch `/v3/paths/get/{name}` details (errors recorded in `lastError`, inspection still persisted)
    - Track parsing happens inside infrastructure: `getStreamDetails` returns a domain `StreamDetails` (tracks mapped via the `TRACK_FIELD_MAP` table in `infrastructure/media-mtx/mappers/`); the recorder assembles the record inline, defaulting to empty tracks/metadata when inspection failed
    - Persist the inspection record and emit `stream.inspected`
-3. `StreamTrackAlertService` listens on `stream.inspected` (`@OnEvent`) and, for error-free inspections, evaluates `STREAM_TRACK_ALERT_RULES` against the stream's metadata expectations
+3. Alerting is decoupled: inspection just emits the event. The alerts feature's `TrackAlertRuler` reacts (see Alerts Module / ADR-0010) — inspection no longer imports `@/alerts` or `@/streams`.
 
 **Query API**: `StreamInspectionQueryService` provides latest-per-stream, latest-for-one, and history.
 
@@ -306,7 +307,8 @@ Internally split by service role; `StreamsFacadeService` is the single entry poi
 - `ClusterNodeResolverService` (registry): resolves the **live** cluster client set from the pod registry — all active cluster pods for fan-out, or the client for a specific assigned pod — falling back to the static pool / round-robin pick when none are registered (see ADR-0009)
 - `MediaMtxStreamListingService` (service): ingest listing (primary endpoint with fallback to registered ingest pods) and cluster listing (fan-out over all registered cluster nodes with per-node error isolation via `StreamCollectionService`)
 - `MediaMtxPipelineService` (service): create a cluster pull pipeline **on the pod the stream is assigned to**, pulling from `${INGEST_RTSP_URL}/{name}` (or the stream's stored source when it is already a pullable protocol URL; treats HTTP 409 as already-exists); delete fans out across all active cluster nodes
-- `MediaMtxStreamStatsService` (service): `getStreamStats(context, name)` and `getStreamDetails(name, source)` — public methods, selected by pod role
+- `MediaMtxStreamStatsService` (service): `getStreamDetails(name, source)` — returns a domain `StreamDetails`, node selected by pod role (used by inspection)
+- `MediaMtxMetricsService` (service): scrapes each node's Prometheus `/metrics` (`MediaMtxMetricsClient` → `parsePrometheusText` → `mapMetricsToSnapshot`), resolving nodes from the pod registry; returns `MediaMtxMetricsSnapshot[]`
 
 ---
 
@@ -370,13 +372,15 @@ sequenceDiagram
 ```
 3. METRICS COLLECTION (every 10 seconds)
    MetricCollectionService
-     └─▶ listContextualStreams() → per stream (sequential):
-           ├─ getStreamStats → persist Metric (missing v3 fields default to 0)
-           ├─ MetricAlertInvocationService: METRIC_ALERT_RULES with config
-           │     thresholds → AlertEvaluationService → dedup →
-           │     emit alert.created (new alerts only)
-           └─ (cluster only) StreamFailoverService:
-                 if degraded and ≥2 active pods → reassign → emit stream.assigned
+     └─▶ MediaMtxMetricsService.collect()
+           └─ per node (ingest + cluster, resolved from pod registry):
+                GET /metrics → parse → NodeMetric + PathMetric[]
+     └─▶ persist node + path metrics (nodemetrics / pathmetrics)
+     └─▶ emit metrics.collected {nodes, paths}
+           └─▶ MetricAlertRuler (@OnEvent, alerts feature):
+                 METRIC_ALERT_RULES over each path → signals →
+                 AlertReconcileService.reconcileSource(metrics)
+                 → alert.created / updated / resolved
 
 4. STREAM INSPECTION (every 30 seconds)
    StreamInspectionSchedulerService
@@ -385,9 +389,9 @@ sequenceDiagram
            ├─ tracks parsed in infrastructure (TRACK_FIELD_MAP-driven mapper)
            ├─ persist StreamInspection record
            └─ emit stream.inspected
-                 └─▶ StreamTrackAlertService (@OnEvent):
-                       STREAM_TRACK_ALERT_RULES vs stream.metadata expectations
-                       → alert.created (deduped)
+                 └─▶ TrackAlertRuler (@OnEvent, alerts feature):
+                       STREAM_TRACK_ALERT_RULES vs stream expectations → signals →
+                       AlertReconcileService.reconcileSubject(inspection, stream)
 ```
 
 ---
@@ -574,27 +578,33 @@ flowchart LR
     Orch --> Facade
     Orch --> Pipeline[MediaMtxPipelineService]
 
-    MetricS --> Listing
-    MetricS --> Workflow[MetricCollectionWorkflowService]
-    Workflow --> Collector["StreamMetricCollector<br/>→ Stats + Persistence"]
-    Workflow --> AlertInvoke["MetricAlertInvocation<br/>→ AlertEvaluationService"]
-    Workflow --> Failover["StreamFailover (cluster only)<br/>→ PodQuery + StreamAssignment"]
+    MetricS --> MetricsSvc["MediaMtxMetricsService<br/>(scrape /metrics)"]
+    MetricS --> MetricPersist
+    MetricS -. "metrics.collected" .-> MRuler
 
-    InspS --> Listing
     InspS --> Recorder["InspectionRecorder<br/>→ Stats + Repository"]
-    Recorder -. "stream.inspected" .-> TrackAlert["StreamTrackAlertService (@OnEvent)<br/>→ StreamQuery + AlertEvaluation"]
+    Recorder -. "stream.inspected" .-> TRuler
+
+    subgraph alerts["Alerts feature (rulers + reconcile)"]
+        MRuler["MetricAlertRuler (@OnEvent)"]
+        TRuler["TrackAlertRuler (@OnEvent)<br/>→ StreamQuery"]
+        MRuler --> Reconcile[AlertReconcileService]
+        TRuler --> Reconcile
+    end
+    Reconcile -. "alert.created/updated/resolved" .-> Bus
 
     Bus(("EventEmitter2")) -. "broadcast whitelist" .-> Gateway[EventsGateway] -.-> Clients["Socket.IO clients"]
 ```
 
 ### ConfigService Consumers
 
-- **MediaMtxClientRegistry**: `ingestBaseUrl`, `clusterBaseUrls`, `ingestPodMediaMtxPort`
-- **MediaMtxPipelineService**: `ingestBaseUrl` (fallback RTSP source)
+- **MediaMtxClientRegistry**: `ingestBaseUrl`, `clusterBaseUrl(s)`, `ingestPodMediaMtxPort`, `clusterPodMediaMtxPort`
+- **MediaMtxMetricsService**: `ingest/clusterBaseUrl(s)`, `mediaMtxMetricsPort`
+- **MediaMtxPipelineService**: `ingestRtspBaseUrl` (cluster pull source)
 - **PodQueryService**: `podHeartbeatToleranceSeconds`
-- **MetricAlertInvocationService / StreamFailoverService**: `alertBitrateLowThreshold`, `alertPacketLossThreshold`, `alertLatencyHighThreshold`
+- **NodeResourceRuler**: `nodeCpuHighThreshold`, `nodeMemoryHighThreshold`, `nodeDiskHighThreshold`
 
-Getters for `syncPollInterval`, `metricsPollInterval`, `inspectionInterval`, `bitrateDropPercent`, and `staleSeconds` exist but are **not consumed** — scheduling is fixed in `@Cron` decorators.
+Getters for `syncPollInterval`, `metricsPollInterval`, `inspectionInterval` exist but are **not consumed** — scheduling is fixed in `@Cron` decorators (operational alert rules use boolean checks, no thresholds).
 
 ---
 
@@ -664,25 +674,22 @@ There is no `pod.removed` event; pods silently age out of the active window. The
 
 1. **Scheduling intervals are hard-coded**:
     - Sync and metrics run every 10 seconds, inspection every 30 seconds, fixed in `@Cron` decorators
-    - `SYNC_POLL_INTERVAL`, `METRICS_POLL_INTERVAL`, `INSPECTION_INTERVAL`, `ALERT_BITRATE_DROP_PERCENT`, `ALERT_STALE_SECONDS` are defined in `ConfigService` but never consumed
+    - `SYNC_POLL_INTERVAL`, `METRICS_POLL_INTERVAL`, `INSPECTION_INTERVAL` are defined in `ConfigService` but never consumed
 
-2. **MediaMTX v3 does not provide runtime quality stats**:
-    - `getStreamStats` returns the v3 path item (`bytesReceived`, `bytesSent`, `readers`, tracks); `bitrate`, `fps`, `latency`, `jitter`, `packetLoss` are not present and are persisted as `0`
-    - Consequently the bitrate/packet-loss/latency alert rules and metric-driven failover will effectively never trigger until real stat extraction is implemented
+2. **Metrics are operational, not quality**:
+    - The MediaMTX `/metrics` endpoint exposes node + path operational data (bytes, readers, conns/sessions, `framesInError`, ready state) — not per-stream bitrate/fps; per-session loss/jitter/RTT exist but are deferred to the inspection feature (ADR-0009/0010)
+    - So the only metric alerts are operational (`stream_not_ready`, `frames_in_error`); there is no metric-driven failover
 
-3. **Alert deduplication is type-scoped**:
-    - Dedup key is unresolved `{streamName, type}`; after resolving an alert the same condition can fire a new alert (by design), and only the first occurrence emits `alert.created`
-
-4. **No pod removal signal**:
+3. **No pod removal signal**:
     - Inactive pods age out of the active window but are never deleted, and no `pod.removed` event is emitted
 
-5. **Sequential scheduled processing**:
-    - Metrics and inspection process streams one at a time (`SequentialStreamTaskRunner`); with many streams a cycle can exceed its 10s/30s interval
+4. **Sequential scheduled processing**:
+    - Inspection processes streams one at a time (`SequentialStreamTaskRunner`); with many streams a cycle can exceed its 30s interval
 
-6. **Discovery source fallback assumes RTSP**:
-    - When a discovered stream has no usable source, the pipeline source defaults to `rtsp://{INGEST_MEDIAMTX_BASE_URL host}/{name}`
+5. **Discovery source fallback assumes RTSP**:
+    - When a discovered stream has no usable source, the pipeline source defaults to `${INGEST_RTSP_URL}/{name}`
 
-Previously documented limitations that are now fixed: route shadowing of `GET /api/streams/assignment` (route is declared before `:name`), private bracket access into the MediaMTX service (replaced by public `getStreamDetails`), unbounded axios client creation (clients are cached per URL by `MediaMtxClientFactory`), and hard-coded alert thresholds (now env-configurable).
+Previously documented limitations that are now fixed: route shadowing of `GET /api/streams/assignment` (route is declared before `:name`), private bracket access into the MediaMTX service (replaced by public `getStreamDetails`), unbounded axios client creation (clients cached per URL by `MediaMtxClientFactory`), broken relay teardown (`removePath` now uses `DELETE /v3/config/paths/delete`), and metrics fed by fake/zero stats (now real MediaMTX `/metrics`).
 
 ---
 

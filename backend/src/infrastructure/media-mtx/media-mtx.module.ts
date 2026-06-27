@@ -9,6 +9,7 @@ import {
     ClusterNodeResolverService,
 } from "./registry";
 import {
+    MediaMtxMetricsService,
     MediaMtxPipelineService,
     MediaMtxStreamStatsService,
     MediaMtxStreamListingService,
@@ -32,6 +33,7 @@ import {
         MediaMtxStreamListingService,
         MediaMtxStreamStatsService,
         MediaMtxPipelineService,
+        MediaMtxMetricsService,
     ],
     exports: [
         MediaMtxClientFactory,
@@ -39,6 +41,7 @@ import {
         MediaMtxStreamListingService,
         MediaMtxStreamStatsService,
         MediaMtxPipelineService,
+        MediaMtxMetricsService,
     ],
 })
 export class MediaMtxModule {}

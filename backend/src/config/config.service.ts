@@ -25,32 +25,12 @@ export class ConfigService {
         return Number(process.env.METRICS_POLL_INTERVAL ?? 5000);
     }
 
-    get bitrateDropPercent(): number {
-        return Number(process.env.ALERT_BITRATE_DROP_PERCENT ?? 30);
-    }
-
-    get staleSeconds(): number {
-        return Number(process.env.ALERT_STALE_SECONDS ?? 60);
-    }
-
     get inspectionInterval(): number {
         return Number(process.env.INSPECTION_INTERVAL ?? 30000);
     }
 
     get podHeartbeatToleranceSeconds(): number {
         return Number(process.env.POD_HEALTH_TOLERANCE_SECONDS ?? 120);
-    }
-
-    get alertBitrateLowThreshold(): number {
-        return Number(process.env.ALERT_BITRATE_LOW ?? 500);
-    }
-
-    get alertPacketLossThreshold(): number {
-        return Number(process.env.ALERT_PACKET_LOSS ?? 2);
-    }
-
-    get alertLatencyHighThreshold(): number {
-        return Number(process.env.ALERT_LATENCY_HIGH ?? 1000);
     }
 
     get ingestPodMediaMtxPort(): number {
@@ -61,6 +41,11 @@ export class ConfigService {
         return Number(process.env.CLUSTER_POD_MEDIAMTX_PORT ?? 9000);
     }
 
+    /** Port of the MediaMTX Prometheus metrics endpoint on every node (ingest + cluster). */
+    get mediaMtxMetricsPort(): number {
+        return Number(process.env.MEDIAMTX_METRICS_PORT ?? 9998);
+    }
+
     /**
      * RTSP base the cluster nodes pull from to relay an ingest stream.
      * The pull source for a path is `${ingestRtspBaseUrl}/${pathName}`.
@@ -68,5 +53,18 @@ export class ConfigService {
      */
     get ingestRtspBaseUrl(): string {
         return (process.env.INGEST_RTSP_URL ?? "rtsp://mediamtx-ingest:8554").replace(/\/+$/, "");
+    }
+
+    /** Node-resource alert thresholds (percent); a pod over any of these raises a node alert. */
+    get nodeCpuHighThreshold(): number {
+        return Number(process.env.NODE_CPU_HIGH_PERCENT ?? 85);
+    }
+
+    get nodeMemoryHighThreshold(): number {
+        return Number(process.env.NODE_MEMORY_HIGH_PERCENT ?? 90);
+    }
+
+    get nodeDiskHighThreshold(): number {
+        return Number(process.env.NODE_DISK_HIGH_PERCENT ?? 85);
     }
 }

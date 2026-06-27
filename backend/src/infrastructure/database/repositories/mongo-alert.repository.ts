@@ -2,9 +2,9 @@ import { Model } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 
-import { AlertType } from "@/common";
+import { AlertSource } from "@/common";
 import { AlertRepository } from "@/alerts";
-import { Alert, AlertCreationData } from "@/alerts";
+import { Alert, AlertCreationData, AlertUpdateData } from "@/alerts";
 
 import { Alert as AlertSchema, AlertDocument } from "../schemas";
 import { MongoDomainRepository } from "./mongo-domain.repository";
@@ -27,20 +27,14 @@ export class MongoAlertRepository
         super(model);
     }
 
-    async findUnresolvedByStreamAndType(
-        streamName: string,
-        type: AlertType,
-    ): Promise<Alert | null> {
-        const doc = await this.model
-            .findOne({ streamName, type, isResolved: false })
-            .lean<LeanAlert>()
-            .exec();
-        return this.toOptionalDomain(doc);
+    async create(data: AlertCreationData): Promise<Alert> {
+        const doc = await new this.model({ ...data, lastSeenAt: new Date() }).save();
+        return this.fromDocument(doc);
     }
 
-    async create(data: AlertCreationData): Promise<Alert> {
-        const doc = await new this.model(data).save();
-        return this.fromDocument(doc);
+    async update(id: string, data: AlertUpdateData): Promise<Alert | null> {
+        const doc = await this.model.findByIdAndUpdate(id, data, { new: true }).exec();
+        return doc ? this.fromDocument(doc) : null;
     }
 
     async resolveById(id: string, resolvedAt: Date): Promise<Alert | null> {
@@ -48,6 +42,19 @@ export class MongoAlertRepository
             .findByIdAndUpdate(id, { isResolved: true, resolvedAt }, { new: true })
             .exec();
         return doc ? this.fromDocument(doc) : null;
+    }
+
+    async findOpenBySourceAndSubject(source: AlertSource, subject: string): Promise<Alert[]> {
+        const docs = await this.model
+            .find({ source, subject, isResolved: false })
+            .lean<LeanAlert[]>()
+            .exec();
+        return this.toDomainList(docs);
+    }
+
+    async findOpenSubjects(source: AlertSource): Promise<string[]> {
+        const subjects = await this.model.distinct("subject", { source, isResolved: false });
+        return subjects as string[];
     }
 
     async findAll(): Promise<Alert[]> {
@@ -58,11 +65,13 @@ export class MongoAlertRepository
     protected toDomain(raw: LeanAlert): Alert {
         return {
             id: raw._id.toString(),
-            streamName: raw.streamName,
+            source: raw.source,
+            subject: raw.subject,
             type: raw.type,
             severity: raw.severity,
             message: raw.message,
             isResolved: raw.isResolved,
+            lastSeenAt: raw.lastSeenAt,
             resolvedAt: raw.resolvedAt,
             createdAt: raw.createdAt,
             updatedAt: raw.updatedAt,

@@ -33,8 +33,9 @@ describe("EventsGateway", () => {
     it("registers websocket broadcast listeners for the configured system events", () => {
         gateway.onModuleInit();
 
-        expect(events.on).toHaveBeenCalledTimes(8);
+        expect(events.on).toHaveBeenCalledTimes(9);
         expect(handlers.has(SystemEventNames.ALERT_CREATED)).toBe(true);
+        expect(handlers.has(SystemEventNames.ALERT_UPDATED)).toBe(true);
         expect(handlers.has(SystemEventNames.POD_REGISTERED)).toBe(true);
         expect(handlers.has(SystemEventNames.SYNC_TICK)).toBe(false);
     });

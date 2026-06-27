@@ -1,17 +1,19 @@
 import { Test, TestingModule } from "@nestjs/testing";
 
 import { Alert } from "@/alerts/domain";
-import { AlertSeverity, AlertType } from "@/common";
 import { AlertsController } from "@/alerts/controllers";
 import { AlertLifecycleService } from "@/alerts/services";
+import { AlertType, AlertSource, AlertSeverity } from "@/common";
 
 const makeAlert = (overrides: Partial<Alert> = {}): Alert => ({
     id: "alert-1",
-    streamName: "stream-1",
-    type: AlertType.PACKET_LOSS,
+    source: AlertSource.METRICS,
+    subject: "stream-1",
+    type: AlertType.STREAM_NOT_READY,
     severity: AlertSeverity.WARNING,
-    message: "Packet loss high",
+    message: "Stream not ready",
     isResolved: false,
+    lastSeenAt: new Date(),
     resolvedAt: null,
     createdAt: new Date(),
     updatedAt: new Date(),

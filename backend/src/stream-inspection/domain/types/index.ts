@@ -3,5 +3,4 @@
  */
 
 export * from "./stream-inspection.types";
-export * from "./stream-track-alert-rule.types";
 export * from "./stream-inspection-creation.types";

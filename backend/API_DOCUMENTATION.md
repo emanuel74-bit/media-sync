@@ -219,15 +219,19 @@ Register a pod or refresh an existing one. Upserts by `podId`, sets status to `a
   "podId": "string (required)",
   "host": "string (optional)",
   "tags": ["string"] (optional),
-  "type": "ingest|cluster (optional, default: cluster)"
+  "type": "ingest|cluster (optional, default: cluster)",
+  "resources": { "cpu": 0-100, "memory": 0-100, "disk": 0-100 } (optional)
 }
 ```
+
+When `resources` are present the pod's host CPU/memory/disk usage is forwarded to
+the alert pipeline (`node.sampled`), which can raise `node_*_high` alerts.
 
 **Response:** Pod object
 
 ### Pod Heartbeat
 
-Refresh a pod's heartbeat timestamp to keep it active. Unlike `register`, it only takes the pod ID and does not emit an event.
+Refresh a pod's heartbeat timestamp to keep it active. Unlike `register`, it does not emit `pod.registered`. Accepts the same optional `resources` as register.
 
 **Endpoint:** `POST /api/pods/heartbeat`
 
@@ -235,7 +239,8 @@ Refresh a pod's heartbeat timestamp to keep it active. Unlike `register`, it onl
 
 ```json
 {
-    "podId": "string (required)"
+    "podId": "string (required)",
+    "resources": { "cpu": 0-100, "memory": 0-100, "disk": 0-100 } (optional)
 }
 ```
 
@@ -271,11 +276,13 @@ Retrieve a list of all alerts.
 [
   {
     "_id": "string",
-    "streamName": "string",
-    "type": "bitrate_low|packet_loss|latency_high|missing_video_track|missing_audio_track|unexpected_track_types",
+    "source": "metrics|inspection|node",
+    "subject": "string (stream name, or pod id for node alerts)",
+    "type": "stream_not_ready|frames_in_error|missing_video_track|missing_audio_track|unexpected_track_types|node_cpu_high|node_memory_high|node_disk_high",
     "severity": "info|warning|critical",
     "message": "string",
     "isResolved": boolean,
+    "lastSeenAt": "2023-01-01T00:00:00.000Z",
     "resolvedAt": "2023-01-01T00:00:00.000Z|null",
     "createdAt": "2023-01-01T00:00:00.000Z",
     "updatedAt": "2023-01-01T00:00:00.000Z"
@@ -283,9 +290,15 @@ Retrieve a list of all alerts.
 ]
 ```
 
+Alerts are reconciled automatically by source: a producer emits a data event, a
+ruler evaluates rules into signals, and the alert is added / refreshed / updated
+(`alert.updated`) / resolved (`alert.resolved`) as the condition changes. See
+the WebSocket events and ADR-0010.
+
 ### Resolve Alert
 
-Mark an alert as resolved. Emits the `alert.resolved` WebSocket event.
+Manually mark an alert as resolved (reconciliation also resolves alerts
+automatically when their condition clears). Emits the `alert.resolved` event.
 
 **Endpoint:** `PATCH /api/alerts/{id}/resolve`
 
@@ -299,9 +312,13 @@ Mark an alert as resolved. Emits the `alert.resolved` WebSocket event.
 
 ## Metrics API
 
-### Get Stream Metrics
+Metrics are **MediaMTX operational data**, scraped from each node's Prometheus
+`/metrics` endpoint every 10 seconds (per-stream quality is the stream-inspection
+feature's job). Two record kinds are persisted: per-path and per-node.
 
-Retrieve recent metrics for a specific stream.
+### Get Stream (Path) Metrics
+
+Recent per-path operational samples for a stream (one per node hosting it).
 
 **Endpoint:** `GET /api/metrics/stream/{name}`
 
@@ -318,19 +335,47 @@ Retrieve recent metrics for a specific stream.
     "_id": "string",
     "streamName": "string",
     "context": "ingest|cluster",
-    "bitrate": number,
-    "fps": number,
-    "latency": number,
-    "jitter": number,
-    "packetLoss": number,
-    "consumers": number,
-    "createdAt": "2023-01-01T00:00:00.000Z",
-    "updatedAt": "2023-01-01T00:00:00.000Z"
+    "node": "string",
+    "state": "ready|notReady|...",
+    "ready": boolean,
+    "bytesReceived": number,
+    "bytesSent": number,
+    "readers": number,
+    "framesInError": number,
+    "createdAt": "2023-01-01T00:00:00.000Z"
   }
 ]
 ```
 
-**Note:** The MediaMTX v3 path API does not expose bitrate/fps/latency/jitter/packetLoss directly; absent fields are persisted as `0`.
+### Get Node Metrics
+
+Recent per-node operational samples (how loaded each MediaMTX node is).
+
+**Endpoint:** `GET /api/metrics/nodes`
+
+**Parameters:**
+
+- `limit` (query, optional): Number of records to return (default: 50)
+
+**Response:**
+
+```json
+[
+  {
+    "_id": "string",
+    "context": "ingest|cluster",
+    "node": "string",
+    "paths": number,
+    "rtspConns": number,
+    "rtspSessions": number,
+    "rtmpConns": number,
+    "srtConns": number,
+    "webrtcSessions": number,
+    "hlsMuxers": number,
+    "createdAt": "2023-01-01T00:00:00.000Z"
+  }
+]
+```
 
 ---
 
@@ -449,15 +494,24 @@ Emitted when a stream is unassigned from a pod.
 
 #### Alert Created
 
-Emitted when a new alert is created.
+Emitted when reconciliation opens a new alert.
 
 **Event Name:** `alert.created`
 
 **Payload:** Full alert document
 
+#### Alert Updated
+
+Emitted when an open alert's severity or message changes (same condition, new detail).
+
+**Event Name:** `alert.updated`
+
+**Payload:** Full alert document
+
 #### Alert Resolved
 
-Emitted when an alert is marked as resolved.
+Emitted when an alert is resolved — automatically when its condition clears, or
+manually via `PATCH /api/alerts/{id}/resolve`.
 
 **Event Name:** `alert.resolved`
 
@@ -506,6 +560,8 @@ Emitted when a pod registers (not on plain heartbeats).
 These are emitted on the in-process event bus only and are not forwarded to WebSocket clients:
 
 - `sync.tick` — `{ ingest: number, cluster: number, failures: string[] }` inventory counts and failed workflow names per sync cycle
+- `metrics.collected` — `{ nodes: NodeMetric[], paths: PathMetric[], collectedAt }` every metrics scrape; the alerts ruler consumes it to produce alerts
+- `node.sampled` — `{ podId, context, cpu, memory, disk }` when a pod reports host resources on register/heartbeat; the alerts ruler consumes it to produce `node_*_high` alerts
 
 ---
 
@@ -574,32 +630,54 @@ All endpoints may return the following error formats:
 ```typescript
 {
   _id: string;
-  streamName: string;
-  type: 'bitrate_low' | 'packet_loss' | 'latency_high' | 'missing_video_track' | 'missing_audio_track' | 'unexpected_track_types';
+  source: 'metrics' | 'inspection' | 'node';
+  subject: string; // stream name (metrics/inspection) or pod id (node)
+  type: 'stream_not_ready' | 'frames_in_error'
+      | 'missing_video_track' | 'missing_audio_track' | 'unexpected_track_types'
+      | 'node_cpu_high' | 'node_memory_high' | 'node_disk_high';
   severity: 'info' | 'warning' | 'critical';
   message: string;
   isResolved: boolean;
+  lastSeenAt: Date;
   resolvedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
 ```
 
-### Metric
+### PathMetric (per stream, per node)
 
 ```typescript
 {
     _id: string;
     streamName: string;
     context: "ingest" | "cluster";
-    bitrate: number;
-    fps: number;
-    latency: number;
-    jitter: number;
-    packetLoss: number;
-    consumers: number;
+    node: string;
+    state: string;
+    ready: boolean;
+    bytesReceived: number;
+    bytesSent: number;
+    readers: number;
+    framesInError: number;
     createdAt: Date;
-    updatedAt: Date;
+}
+```
+
+### NodeMetric (per node)
+
+```typescript
+{
+    _id: string;
+    context: "ingest" | "cluster";
+    node: string;
+    paths: number;
+    rtspConns: number;
+    rtspSessions: number;
+    rtmpConns: number;
+    srtConns: number;
+    webrtcSessions: number;
+    hlsMuxers: number;
+    createdAt: Date;
 }
 ```
 
@@ -661,17 +739,16 @@ interface StreamTrack {
 | `POD_HEALTH_TOLERANCE_SECONDS` | number | `120`                                   | Max seconds without heartbeat before pod considered inactive |
 | `INGEST_POD_MEDIAMTX_PORT`     | number | `9000`                                  | MediaMTX API port used when querying registered ingest pods  |
 | `CLUSTER_POD_MEDIAMTX_PORT`    | number | `9000`                                  | MediaMTX API port used when building per-pod cluster clients  |
+| `MEDIAMTX_METRICS_PORT`        | number | `9998`                                  | MediaMTX Prometheus `/metrics` port on every node            |
+| `NODE_CPU_HIGH_PERCENT`        | number | `85`                                    | Pod CPU% above this raises a `node_cpu_high` alert (warning)  |
+| `NODE_MEMORY_HIGH_PERCENT`     | number | `90`                                    | Pod memory% above this raises a `node_memory_high` alert (warning) |
+| `NODE_DISK_HIGH_PERCENT`       | number | `85`                                    | Pod disk% above this raises a `node_disk_high` alert (critical) |
 | `INGEST_RTSP_URL`              | string | `rtsp://mediamtx-ingest:8554`           | RTSP base the cluster pulls relayed paths from (include creds for ingest read auth) |
-| `ALERT_BITRATE_LOW`            | number | `500`                                   | Bitrate-low alert threshold (warning)                        |
-| `ALERT_PACKET_LOSS`            | number | `2`                                     | Packet-loss alert threshold % (critical; also triggers failover) |
-| `ALERT_LATENCY_HIGH`           | number | `1000`                                  | High-latency alert threshold ms (warning; also triggers failover) |
 | `SYNC_POLL_INTERVAL`           | number | `10000`                                 | (unused) intended sync interval in ms                        |
 | `METRICS_POLL_INTERVAL`        | number | `5000`                                  | (unused) intended metrics interval in ms                     |
 | `INSPECTION_INTERVAL`          | number | `30000`                                 | (unused) intended inspection interval in ms                  |
-| `ALERT_BITRATE_DROP_PERCENT`   | number | `30`                                    | (unused) bitrate drop threshold %                            |
-| `ALERT_STALE_SECONDS`          | number | `60`                                    | (unused) stale stream threshold seconds                      |
 
-**Note:** Interval properties are currently unused; scheduling is hard-coded in `@Cron` decorators (sync 10s, metrics 10s, inspection 30s).
+**Note:** Scheduling is hard-coded in `@Cron` decorators (sync 10s, metrics 10s, inspection 30s); the `*_INTERVAL` getters exist but are not consumed. Operational alert rules (`stream_not_ready`, `frames_in_error`) are boolean checks with no configurable thresholds.
 
 ---
 
