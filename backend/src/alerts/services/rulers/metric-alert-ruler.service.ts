@@ -4,8 +4,8 @@ import { OnEvent } from "@nestjs/event-emitter";
 import { MetricsCollectedPayload } from "@/common";
 import { AlertSignal, AlertSource, RuleEvaluator, SystemEventNames } from "@/common";
 
-import { METRIC_ALERT_RULES } from "../domain";
-import { AlertReconcileService } from "./alert-reconcile.service";
+import { METRIC_ALERT_RULES } from "../../domain";
+import { AlertReconcileService } from "../alert-reconcile.service";
 
 /**
  * Reacts to `metrics.collected`, evaluates operational rules against every path

@@ -35,51 +35,21 @@ export class AlertReconcileService {
     ): Promise<void> {
         const open = await this.alertRepository.findOpenBySourceAndSubject(source, subject);
         const openByType = new Map<string, Alert>(open.map((alert) => [alert.type, alert]));
+        const firing = this.dedupeByType(signals);
         const now = new Date();
 
-        // One subject can be reported by several nodes, so the same alert type may
-        // arrive more than once per cycle — collapse to one signal per type.
-        const signalByType = new Map<string, AlertSignal>();
-        for (const signal of signals) {
-            if (!signalByType.has(signal.type)) {
-                signalByType.set(signal.type, signal);
-            }
-        }
-
-        for (const signal of signalByType.values()) {
+        for (const signal of firing.values()) {
             const existing = openByType.get(signal.type);
-            if (!existing) {
-                const created = await this.alertRepository.create({
-                    source,
-                    subject,
-                    type: signal.type,
-                    severity: signal.severity,
-                    message: signal.message,
-                });
-                this.events.emit(SystemEventNames.ALERT_CREATED, created);
-            } else if (
-                existing.severity !== signal.severity ||
-                existing.message !== signal.message
-            ) {
-                const updated = await this.alertRepository.update(existing.id, {
-                    severity: signal.severity,
-                    message: signal.message,
-                    lastSeenAt: now,
-                });
-                if (updated) {
-                    this.events.emit(SystemEventNames.ALERT_UPDATED, updated);
-                }
+            if (existing) {
+                await this.applyChange(existing, signal, now);
             } else {
-                await this.alertRepository.update(existing.id, { lastSeenAt: now });
+                await this.openAlert(source, subject, signal);
             }
         }
 
         for (const alert of open) {
-            if (!signalByType.has(alert.type)) {
-                const resolved = await this.alertRepository.resolveById(alert.id, now);
-                if (resolved) {
-                    this.events.emit(SystemEventNames.ALERT_RESOLVED, resolved);
-                }
+            if (!firing.has(alert.type)) {
+                await this.resolve(alert.id, now);
             }
         }
     }
@@ -98,6 +68,73 @@ export class AlertReconcileService {
 
         for (const subject of subjects) {
             await this.reconcileSubject(source, subject, signalsBySubject.get(subject) ?? []);
+        }
+    }
+
+    /**
+     * Resolve an alert and announce it (`alert.resolved`). The single owner of the
+     * resolve transition — used both by the reconcile loop (a signal vanished) and
+     * the manual REST surface (`AlertAccessService`). Returns null if already gone.
+     */
+    async resolve(alertId: string, resolvedAt: Date = new Date()): Promise<Alert | null> {
+        const resolved = await this.alertRepository.resolveById(alertId, resolvedAt);
+        if (resolved) {
+            this.events.emit(SystemEventNames.ALERT_RESOLVED, resolved);
+        }
+        return resolved;
+    }
+
+    /**
+     * One subject can be reported by several nodes, so the same alert type may
+     * arrive more than once per cycle — keep the first signal of each type.
+     */
+    private dedupeByType(signals: AlertSignal[]): Map<string, AlertSignal> {
+        const byType = new Map<string, AlertSignal>();
+        for (const signal of signals) {
+            if (!byType.has(signal.type)) {
+                byType.set(signal.type, signal);
+            }
+        }
+        return byType;
+    }
+
+    /** Open a new alert, emitting alert.created unless a concurrent reconcile won the race. */
+    private async openAlert(
+        source: AlertSource,
+        subject: string,
+        signal: AlertSignal,
+    ): Promise<void> {
+        const { alert, created } = await this.alertRepository.create({
+            source,
+            subject,
+            type: signal.type,
+            severity: signal.severity,
+            message: signal.message,
+        });
+        if (created) {
+            this.events.emit(SystemEventNames.ALERT_CREATED, alert);
+        }
+    }
+
+    /**
+     * Update an open alert when its severity/message changed (emit alert.updated),
+     * or just bump lastSeenAt when the signal is unchanged (refresh, no event).
+     */
+    private async applyChange(existing: Alert, signal: AlertSignal, now: Date): Promise<void> {
+        const changed =
+            existing.severity !== signal.severity || existing.message !== signal.message;
+        if (!changed) {
+            await this.alertRepository.update(existing.id, { lastSeenAt: now });
+            return;
+        }
+
+        const updated = await this.alertRepository.update(existing.id, {
+            severity: signal.severity,
+            message: signal.message,
+            lastSeenAt: now,
+        });
+        if (updated) {
+            this.events.emit(SystemEventNames.ALERT_UPDATED, updated);
         }
     }
 }

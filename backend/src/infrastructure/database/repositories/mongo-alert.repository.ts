@@ -4,7 +4,7 @@ import { InjectModel } from "@nestjs/mongoose";
 
 import { AlertSource } from "@/common";
 import { AlertRepository } from "@/alerts";
-import { Alert, AlertCreationData, AlertUpdateData } from "@/alerts";
+import { Alert, AlertCreateResult, AlertCreationData, AlertUpdateData } from "@/alerts";
 
 import { Alert as AlertSchema, AlertDocument } from "../schemas";
 import { MongoDomainRepository } from "./mongo-domain.repository";
@@ -27,9 +27,27 @@ export class MongoAlertRepository
         super(model);
     }
 
-    async create(data: AlertCreationData): Promise<Alert> {
-        const doc = await new this.model({ ...data, lastSeenAt: new Date() }).save();
-        return this.fromDocument(doc);
+    async create(data: AlertCreationData): Promise<AlertCreateResult> {
+        // Atomic open-or-find on the (source, subject, type) dedup key. Paired with
+        // the partial unique index, the server collapses a concurrent insert into
+        // the existing open alert instead of creating a duplicate. `$setOnInsert`
+        // means a losing racer leaves the winner's alert untouched.
+        const result = await this.model
+            .findOneAndUpdate(
+                { source: data.source, subject: data.subject, type: data.type, isResolved: false },
+                {
+                    $setOnInsert: {
+                        severity: data.severity,
+                        message: data.message,
+                        lastSeenAt: new Date(),
+                    },
+                },
+                { upsert: true, new: true, includeResultMetadata: true },
+            )
+            .exec();
+
+        const created = !result.lastErrorObject?.updatedExisting;
+        return { alert: this.fromDocument(result.value as AlertDocument), created };
     }
 
     async update(id: string, data: AlertUpdateData): Promise<Alert | null> {

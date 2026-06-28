@@ -141,8 +141,8 @@ src/
 │   │   ├── consts/               # METRIC_ALERT_RULES, STREAM_TRACK_ALERT_RULES
 │   │   └── types/                # Alert, rule + context types
 │   ├── repositories/             # AlertRepository (abstract contract)
-│   └── services/                 # AlertReconcileService, MetricAlertRuler,
-│                                 #   TrackAlertRuler (@OnEvent), AlertLifecycleService
+│   └── services/                 # AlertReconcileService, AlertAccessService
+│       └── rulers/               #   MetricAlertRuler, TrackAlertRuler, NodeResourceRuler (@OnEvent)
 ├── metrics/                      # MediaMTX operational metrics (no rules/alerts)
 │   ├── controllers/
 │   ├── domain/types/             # NodeMetric, PathMetric
@@ -230,9 +230,9 @@ Internally split by service role; `StreamsFacadeService` is the single entry poi
 
 An alert's **subject** is whatever the source alerts on — a stream name (metrics/inspection) or a pod id (node). Reconcile is scoped by `(source, subject, type)`.
 
-**Reconcile** (`AlertReconcileService`, scoped by `AlertSource`): diffs current signals against open alerts of that source — add (`alert.created`), refresh (`lastSeenAt`), update (`alert.updated`), resolve (`alert.resolved`). `reconcileSource` auto-resolves subjects absent from a cycle; duplicate-type signals (same stream on multiple nodes) collapse to one.
+**Reconcile** (`AlertReconcileService`, scoped by `AlertSource`): diffs current signals against open alerts of that source — add (`alert.created`), refresh (`lastSeenAt`), update (`alert.updated`), resolve (`alert.resolved`). `reconcileSource` auto-resolves subjects absent from a cycle; duplicate-type signals (same stream on multiple nodes) collapse to one. Add is an **atomic, idempotent upsert** on the `(source, subject, type)` dedup key, backed by a partial unique index (open alerts only), so concurrent reconciles for the same subject can't create duplicates and only the inserting one emits `alert.created`.
 
-**Read/manual surface** (`AlertLifecycleService`): `listAlerts`, `resolveAlert(id)` — backs the REST controller.
+**Read/manual surface** (`AlertAccessService`): `listAlerts`, `resolveAlert(id)` — the externally-triggered (REST) surface, distinct from the automatic reconcile lifecycle.
 
 **Rule sets** (`alerts/domain/consts/`, evaluated via the shared `RuleEvaluator`):
 
@@ -566,7 +566,7 @@ flowchart LR
 
     StreamsC --> StrSvc["StreamQuery / Crud /<br/>Lifecycle / Assignment"]
     PodsC --> PodSvc["PodRegistration / PodQuery"]
-    AlertsC --> AlertLife[AlertLifecycleService]
+    AlertsC --> AlertLife[AlertAccessService]
     MetricsC --> MetricPersist[MetricPersistenceService]
     InspC --> InspQuery[StreamInspectionQueryService]
 

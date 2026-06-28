@@ -9,7 +9,7 @@ import { MongoAlertRepository, Alert, AlertSchema } from "@/infrastructure";
 import { AlertRepository } from "./repositories";
 import { AlertsController } from "./controllers";
 import {
-    AlertLifecycleService,
+    AlertAccessService,
     AlertReconcileService,
     MetricAlertRuler,
     TrackAlertRuler,
@@ -24,7 +24,7 @@ import {
         StreamsModule,
     ],
     providers: [
-        AlertLifecycleService,
+        AlertAccessService,
         AlertReconcileService,
         MetricAlertRuler,
         TrackAlertRuler,

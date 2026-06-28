@@ -1,6 +1,6 @@
 import { RuleEvaluator } from "@/common/services";
-import { MetricAlertRuler } from "@/alerts/services/metric-alert-ruler.service";
 import { PodRole, AlertType, AlertSource, MetricsCollectedPayload } from "@/common";
+import { MetricAlertRuler } from "@/alerts/services/rulers/metric-alert-ruler.service";
 import type { AlertReconcileService } from "@/alerts/services/alert-reconcile.service";
 
 const pathSample = (streamName: string, ready: boolean, framesInError = 0) => ({

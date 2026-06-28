@@ -23,11 +23,15 @@ This file is the **rule registry** for the backend. It is derived from the actua
 **PHIL-02** — Rule: Variation SHOULD be expressed as data, not branching. Alert conditions are declarative rule arrays; sync steps are an injected workflow list; track parsing is a field-map table.
 Example: `src/metrics/domain/consts/metric-alert-rules.const.ts`, `src/sync/domain/consts/sync-workflows.const.ts`, `src/infrastructure/media-mtx/mappers/track-field-map.const.ts`.
 
-**PHIL-03** — Rule: Every class MUST have exactly one responsibility, and the file/class name MUST state it. When a service grows a second role, split it (see SVC-01).
+**PHIL-03** — Rule: Every class MUST have exactly one responsibility, and the file/class name MUST state it. When a service grows a second role, split it (see SVC-01). The function-level analog is PHIL-06.
 
 **PHIL-04** — Rule: Dependencies MUST point inward: controllers → services → repositories/clients. Outer layers never get imported by inner ones.
 
 **PHIL-05** — Rule: Cross-module access goes through the target module's public surface (its barrel and, for streams, the facade — see SVC-04). Never reach into another module's internals.
+
+**PHIL-06** — Rule: A function does one thing at one level of abstraction. When a method interleaves _deciding_ with _doing_, runs several phases in sequence (gather → transform → dispatch → emit), or makes the reader track multiple bookkeeping structures at once, extract its steps into intent-named private helpers so the orchestrating function reads as a short list of named calls — its own docstring made executable. Extract to **name a concept or separate a level**, never to hit a line target: a helper must be nameable for what it _means_, make its caller read better, and be self-contained (its inputs are its parameters). Counterweight (the SVC-05 spirit at function scope): do NOT fragment into one-line helpers that merely relocate a single statement, helpers whose name just restates the call, or call-chains the reader must hop through to follow control flow — if inlining loses no concept and the caller is no harder to read, keep it inline. Prefer this method-level split before reaching for a new class or abstraction; over-extraction is as much a readability cost as a too-long block.
+Example: `AlertReconcileService.reconcileSubject` is a ~20-line orchestrator over `dedupeByType` / `openAlert` / `applyChange` / `resolveAlert`; each lifecycle transition (a repository write plus its one conditional emit) lives in a single small method.
+Enforced: review.
 
 ---
 
@@ -87,6 +91,10 @@ Example: `streams/repositories/stream.repository.ts` ↔ `infrastructure/databas
 
 **NAME-07** — Rule: New event names MUST be added to `SystemEventNames` in `common/domain/consts/system-event-names.const.ts` using the `<subject>.<verb-past>` dotted form (`stream.synced`, `alert.created`, `pod.registered`). Never emit a string literal.
 
+**NAME-08** — Rule: Parallel types that fill the same structural role across a family of variants MUST share one name shape (a common head/suffix), so the family is recognizable and greppable and a missing member is obvious.
+Example: each producer's rule alias is `<Subject>AlertRule` (`MetricAlertRule`, `StreamTrackAlertRule`, `NodeResourceAlertRule`); each rule's injected context is `<Subject>AlertContext` (`StreamTrackAlertContext`, `NodeResourceAlertContext`).
+Enforced: review.
+
 ---
 
 ## 4. DIR — Folder structure
@@ -114,6 +122,10 @@ Example: `gateway/` is just `events.gateway.ts` + `gateway.module.ts`; `config/`
 
 **DIR-09** — Rule: Deployment artifacts live under `deploy/`, grouped by tool and named for what they are: `deploy/docker/` (Dockerfiles `<purpose>.Dockerfile`, compose files `compose.<variant>.yml`), `deploy/k8s/` (real Kubernetes manifests only), `deploy/mediamtx/` (MediaMTX runtime configs — these are NOT k8s manifests), `deploy/scripts/` (pod runtime shell scripts). Nothing deployment-related sits at the backend root. Compose build context is `backend/`.
 Decision history: [ADR-0007](../docs/adr/0007-backend-deploy-layout.md).
+Enforced: review.
+
+**DIR-10** — Rule: A `domain/types/` folder (and an integration's `types/`) is organized like `services/` (DIR-04), one layer down for shapes. Each exported interface or type alias MUST live in its own `.types.ts` file named after it (kebab-case). When the folder holds several shapes spanning distinct subjects/themes, group them into subject subfolders, each with its own barrel; split a subject into nested per-subject subfolders when it spans multiple sub-subjects — especially ones expected to grow (DIR-06 spirit). Strongly-linked shapes — a type and the type it embeds or wraps, a rule alias and the context it is parameterised by — stay co-located in the same folder so their imports remain sibling-relative. A small or single-theme types folder MAY stay flat until a second theme appears (DIR-08).
+Example: `alerts/domain/types/{alert/, rules/{metric,stream-track,node}/}` — `Alert` plus its create/update payloads under `alert/`; each producer's rule alias and context under `rules/<subject>/`.
 Enforced: review.
 
 ---
@@ -193,6 +205,10 @@ Example: `sync/services/{scheduler,query,orchestration,workflows}/`, token `SYNC
 Example: `StreamsFacadeService` is what `sync/` and `metrics/` import; they never touch `StreamCrudService` directly. (Exception: `metrics/failover` wraps `StreamQueryService`/`StreamAssignmentService` in its own gateway service — `MetricFailoverStreamGatewayService` — which is the same pattern one level down.)
 
 **SVC-05** — Rule: A service that delegates to another service MUST change at least one of: vocabulary/abstraction level, module boundary, exposed surface area — or carry at least one decision (guard, transformation, defaulting). If inlining the wrapper loses no concept, inline it. A pure same-module, same-vocabulary forwarder is forbidden, and a wrapper whose tests only assert "calls the delegate with the same arguments" is presumptively one. Facades and boundary gateways (SVC-04) are exempt: their value is the seam itself.
+
+**SVC-06** — Rule: An evaluate-and-react flow is decomposed as **produce → evaluate → reconcile**. A _producer_ emits a typed data event and stays ignorant of who consumes it — it never imports the consumer, evaluates conditions, or writes the consumer's records. A consumer-side _evaluator_ reacts (`@OnEvent`) and turns the data into the set of records that _should_ exist (its desired state), declaratively via a rules-as-data table where the conditions vary (PHIL-02 / RULE-02). A _reconciler_ then diffs desired against actual, scoped by a stable key, and converges them: create what is newly desired, update what changed, remove what is no longer desired (an actual with no matching desired); an unchanged entry may be touched without re-emitting. Crossing a feature boundary is an event; staying inside one is a direct call (EVT-04). Adding a producer to an existing pipeline = data event + evaluator + desired-state mapping + scope key, with no change to the reconciler. Uniqueness of a reconciled record under concurrent cycles is a database invariant, not application logic (DATA-05).
+Example: the alerts pipeline — metrics/inspection/pods _produce_ data events, rulers in `alerts/services/rulers/` _evaluate_ them into `AlertSignal[]`, and `AlertReconcileService` _reconciles_ by `(source, subject, type)`. Decision history: [ADR-0010](../docs/adr/0010-event-driven-alert-pipeline.md), [ADR-0011](../docs/adr/0011-node-resource-alerts-third-producer.md).
+Enforced: review.
 Example: `MetricAlertReactionService` and `MetricFailoverReactionService` were deleted under this rule — the metric workflow now calls `MetricAlertInvocationService` directly, and the cluster-only guard moved into `StreamFailoverService` where its sibling preconditions live.
 Decision history: [ADR-0005](../docs/adr/0005-no-pass-through-services.md).
 Enforced: review.
@@ -208,6 +224,10 @@ Enforced: review.
 **DATA-03** — Rule: Repository methods are named for the domain operation, not the Mongo verb: `findUnresolvedByStreamAndType`, `upsertByPodId`, `assignToPod`, `resolveById`.
 
 **DATA-04** — Rule: Repositories return domain-shaped documents and `null` for not-found; throwing `NotFoundException` is the service's decision, not the repository's.
+
+**DATA-05** — Rule: A "at most one X per key" invariant that must hold under concurrent writers is enforced at the database, not in application read-then-write logic (which races: two cycles both read "absent" and both insert). Use a unique index — `partialFilterExpression` when the constraint applies to a subset (e.g. only open records) — plus an idempotent upsert whose filter _is_ the dedup key, so a losing writer collapses onto the winner instead of duplicating. The write reports whether it actually inserted so callers fire create-only side effects (events) exactly once.
+Example: `AlertSchema` partial unique index on `(source, subject, type)` where `isResolved: false`, backing `MongoAlertRepository.create`'s upsert that returns `{ alert, created }`.
+Enforced: tooling (DB constraint) + review.
 Example: `StreamAssignmentService.assignToPod` throws when the repo returns null.
 
 ---
@@ -273,16 +293,6 @@ Example: `METRIC_ALERT_RULES`, `STREAM_TRACK_ALERT_RULES` in `alerts/domain/cons
 **RULE-03** — Rule: A rule's `check`/`message` operate only on their typed input (and optional context); no service calls, persistence, or config reads inside a rule. Context the rule needs (e.g. a stream's track expectations) is gathered by the ruler and passed in.
 
 **RULE-04** — Rule: The input shapes rules evaluate live in `common/domain/types/` (`PathMetricSample`, `StreamTrack`, …) so the producer that emits them and the alerts ruler that consumes them share one definition (TYPE-03).
-
----
-
-## 14b. ALRT — Alert pipeline (producer → ruler → reconcile)
-
-**ALRT-01** — Rule: Producers emit a data event and nothing more — they do not import `@/alerts`, evaluate rules, or create alerts. A **ruler** in the alerts feature reacts (`@OnEvent`), evaluates rules into `AlertSignal[]`, and calls `AlertReconcileService` directly (cross-feature hop = event; intra-feature hop = call, per EVT-04). An alert's `subject` is whatever its source alerts on — a stream name or a pod id.
-Example (three producers, one pipeline): `metrics.collected` → `MetricAlertRuler`; `stream.inspected` → `TrackAlertRuler`; `node.sampled` (pods feature) → `NodeResourceRuler`.
-
-**ALRT-02** — Rule: Alert lifecycle is reconciliation, scoped by `AlertSource`: given the signals currently firing for a (source, subject), `AlertReconcileService` adds new, refreshes unchanged (`lastSeenAt`), updates changed (`alert.updated`), and resolves any open alert with no matching signal. A ruler holding a complete cross-subject batch uses `reconcileSource` (auto-resolves vanished subjects); a per-subject ruler uses `reconcileSubject`. Adding a producer = data event + ruler + rule set + `AlertSource` value; no lifecycle changes.
-Decision history: [ADR-0010](../docs/adr/0010-event-driven-alert-pipeline.md).
 
 ---
 
@@ -353,6 +363,8 @@ Current, verified gaps between the rules above and the code. Fix on touch; remov
 **DEVN-04** — `StreamInspectionRecorderService` injects its repository via `forwardRef` (smell against ARCH-04); the cycle should be removed instead.
 
 **DEVN-06** — `npm run barrels:generate` (barrelsby `--delete --location all`) overwrites the curated feature-root barrels with broken self-referential output (`export * from "./index"`), so it cannot be run over the whole tree (blocks the original intent of TOOL-03). Until the script is fixed or scoped to nested folders, barrels are maintained by hand per TOOL-03.
+
+**DEVN-07** — DIR-10 is currently satisfied only by `alerts/domain/types/`. Other type folders still pack multiple shapes per file and use no subject subfolders — e.g. `infrastructure/media-mtx/types/media-mtx.types.ts` (5), `streams/domain/types/stream.types.ts` (3), `pods/domain/types/pod-registration-data.types.ts` (3), `common/domain/types/event-payloads.types.ts` (3), plus several two-shape files. Apply DIR-10 on touch.
 
 ---
 

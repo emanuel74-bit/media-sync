@@ -2,12 +2,12 @@ import { ApiTags } from "@nestjs/swagger";
 import { Controller, Get, Patch, Param } from "@nestjs/common";
 
 import { Alert } from "../domain";
-import { AlertLifecycleService } from "../services";
+import { AlertAccessService } from "../services";
 
 @ApiTags("alerts")
 @Controller("api/alerts")
 export class AlertsController {
-    constructor(private readonly alertsService: AlertLifecycleService) {}
+    constructor(private readonly alertsService: AlertAccessService) {}
 
     @Get()
     findAll(): Promise<Alert[]> {

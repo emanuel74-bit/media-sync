@@ -4,8 +4,8 @@ import { OnEvent } from "@nestjs/event-emitter";
 import { ConfigService } from "@/config";
 import { AlertSource, RuleEvaluator, SystemEventNames, NodeSampledPayload } from "@/common";
 
-import { AlertReconcileService } from "./alert-reconcile.service";
-import { NODE_RESOURCE_RULES, NodeResourceThresholds } from "../domain";
+import { AlertReconcileService } from "../alert-reconcile.service";
+import { NODE_RESOURCE_RULES, NodeResourceAlertContext } from "../../domain";
 
 /**
  * Reacts to `node.sampled` (a pod's self-reported CPU/memory/disk), evaluates the
@@ -21,7 +21,7 @@ export class NodeResourceRuler {
 
     @OnEvent(SystemEventNames.NODE_SAMPLED)
     async onNodeSampled(payload: NodeSampledPayload): Promise<void> {
-        const thresholds: NodeResourceThresholds = {
+        const thresholds: NodeResourceAlertContext = {
             cpu: this.config.nodeCpuHighThreshold,
             memory: this.config.nodeMemoryHighThreshold,
             disk: this.config.nodeDiskHighThreshold,

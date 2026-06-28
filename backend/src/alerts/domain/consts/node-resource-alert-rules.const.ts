@@ -1,9 +1,9 @@
 import { AlertType, AlertSeverity } from "@/common";
 
-import { NodeResourceRule } from "../types";
+import { NodeResourceAlertRule } from "../types";
 
 /** Node-resource alerts derived from a pod's self-reported host usage (source: node). */
-export const NODE_RESOURCE_RULES: NodeResourceRule[] = [
+export const NODE_RESOURCE_RULES: NodeResourceAlertRule[] = [
     {
         check: (node, thresholds) => node.cpu > thresholds.cpu,
         type: AlertType.NODE_CPU_HIGH,

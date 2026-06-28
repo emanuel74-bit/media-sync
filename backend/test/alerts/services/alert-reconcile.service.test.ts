@@ -32,7 +32,9 @@ describe("AlertReconcileService", () => {
 
     beforeEach(() => {
         repo = {
-            create: jest.fn().mockImplementation(async (d) => ({ id: "new", ...d })),
+            create: jest
+                .fn()
+                .mockImplementation(async (d) => ({ alert: { id: "new", ...d }, created: true })),
             update: jest.fn().mockImplementation(async (id) => openAlert({ id })),
             resolveById: jest
                 .fn()
@@ -61,6 +63,19 @@ describe("AlertReconcileService", () => {
                 SystemEventNames.ALERT_CREATED,
                 expect.objectContaining({ type: AlertType.STREAM_NOT_READY }),
             );
+        });
+
+        it("does not emit ALERT_CREATED when a concurrent reconcile already opened the alert", async () => {
+            repo.findOpenBySourceAndSubject.mockResolvedValue([]);
+            repo.create.mockResolvedValueOnce({
+                alert: openAlert({ id: "raced" }),
+                created: false,
+            });
+
+            await service.reconcileSubject(AlertSource.METRICS, "live", [signal()]);
+
+            expect(repo.create).toHaveBeenCalledTimes(1);
+            expect(events.emit).not.toHaveBeenCalled();
         });
 
         it("refreshes (lastSeenAt only, no event) when the signal is unchanged", async () => {
@@ -128,6 +143,28 @@ describe("AlertReconcileService", () => {
             expect(repo.resolveById).toHaveBeenCalledTimes(1);
             // "live" had a signal and no open alert → created.
             expect(repo.create).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    describe("resolve", () => {
+        it("marks the alert resolved and emits ALERT_RESOLVED", async () => {
+            const resolved = openAlert({ isResolved: true });
+            repo.resolveById.mockResolvedValue(resolved);
+
+            const result = await service.resolve("a1");
+
+            expect(result).toBe(resolved);
+            expect(repo.resolveById).toHaveBeenCalledWith("a1", expect.any(Date));
+            expect(events.emit).toHaveBeenCalledWith(SystemEventNames.ALERT_RESOLVED, resolved);
+        });
+
+        it("does not emit when the alert is already gone", async () => {
+            repo.resolveById.mockResolvedValue(null);
+
+            const result = await service.resolve("missing");
+
+            expect(result).toBeNull();
+            expect(events.emit).not.toHaveBeenCalled();
         });
     });
 });

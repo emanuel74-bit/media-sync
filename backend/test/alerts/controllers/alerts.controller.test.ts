@@ -1,8 +1,8 @@
 import { Test, TestingModule } from "@nestjs/testing";
 
 import { Alert } from "@/alerts/domain";
+import { AlertAccessService } from "@/alerts/services";
 import { AlertsController } from "@/alerts/controllers";
-import { AlertLifecycleService } from "@/alerts/services";
 import { AlertType, AlertSource, AlertSeverity } from "@/common";
 
 const makeAlert = (overrides: Partial<Alert> = {}): Alert => ({
@@ -22,23 +22,23 @@ const makeAlert = (overrides: Partial<Alert> = {}): Alert => ({
 
 describe("AlertsController", () => {
     let controller: AlertsController;
-    let alertsService: jest.Mocked<AlertLifecycleService>;
+    let alertsService: jest.Mocked<AlertAccessService>;
 
     beforeEach(async () => {
         alertsService = {
             listAlerts: jest.fn(),
             resolveAlert: jest.fn(),
-        } as unknown as jest.Mocked<AlertLifecycleService>;
+        } as unknown as jest.Mocked<AlertAccessService>;
 
         const module: TestingModule = await Test.createTestingModule({
             controllers: [AlertsController],
-            providers: [{ provide: AlertLifecycleService, useValue: alertsService }],
+            providers: [{ provide: AlertAccessService, useValue: alertsService }],
         }).compile();
 
         controller = module.get<AlertsController>(AlertsController);
     });
 
-    it("delegates findAll to AlertLifecycleService.listAlerts", async () => {
+    it("delegates findAll to AlertAccessService.listAlerts", async () => {
         const alerts = [makeAlert()];
         alertsService.listAlerts.mockResolvedValue(alerts);
 
@@ -48,7 +48,7 @@ describe("AlertsController", () => {
         expect(alertsService.listAlerts).toHaveBeenCalledTimes(1);
     });
 
-    it("delegates resolve to AlertLifecycleService.resolveAlert", async () => {
+    it("delegates resolve to AlertAccessService.resolveAlert", async () => {
         const alert = makeAlert({ isResolved: true, resolvedAt: new Date() });
         alertsService.resolveAlert.mockResolvedValue(alert);
 

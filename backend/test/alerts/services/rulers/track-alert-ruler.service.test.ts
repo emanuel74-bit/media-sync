@@ -1,6 +1,6 @@
 import { RuleEvaluator } from "@/common/services";
 import type { StreamQueryService } from "@/streams";
-import { TrackAlertRuler } from "@/alerts/services/track-alert-ruler.service";
+import { TrackAlertRuler } from "@/alerts/services/rulers/track-alert-ruler.service";
 import type { AlertReconcileService } from "@/alerts/services/alert-reconcile.service";
 import { PodRole, TrackType, AlertType, AlertSource, StreamInspectedPayload } from "@/common";
 

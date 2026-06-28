@@ -2,7 +2,7 @@
 
 - **Status**: Accepted
 - **Date**: 2026-06-26
-- **Related rules**: RULE-01..04, EVT-01/04, ALRT-01..02
+- **Related rules**: RULE-01..04, EVT-01/04, SVC-06, DATA-05
 
 ## Context
 

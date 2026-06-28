@@ -1,9 +1,7 @@
-import { EventEmitter2 } from "@nestjs/event-emitter";
-
 import { Alert } from "@/alerts/domain";
 import { AlertRepository } from "@/alerts/repositories";
-import { AlertLifecycleService } from "@/alerts/services";
-import { AlertType, AlertSource, AlertSeverity, SystemEventNames } from "@/common";
+import { AlertType, AlertSource, AlertSeverity } from "@/common";
+import { AlertAccessService, AlertReconcileService } from "@/alerts/services";
 
 const makeAlert = (overrides: Partial<Alert> = {}): Alert => ({
     id: "alert-1",
@@ -20,18 +18,17 @@ const makeAlert = (overrides: Partial<Alert> = {}): Alert => ({
     ...overrides,
 });
 
-describe("AlertLifecycleService", () => {
-    let service: AlertLifecycleService;
+describe("AlertAccessService", () => {
+    let service: AlertAccessService;
     let alertRepository: jest.Mocked<AlertRepository>;
-    let events: jest.Mocked<EventEmitter2>;
+    let reconcile: jest.Mocked<AlertReconcileService>;
 
     beforeEach(() => {
         alertRepository = {
-            resolveById: jest.fn(),
             findAll: jest.fn(),
         } as unknown as jest.Mocked<AlertRepository>;
-        events = { emit: jest.fn() } as unknown as jest.Mocked<EventEmitter2>;
-        service = new AlertLifecycleService(alertRepository, events);
+        reconcile = { resolve: jest.fn() } as unknown as jest.Mocked<AlertReconcileService>;
+        service = new AlertAccessService(alertRepository, reconcile);
     });
 
     it("delegates listAlerts to the repository", async () => {
@@ -44,23 +41,13 @@ describe("AlertLifecycleService", () => {
         expect(alertRepository.findAll).toHaveBeenCalledTimes(1);
     });
 
-    it("resolves alerts and emits ALERT_RESOLVED", async () => {
+    it("delegates resolveAlert to the reconcile engine and returns its result", async () => {
         const resolved = makeAlert({ isResolved: true, resolvedAt: new Date() });
-        alertRepository.resolveById.mockResolvedValue(resolved);
+        reconcile.resolve.mockResolvedValue(resolved);
 
         const result = await service.resolveAlert("alert-1");
 
         expect(result).toBe(resolved);
-        expect(alertRepository.resolveById).toHaveBeenCalledWith("alert-1", expect.any(Date));
-        expect(events.emit).toHaveBeenCalledWith(SystemEventNames.ALERT_RESOLVED, resolved);
-    });
-
-    it("does not emit ALERT_RESOLVED when the alert does not exist", async () => {
-        alertRepository.resolveById.mockResolvedValue(null);
-
-        const result = await service.resolveAlert("missing-alert");
-
-        expect(result).toBeNull();
-        expect(events.emit).not.toHaveBeenCalled();
+        expect(reconcile.resolve).toHaveBeenCalledWith("alert-1");
     });
 });

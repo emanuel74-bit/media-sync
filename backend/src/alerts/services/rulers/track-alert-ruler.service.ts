@@ -4,8 +4,8 @@ import { OnEvent } from "@nestjs/event-emitter";
 import { StreamQueryService } from "@/streams";
 import { AlertSource, RuleEvaluator, SystemEventNames, StreamInspectedPayload } from "@/common";
 
-import { AlertReconcileService } from "./alert-reconcile.service";
-import { STREAM_TRACK_ALERT_RULES, StreamTrackAlertContext } from "../domain";
+import { AlertReconcileService } from "../alert-reconcile.service";
+import { STREAM_TRACK_ALERT_RULES, StreamTrackAlertContext } from "../../domain";
 
 /**
  * Reacts to `stream.inspected`, evaluates content rules against the inspected

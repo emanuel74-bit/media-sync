@@ -33,3 +33,12 @@ export class Alert {
 }
 
 export const AlertSchema = SchemaFactory.createForClass(Alert);
+
+// At most one OPEN alert per (source, subject, type). Backs the reconciler's
+// idempotent create: a concurrent insert hits this constraint and the server's
+// upsert retry collapses it to the existing alert instead of a duplicate.
+// Partial filter so resolved alerts (the history) are exempt.
+AlertSchema.index(
+    { source: 1, subject: 1, type: 1 },
+    { unique: true, partialFilterExpression: { isResolved: false } },
+);

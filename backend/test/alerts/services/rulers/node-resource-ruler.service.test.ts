@@ -1,8 +1,8 @@
 import type { ConfigService } from "@/config";
 import { RuleEvaluator } from "@/common/services";
 import { PodRole, AlertType, AlertSource, NodeSampledPayload } from "@/common";
-import { NodeResourceRuler } from "@/alerts/services/node-resource-ruler.service";
 import type { AlertReconcileService } from "@/alerts/services/alert-reconcile.service";
+import { NodeResourceRuler } from "@/alerts/services/rulers/node-resource-ruler.service";
 
 const sample = (overrides: Partial<NodeSampledPayload> = {}): NodeSampledPayload => ({
     podId: "cluster-1",
