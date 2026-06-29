@@ -22,7 +22,7 @@ export class ConfigService {
     }
 
     get metricsPollInterval(): number {
-        return Number(process.env.METRICS_POLL_INTERVAL ?? 5000);
+        return Number(process.env.METRICS_POLL_INTERVAL ?? 10000);
     }
 
     get inspectionInterval(): number {

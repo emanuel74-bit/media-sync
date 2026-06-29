@@ -64,7 +64,7 @@ export class MongoStreamInspectionRepository
             source: raw.source,
             tracks: raw.tracks as StreamTrack[],
             metadata: raw.metadata,
-            lastError: raw.lastError,
+            lastError: raw.lastError ?? null,
             inspectedAt: raw.inspectedAt,
             createdAt: raw.createdAt,
             updatedAt: raw.updatedAt,

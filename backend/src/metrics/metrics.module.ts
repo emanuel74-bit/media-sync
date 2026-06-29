@@ -1,8 +1,6 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
-import { ConfigModule } from "@/config";
-import { CommonModule } from "@/common";
 import { MediaMtxModule } from "@/infrastructure";
 import {
     NodeMetric,
@@ -24,8 +22,6 @@ import { MetricCollectionService, MetricPersistenceService } from "./services";
             { name: PathMetric.name, schema: PathMetricSchema },
         ]),
         MediaMtxModule,
-        ConfigModule,
-        CommonModule,
     ],
     providers: [
         MetricCollectionService,

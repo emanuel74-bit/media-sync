@@ -3,5 +3,4 @@
  */
 
 export * from "./query";
-export * from "./recording";
-export * from "./scheduling";
+export * from "./collection";

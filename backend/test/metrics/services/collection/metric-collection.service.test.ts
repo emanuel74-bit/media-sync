@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { PodRole, SystemEventNames, SequentialStreamTaskRunner } from "@/common";
+import { PodRole, SystemEventNames } from "@/common";
 import { MediaMtxMetricsService, MediaMtxMetricsSnapshot } from "@/infrastructure";
 import { MetricCollectionService, MetricPersistenceService } from "@/metrics/services";
 
@@ -48,16 +48,12 @@ describe("MetricCollectionService", () => {
         } as unknown as jest.Mocked<MetricPersistenceService>;
         events = { emit: jest.fn() } as unknown as jest.Mocked<EventEmitter2>;
 
-        // Real runner so runSafely actually invokes the work.
-        const runner = new SequentialStreamTaskRunner();
-
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 MetricCollectionService,
                 { provide: MediaMtxMetricsService, useValue: mediaMtxMetrics },
                 { provide: MetricPersistenceService, useValue: persistence },
                 { provide: EventEmitter2, useValue: events },
-                { provide: SequentialStreamTaskRunner, useValue: runner },
             ],
         }).compile();
 
@@ -90,10 +86,10 @@ describe("MetricCollectionService", () => {
         );
     });
 
-    it("swallows a failing scrape cycle without throwing or emitting", async () => {
+    it("propagates a failing scrape cycle (the scheduler guards it) without persisting or emitting", async () => {
         mediaMtxMetrics.collect.mockRejectedValue(new Error("scrape boom"));
 
-        await expect(service.collectMetrics()).resolves.toBeUndefined();
+        await expect(service.collectMetrics()).rejects.toThrow("scrape boom");
 
         expect(persistence.saveNodeMetrics).not.toHaveBeenCalled();
         expect(events.emit).not.toHaveBeenCalled();

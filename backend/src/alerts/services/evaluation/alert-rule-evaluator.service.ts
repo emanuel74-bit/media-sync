@@ -1,7 +1,12 @@
 import { Injectable } from "@nestjs/common";
 
-import { AlertSignal, RuntimeAlertRule } from "../domain";
+import { AlertSignal, RuntimeAlertRule } from "@/common";
 
+/**
+ * Shared evaluation engine for the alert rulers: maps any rule list + input to the
+ * `AlertSignal[]` that should exist. Generic across the alert sources (metric/track/node),
+ * not across features — its output is an alerts concept, so it lives with the rulers.
+ */
 @Injectable()
 export class RuleEvaluator {
     evaluate<TInput, TContext>(

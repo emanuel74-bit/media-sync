@@ -744,9 +744,9 @@ interface StreamTrack {
 | `NODE_MEMORY_HIGH_PERCENT`     | number | `90`                                    | Pod memory% above this raises a `node_memory_high` alert (warning) |
 | `NODE_DISK_HIGH_PERCENT`       | number | `85`                                    | Pod disk% above this raises a `node_disk_high` alert (critical) |
 | `INGEST_RTSP_URL`              | string | `rtsp://mediamtx-ingest:8554`           | RTSP base the cluster pulls relayed paths from (include creds for ingest read auth) |
-| `SYNC_POLL_INTERVAL`           | number | `10000`                                 | (unused) intended sync interval in ms                        |
-| `METRICS_POLL_INTERVAL`        | number | `5000`                                  | (unused) intended metrics interval in ms                     |
-| `INSPECTION_INTERVAL`          | number | `30000`                                 | (unused) intended inspection interval in ms                  |
+| `SYNC_POLL_INTERVAL`           | number | `10000`                                 | Periodic sync interval in ms (`SyncService`)                 |
+| `METRICS_POLL_INTERVAL`        | number | `10000`                                 | Metrics scrape interval in ms (`MetricCollectionService`)    |
+| `INSPECTION_INTERVAL`          | number | `30000`                                 | Stream inspection interval in ms (`StreamInspectionCollectionService`) |
 
 **Note:** Scheduling is hard-coded in `@Cron` decorators (sync 10s, metrics 10s, inspection 30s); the `*_INTERVAL` getters exist but are not consumed. Operational alert rules (`stream_not_ready`, `frames_in_error`) are boolean checks with no configurable thresholds.
 

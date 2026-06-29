@@ -3,8 +3,8 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 
 import { AlertSignal, AlertSource, SystemEventNames } from "@/common";
 
-import { Alert } from "../domain";
-import { AlertRepository } from "../repositories";
+import { Alert } from "../../domain";
+import { AlertRepository } from "../../repositories";
 
 /**
  * Reconciles the alert signals currently firing for a source against the alerts

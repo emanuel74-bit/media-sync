@@ -2,9 +2,10 @@ import { Injectable } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";
 
 import { ConfigService } from "@/config";
-import { AlertSource, RuleEvaluator, SystemEventNames, NodeSampledPayload } from "@/common";
+import { AlertSource, SystemEventNames, NodeSampledPayload } from "@/common";
 
-import { AlertReconcileService } from "../alert-reconcile.service";
+import { RuleEvaluator } from "../evaluation";
+import { AlertReconcileService } from "../reconciliation";
 import { NODE_RESOURCE_RULES, NodeResourceAlertContext } from "../../domain";
 
 /**

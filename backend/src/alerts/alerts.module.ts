@@ -2,7 +2,6 @@ import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
 import { ConfigModule } from "@/config";
-import { CommonModule } from "@/common";
 import { StreamsModule } from "@/streams";
 import { MongoAlertRepository, Alert, AlertSchema } from "@/infrastructure";
 
@@ -14,16 +13,17 @@ import {
     MetricAlertRuler,
     TrackAlertRuler,
     NodeResourceRuler,
+    RuleEvaluator,
 } from "./services";
 
 @Module({
     imports: [
         MongooseModule.forFeature([{ name: Alert.name, schema: AlertSchema }]),
-        CommonModule,
         ConfigModule,
         StreamsModule,
     ],
     providers: [
+        RuleEvaluator,
         AlertAccessService,
         AlertReconcileService,
         MetricAlertRuler,

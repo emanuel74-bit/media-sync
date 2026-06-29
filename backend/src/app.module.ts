@@ -1,6 +1,5 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
-import { ScheduleModule } from "@nestjs/schedule";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 
 import { PodsModule } from "./pods";
@@ -10,13 +9,14 @@ import { ConfigModule } from "./config";
 import { GatewayModule } from "./gateway";
 import { MetricsModule } from "./metrics";
 import { StreamsModule } from "./streams";
+import { SchedulingModule } from "./common";
 import { MediaMtxModule } from "./infrastructure";
 import { StreamInspectionModule } from "./stream-inspection";
 
 @Module({
     imports: [
         ConfigModule,
-        ScheduleModule.forRoot(),
+        SchedulingModule,
         EventEmitterModule.forRoot(),
         MongooseModule.forRoot(process.env.MONGODB_URI ?? "mongodb://localhost:27017/media-sync"),
         MediaMtxModule,

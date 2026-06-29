@@ -33,6 +33,10 @@ Example: `src/metrics/domain/consts/metric-alert-rules.const.ts`, `src/sync/doma
 Example: `AlertReconcileService.reconcileSubject` is a ~20-line orchestrator over `dedupeByType` / `openAlert` / `applyChange` / `resolveAlert`; each lifecycle transition (a repository write plus its one conditional emit) lives in a single small method.
 Enforced: review.
 
+**PHIL-07** — Rule: Prefer composition over inheritance. Use `extends` only for genuine specialization — where the base supplies behavior the subtype reuses (template-method) AND the subtype truly _is-a_ the base. Never extend, nor implement a behavior-less abstract class, merely to be discovered, collected, registered, or labeled by another component: a base with no shared implementation is a tag, and a tag is data you hand over (compose / register), not a type you inherit. The test when unsure — does the base give you _behavior_ or just a _name_? Behavior + a true is-a → inheritance; a label, a "uses / participates-in" relationship, or a shape that is really data-plus-a-callback → composition. Put shared cross-cutting behavior in one collaborator and have participants hold and feed it, rather than in a base they must subclass.
+Example: the only legitimate `extends` in the tree is `Mongo<Entity>Repository extends MongoDomainRepository` — the base supplies real shared mapping/query behavior with `toDomain` as the subclass hole. Everywhere else composes: services inject and call collaborators (`RuleEvaluator`, repositories, facades) instead of extending them.
+Enforced: review.
+
 ---
 
 ## 2. TOOL — Tooling & enforcement
@@ -52,6 +56,10 @@ Enforced: tooling (`.eslintrc.json`).
 
 **TOOL-05** — Rule: `npm run verify` (typecheck + lint + build + test) MUST pass before a change is considered done.
 Enforced: tooling.
+
+**TOOL-06** — Rule: Bindings are `const` by default; `var` is forbidden. A surviving `let` is a smell to resolve, in order of preference: (a) a single expression (ternary / `??` / `Array.map`/`reduce`); (b) destructuring the result of one call that does the branching (`const { a, b } = compute()`); (c) extracting a named **private/local helper** that returns the value, when the computation is a nameable concept (PHIL-06 applies — extract only if the caller reads better). Keep the `let` only when none of those is clearer (a hot-loop accumulator, genuinely incremental construction). Do NOT push one-off `let`-elimination into a shared `.util.ts` — that file is for reusable pure helpers (NAME-01/02); a one-off is a private method or local function.
+Example: `StreamInspectionCollectionService.inspectAndRecord` does `const { details, lastError } = await this.inspectStream(...)`; the try/catch that turns an inspection failure into `lastError` _data_ lives in the private `inspectStream` helper, so both bindings stay `const`.
+Enforced: tooling (`prefer-const`, `no-var`) for the floor; review for the graded resolution.
 
 ---
 
@@ -99,7 +107,7 @@ Enforced: review.
 
 ## 4. DIR — Folder structure
 
-**DIR-01** — Rule: Top level of `src/` contains: one folder per feature (`streams/`, `pods/`, `alerts/`, `metrics/`, `stream-inspection/`, `sync/`, `gateway/`), plus `common/` (shared domain + cross-cutting services), `config/` (env access), and `infrastructure/` (outside-world adapters). New features get a new top-level folder.
+**DIR-01** — Rule: Top level of `src/` contains: one folder per feature (`streams/`, `pods/`, `alerts/`, `metrics/`, `stream-inspection/`, `sync/`, `gateway/`), plus `common/` (shared **non-provider** code — domain types/enums/consts, pure utils — and self-contained cross-cutting capability modules like `scheduling/`), `config/` (env access), and `infrastructure/` (outside-world adapters). New features get a new top-level folder. There is no catch-all provider module (see ARCH-06).
 
 **DIR-02** — Rule: Inside a feature, standard layers use these exact folder names, and only the layers the feature needs: `controllers/`, `services/`, `repositories/`, `domain/`, `dto/`.
 Example: `sync/` has no controllers or dto — and therefore no such folders.
@@ -109,8 +117,8 @@ Example: `sync/` has no controllers or dto — and therefore no such folders.
 **DIR-04** — Rule: When `services/` covers more than one concern, split it into purpose subfolders named after the concern, and move every file dedicated to one concern into its folder.
 Example: `metrics/services/{alerts,collection,failover,persistence}/`, `streams/services/{assignment,mutation,orchestration,query}/`.
 
-**DIR-05** — Rule: A file may sit at a feature/purpose root only if it is the feature's public contract or is shared across multiple child concerns.
-Example: `streams/services/streams-facade.service.ts` (cross-module entry point) sits at `services/` root; everything narrower is in a subfolder.
+**DIR-05** — Rule: A file may sit at a feature/`services/` root only if it is an **aggregating entry point** — the feature's public/cross-module contract that *fans out to* the concerns below it (a facade depends downward and is what outsiders call). A service that is merely *shared by* the concerns — a dependency they consume, like a reconciler or an evaluation engine — is itself a concern and gets its own subfolder; do NOT elevate it to root just because it has several consumers (that inverts the facade relationship). A feature with no such entry point has nothing at its `services/` root.
+Example: `streams/services/streams-facade.service.ts` (cross-module entry that uses the concerns below it) sits at root. Alerts has no facade, so every alerts service is foldered — `access/` (REST read surface), `evaluation/` (`RuleEvaluator` engine), `reconciliation/` (the reconciler shared by the rulers), `rulers/` (per-source reactors) — even though the reconciler and evaluator each have multiple consumers.
 
 **DIR-06** — Rule: Variant families under a shared contract get one child folder per variant, even single-file variants. Shared contracts/dispatchers stay at the parent level. Use variant folders only when the variants are real behavior (classes behind a contract) — if the variation is just data, prefer a single table + mapper (PHIL-02).
 Example: `infrastructure/media-mtx/services/listing/{ingest,cluster}/` with `stream-collection.service.ts` (shared fan-out) at the parent.
@@ -142,6 +150,8 @@ Example: every controller in the repo is < 75 lines.
 **ARCH-04** — Rule: No circular dependencies between features. If two features need each other, the shared part moves to `common/` or communication switches to events. (`forwardRef` is a last resort, all instances rooted in the `infrastructure/` ↔ `@/pods` barrel cycle from hosting Mongo repositories in `infrastructure/`: the `MediaMtxModule` ↔ `PodsModule` module seam, plus the `PodQueryService` injections in `ClusterNodeResolverService` and `IngestStreamListingStrategy` — see [ADR-0008](../docs/adr/0008-runtime-safe-barrel-imports.md), [ADR-0009](../docs/adr/0009-pod-derived-cluster-topology.md). Removing the repository placement would remove all of them.)
 
 **ARCH-05** — Rule: No global mutable state. The only in-memory state is owned by injectable singletons with a clear reason (client cache in `MediaMtxClientFactory`, round-robin index in `MediaMtxClientRegistry`).
+
+**ARCH-06** — Rule: A Nest module is organized around a **capability**, never around "shared/common". There is no catch-all `CommonModule`. A provider used by a single feature lives in that feature and is provided by its module (`RuleEvaluator` lives with the alert rulers in `alerts/`, not in `common/`). A genuinely cross-cutting capability gets its own purpose-named module (`SchedulingModule`). The `common/` folder is allowed only for shared **non-provider** code — domain types/enums/consts and pure utils — which is imported directly and needs no module. The test for "does this belong in common?": if it's an `@Injectable` with one consumer feature, no — move it to that feature.
 
 ---
 
@@ -275,11 +285,13 @@ Example: `StreamTrackAlertService` reacts to `stream.inspected`.
 
 ## 13. JOB — Scheduled jobs
 
-**JOB-01** — Rule: `@Cron` methods live in a dedicated scheduler service and contain no logic beyond: gather inputs, delegate, guard with error handling. Current cadence: sync 10s, metrics 10s, inspection 30s.
+**JOB-01** — Rule: A scheduled job is a single `@ScheduledTask({ name, interval })` on the method that does the work (the decorator + `JobScheduler` live in `common/scheduling/`, re-exported from `@/common`). One declaration defines it — there is no separate scheduler service, lifecycle hook, or registration call to forget. The method itself does nothing but gather → delegate; it does NOT manage a timer, and it does NOT need its own whole-cycle `try/catch` (see JOB-02). Never use `@nestjs/schedule`'s `@Cron`/`@Interval` (removed) — those can't take a config-driven cadence and scatter scheduling across services.
+Example: `MetricCollectionService.collectMetrics`, `StreamInspectionCollectionService.inspectAllStreams`, `SyncService.periodicSync`.
 
-**JOB-02** — Rule: Scheduled iteration over streams goes through `SequentialStreamTaskRunner` (`processSequential` for per-item isolation, `runSafely` for whole-run guarding) so one bad stream/cycle never kills the job.
+**JOB-02** — Rule: Cross-cutting scheduling behavior lives once in `JobScheduler`, not in each job: it discovers every `@ScheduledTask` at bootstrap, runs it on its interval, **guards each run** (a throw is logged + swallowed, never killing the timer), and **prevents overlap** (a run still in flight skips its next tick). A job method therefore throws freely. The only guarding a job writes itself is _per-item isolation_ inside a fan-out loop — wrap each iteration in its own `try/catch` so one bad item doesn't abort the rest.
+Example: `StreamInspectionCollectionService` wraps each per-stream `inspectAndRecord` in `try/catch`, but lets a listing failure propagate to `JobScheduler`; `SyncOrchestratorService` does the same per workflow.
 
-**JOB-03 [ASPIRATIONAL]** — Rule: Job cadence SHOULD come from `ConfigService` (`SYNC_POLL_INTERVAL`, `METRICS_POLL_INTERVAL`, `INSPECTION_INTERVAL`) instead of hard-coded `@Cron` expressions. See DEVN-01.
+**JOB-03** — Rule: A job's cadence MUST come from a `ConfigService` getter via the `@ScheduledTask` `interval` resolver (`interval: (config) => config.metricsPollInterval`), evaluated once at bootstrap — never a hard-coded literal. The resolver is a typed property access, so renaming the getter is refactor-safe. Current cadence: `SYNC_POLL_INTERVAL` (10s), `METRICS_POLL_INTERVAL` (10s), `INSPECTION_INTERVAL` (30s).
 
 ---
 
@@ -288,7 +300,7 @@ Example: `StreamTrackAlertService` reacts to `stream.inspected`.
 **RULE-01** — Rule: Alert conditions are data: an exported `*_ALERT_RULES` const array in `alerts/domain/consts/`, each entry `{ check(input, context), type: AlertType, severity: AlertSeverity, message(input) }`. Rules live with the **alerts** feature, never in the producer feature whose data they inspect (ADR-0010).
 Example: `METRIC_ALERT_RULES`, `STREAM_TRACK_ALERT_RULES` in `alerts/domain/consts/`.
 
-**RULE-02** — Rule: Rule evaluation is generic and shared: `RuleEvaluator` (common) maps any rule list + input → `AlertSignal[]`. A new alert kind = a new rule entry + a new `AlertType` member; no new evaluation plumbing.
+**RULE-02** — Rule: Rule evaluation is one generic engine: `RuleEvaluator` (in `alerts/services/rulers/`, used by all three rulers) maps any rule list + input → `AlertSignal[]`. A new alert kind = a new rule entry + a new `AlertType` member; no new evaluation plumbing.
 
 **RULE-03** — Rule: A rule's `check`/`message` operate only on their typed input (and optional context); no service calls, persistence, or config reads inside a rule. Context the rule needs (e.g. a stream's track expectations) is gathered by the ruler and passed in.
 
@@ -354,13 +366,9 @@ Example: SVC-05 ← [ADR-0005](../docs/adr/0005-no-pass-through-services.md).
 
 Current, verified gaps between the rules above and the code. Fix on touch; remove the entry when fixed.
 
-**DEVN-01** — `ConfigService` getters `syncPollInterval`, `metricsPollInterval`, `inspectionInterval`, `bitrateDropPercent`, `staleSeconds` have no consumers; cadence is hard-coded in `@Cron` decorators (violates CFG-02, blocks JOB-03).
-
-**DEVN-02** — `common/services/` contains both `rule-evaluator.service.ts` and `alert-rule-evaluator.service.ts`; the barrel resolves `RuleEvaluator` from the latter, leaving the former as an unused duplicate (violates PHIL-03 / reuse).
+**DEVN-01** — `ConfigService` getters `bitrateDropPercent` and `staleSeconds` have no consumers (violating CFG-02). The three interval getters (`syncPollInterval`, `metricsPollInterval`, `inspectionInterval`) are now consumed via `@ScheduledTask` resolvers.
 
 **DEVN-03** — `src/sync/services/orchestration/sync-orchestrator.service.spec.ts` is a legacy co-located spec (violates TEST-01/TEST-03); a mirrored test also exists under `test/`.
-
-**DEVN-04** — `StreamInspectionRecorderService` injects its repository via `forwardRef` (smell against ARCH-04); the cycle should be removed instead.
 
 **DEVN-06** — `npm run barrels:generate` (barrelsby `--delete --location all`) overwrites the curated feature-root barrels with broken self-referential output (`export * from "./index"`), so it cannot be run over the whole tree (blocks the original intent of TOOL-03). Until the script is fixed or scoped to nested folders, barrels are maintained by hand per TOOL-03.
 

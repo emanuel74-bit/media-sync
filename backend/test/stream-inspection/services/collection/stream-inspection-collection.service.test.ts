@@ -1,12 +1,16 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { SystemEventNames } from "@/common";
-import { PodRole, TrackType } from "@/common";
-import { MediaMtxStreamStatsService } from "@/infrastructure";
-import { StreamDetails, MediaMtxStreamInfo } from "@/infrastructure";
+import { PodRole, TrackType, SystemEventNames } from "@/common";
 import { StreamInspectionRepository } from "@/stream-inspection/repositories";
-import { StreamInspectionRecorderService } from "@/stream-inspection/services";
+import { StreamInspectionCollectionService } from "@/stream-inspection/services";
+import {
+    MediaMtxStreamStatsService,
+    MediaMtxStreamListingService,
+    StreamDetails,
+    MediaMtxStreamInfo,
+    ContextualMediaMtxStream,
+} from "@/infrastructure";
 
 const makeStream = (name = "stream-a"): MediaMtxStreamInfo => ({
     name,
@@ -21,10 +25,16 @@ const makeDetails = (overrides: Partial<StreamDetails> = {}): StreamDetails => (
     ...overrides,
 });
 
-describe("StreamInspectionRecorderService", () => {
-    let service: StreamInspectionRecorderService;
+const makeContextualStream = (name: string, role: PodRole): ContextualMediaMtxStream => ({
+    stream: { name, source: "rtsp://host/path", status: "ready" },
+    context: role,
+});
+
+describe("StreamInspectionCollectionService", () => {
+    let service: StreamInspectionCollectionService;
     let repo: jest.Mocked<StreamInspectionRepository>;
     let mediaMtxStats: jest.Mocked<MediaMtxStreamStatsService>;
+    let mediaMtxListing: jest.Mocked<MediaMtxStreamListingService>;
     let events: jest.Mocked<EventEmitter2>;
 
     beforeEach(async () => {
@@ -32,18 +42,76 @@ describe("StreamInspectionRecorderService", () => {
         mediaMtxStats = {
             getStreamDetails: jest.fn(),
         } as unknown as jest.Mocked<MediaMtxStreamStatsService>;
+        mediaMtxListing = {
+            listContextualStreams: jest.fn(),
+        } as unknown as jest.Mocked<MediaMtxStreamListingService>;
         events = { emit: jest.fn() } as unknown as jest.Mocked<EventEmitter2>;
 
         const module: TestingModule = await Test.createTestingModule({
             providers: [
-                StreamInspectionRecorderService,
+                StreamInspectionCollectionService,
                 { provide: StreamInspectionRepository, useValue: repo },
                 { provide: MediaMtxStreamStatsService, useValue: mediaMtxStats },
+                { provide: MediaMtxStreamListingService, useValue: mediaMtxListing },
                 { provide: EventEmitter2, useValue: events },
             ],
         }).compile();
 
-        service = module.get<StreamInspectionRecorderService>(StreamInspectionRecorderService);
+        service = module.get<StreamInspectionCollectionService>(StreamInspectionCollectionService);
+    });
+
+    describe("inspectAllStreams — the scheduled sweep", () => {
+        it("inspects and records every contextual stream with its pod-role source", async () => {
+            const streams = [
+                makeContextualStream("s1", PodRole.INGEST),
+                makeContextualStream("s2", PodRole.CLUSTER),
+            ];
+            mediaMtxListing.listContextualStreams.mockResolvedValue(streams);
+            const inspect = jest.spyOn(service, "inspectAndRecord").mockResolvedValue(undefined);
+
+            await service.inspectAllStreams();
+
+            expect(inspect).toHaveBeenCalledTimes(2);
+            expect(inspect).toHaveBeenNthCalledWith(1, streams[0].stream, PodRole.INGEST);
+            expect(inspect).toHaveBeenNthCalledWith(2, streams[1].stream, PodRole.CLUSTER);
+        });
+
+        it("isolates a per-stream failure and continues with the rest", async () => {
+            const streams = [
+                makeContextualStream("bad", PodRole.INGEST),
+                makeContextualStream("good", PodRole.CLUSTER),
+            ];
+            mediaMtxListing.listContextualStreams.mockResolvedValue(streams);
+            jest.spyOn(
+                (service as unknown as { logger: { error: jest.Mock } }).logger,
+                "error",
+            ).mockImplementation();
+            const inspect = jest
+                .spyOn(service, "inspectAndRecord")
+                .mockRejectedValueOnce(new Error("record failed"))
+                .mockResolvedValueOnce(undefined);
+
+            await service.inspectAllStreams();
+
+            expect(inspect).toHaveBeenCalledTimes(2);
+        });
+
+        it("does nothing when there are no streams", async () => {
+            mediaMtxListing.listContextualStreams.mockResolvedValue([]);
+            const inspect = jest.spyOn(service, "inspectAndRecord");
+
+            await service.inspectAllStreams();
+
+            expect(inspect).not.toHaveBeenCalled();
+        });
+
+        it("propagates a listing failure (the scheduler guards it) without inspecting", async () => {
+            mediaMtxListing.listContextualStreams.mockRejectedValue(new Error("listing failed"));
+            const inspect = jest.spyOn(service, "inspectAndRecord");
+
+            await expect(service.inspectAllStreams()).rejects.toThrow("listing failed");
+            expect(inspect).not.toHaveBeenCalled();
+        });
     });
 
     describe("inspectAndRecord — happy path", () => {
@@ -124,7 +192,7 @@ describe("StreamInspectionRecorderService", () => {
             expect(saved.lastError).toBe("raw string error");
         });
 
-        it("does not rethrow after error — resolves normally", async () => {
+        it("does not rethrow a stats error — resolves normally", async () => {
             mediaMtxStats.getStreamDetails.mockRejectedValue(new Error("boom"));
             repo.save.mockResolvedValue(undefined);
 

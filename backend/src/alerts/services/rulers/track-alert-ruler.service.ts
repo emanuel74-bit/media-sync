@@ -2,9 +2,10 @@ import { Injectable } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";
 
 import { StreamQueryService } from "@/streams";
-import { AlertSource, RuleEvaluator, SystemEventNames, StreamInspectedPayload } from "@/common";
+import { AlertSource, SystemEventNames, StreamInspectedPayload } from "@/common";
 
-import { AlertReconcileService } from "../alert-reconcile.service";
+import { RuleEvaluator } from "../evaluation";
+import { AlertReconcileService } from "../reconciliation";
 import { STREAM_TRACK_ALERT_RULES, StreamTrackAlertContext } from "../../domain";
 
 /**

@@ -36,7 +36,7 @@ The system solves the problem of coordinating media stream ingestion and distrib
 - **Framework**: NestJS 9.x with TypeScript (strict layering, barrel exports via barrelsby)
 - **Database**: MongoDB via Mongoose ODM (repository pattern; Mongo implementations in `infrastructure/`)
 - **Real-time**: Socket.IO for WebSocket events
-- **Scheduling**: @nestjs/schedule with `@Cron` decorators
+- **Scheduling**: a central `JobScheduler` (`src/common/scheduling/`) runs `@ScheduledTask`-decorated methods on config-driven intervals
 - **Eventing**: @nestjs/event-emitter (in-process event bus, bridged to WebSocket by the gateway)
 - **HTTP Clients**: Axios clients wrapping the MediaMTX v3 HTTP API
 
@@ -65,7 +65,7 @@ flowchart TB
             InspectionC[Inspection]
         end
         services["Feature Services<br/>(query / mutation / lifecycle / orchestration per feature;<br/>StreamsFacadeService is the cross-module entry into streams)"]
-        subgraph workers["Scheduled Workers (@Cron)"]
+        subgraph workers["Scheduled Workers (@ScheduledTask)"]
             SyncW["SyncService (10s)<br/>runs SyncWorkflow pipeline"]
             MetricsW["MetricCollectionService (10s)<br/>collect → alerts → failover"]
             InspectW["InspectionScheduler (30s)<br/>inspect + save"]
@@ -102,7 +102,7 @@ src/
 │   │   │                         #   StreamStatus, TrackType
 │   │   └── types/                # event payloads, alert rule shapes, StreamTrack
 │   ├── rules/                    # metric-threshold predicate utils
-│   └── services/                 # RuleEvaluator, SequentialStreamTaskRunner
+│   └── scheduling/               # JobScheduler + @ScheduledTask (cron framework)
 ├── infrastructure/
 │   ├── database/
 │   │   ├── repositories/         # mongo-*.repository.ts (concrete implementations)
@@ -156,12 +156,11 @@ src/
 │   ├── repositories/             # StreamInspectionRepository (abstract contract)
 │   └── services/
 │       ├── query/                # StreamInspectionQueryService
-│       ├── recording/            # StreamInspectionRecorderService
-│       └── scheduling/           # StreamInspectionSchedulerService (@Cron 30s)
+│       └── collection/           # StreamInspectionCollectionService (@ScheduledTask 30s; sweep → inspect → record → emit)
 ├── sync/
 │   ├── domain/                   # SyncContext/SyncWorkflow types, SYNC_WORKFLOWS token
 │   └── services/
-│       ├── scheduler/            # SyncService (@Cron 10s)
+│       ├── scheduler/            # SyncService (@ScheduledTask 10s)
 │       ├── query/                # SyncQueryAggregatorService (builds SyncContext)
 │       ├── orchestration/        # SyncOrchestratorService (runs workflow list)
 │       └── workflows/            # IngestStreamSynchronizer, StreamReconcile,
@@ -245,7 +244,7 @@ An alert's **subject** is whatever the source alerts on — a stream name (metri
 
 **Responsibility**: Monitor MediaMTX-as-a-service — scrape node + path operational metrics and emit them. No rules, no alerts, no failover (those moved out; per-stream quality is the inspection feature's job).
 
-**Flow** (`MetricCollectionService`, `@Cron` every 10 seconds):
+**Flow** (`MetricCollectionService.collectMetrics`, `@ScheduledTask` every 10 seconds):
 
 1. `MediaMtxMetricsService.collect()` scrapes every ingest + cluster node's Prometheus `/metrics` (nodes resolved from the live pod registry, fallback to configured URLs; per-node failures isolated) → `MediaMtxMetricsSnapshot[]` (a `NodeMetric` + `PathMetric[]` per node)
 2. Persist all node + path samples (`MetricPersistenceService` → `nodemetrics` / `pathmetrics`)
@@ -259,7 +258,7 @@ An alert's **subject** is whatever the source alerts on — a stream name (metri
 
 **Responsibility**: Core orchestration — discovery, assignment, pipeline creation, staleness cleanup.
 
-**Flow** (`SyncService`, `@Cron` every 10 seconds):
+**Flow** (`SyncService.periodicSync`, `@ScheduledTask` every 10 seconds):
 
 1. `SyncQueryAggregatorService.buildContext()` gathers in parallel: ingest stream list, cluster stream list, active cluster pod IDs, all DB streams → `SyncContext`
 2. `SyncOrchestratorService.execute(context)`:
@@ -279,13 +278,13 @@ An alert's **subject** is whatever the source alerts on — a stream name (metri
 
 **Responsibility**: Analyze media tracks and raise content alerts.
 
-**Flow** (`StreamInspectionSchedulerService`, `@Cron` every 30 seconds):
+**Flow** (`StreamInspectionCollectionService.inspectAllStreams`, `@ScheduledTask` every 30 seconds):
 
 1. List all contextual streams (ingest + cluster)
-2. For each, `StreamInspectionRecorderService.inspectAndRecord`:
+2. For each, `inspectAndRecord` (same service, isolated per stream):
    - Fetch `/v3/paths/get/{name}` details (errors recorded in `lastError`, inspection still persisted)
-   - Track parsing happens inside infrastructure: `getStreamDetails` returns a domain `StreamDetails` (tracks mapped via the `TRACK_FIELD_MAP` table in `infrastructure/media-mtx/mappers/`); the recorder assembles the record inline, defaulting to empty tracks/metadata when inspection failed
-   - Persist the inspection record and emit `stream.inspected`
+   - Track parsing happens inside infrastructure: `getStreamDetails` returns a domain `StreamDetails` (tracks mapped via the `TRACK_FIELD_MAP` table in `infrastructure/media-mtx/mappers/`); the service assembles the record inline, defaulting to empty tracks/metadata when inspection failed
+   - Persist the inspection record and emit `stream.inspected` (the service assembles the record inline)
 3. Alerting is decoupled: inspection just emits the event. The alerts feature's `TrackAlertRuler` reacts (see Alerts Module / ADR-0010) — inspection no longer imports `@/alerts` or `@/streams`.
 
 **Query API**: `StreamInspectionQueryService` provides latest-per-stream, latest-for-one, and history.
@@ -345,7 +344,7 @@ Each feature defines an **abstract repository contract** in its own `repositorie
 
 ```mermaid
 sequenceDiagram
-    participant Cron as SyncService (@Cron 10s)
+    participant Cron as SyncService (@ScheduledTask 10s)
     participant Agg as SyncQueryAggregator
     participant MTX as MediaMTX Integration
     participant Pods as PodQueryService
@@ -383,7 +382,7 @@ sequenceDiagram
                  → alert.created / updated / resolved
 
 4. STREAM INSPECTION (every 30 seconds)
-   StreamInspectionSchedulerService
+   StreamInspectionCollectionService
      └─▶ listContextualStreams() → per stream (sequential):
            ├─ GET /v3/paths/get/{name} (errors recorded as lastError)
            ├─ tracks parsed in infrastructure (TRACK_FIELD_MAP-driven mapper)
@@ -604,7 +603,7 @@ flowchart LR
 - **PodQueryService**: `podHeartbeatToleranceSeconds`
 - **NodeResourceRuler**: `nodeCpuHighThreshold`, `nodeMemoryHighThreshold`, `nodeDiskHighThreshold`
 
-Getters for `syncPollInterval`, `metricsPollInterval`, `inspectionInterval` exist but are **not consumed** — scheduling is fixed in `@Cron` decorators (operational alert rules use boolean checks, no thresholds).
+Getters for `syncPollInterval`, `metricsPollInterval`, `inspectionInterval` drive the `@ScheduledTask` cadences via `JobScheduler`. `bitrateDropPercent` and `staleSeconds` exist but are **not consumed** (operational alert rules use boolean checks, no thresholds).
 
 ---
 
@@ -672,9 +671,9 @@ There is no `pod.removed` event; pods silently age out of the active window. The
 
 ## Known Limitations
 
-1. **Scheduling intervals are hard-coded**:
-    - Sync and metrics run every 10 seconds, inspection every 30 seconds, fixed in `@Cron` decorators
-    - `SYNC_POLL_INTERVAL`, `METRICS_POLL_INTERVAL`, `INSPECTION_INTERVAL` are defined in `ConfigService` but never consumed
+1. **Scheduling is centralized and config-driven**:
+    - Every scheduled job is a single `@ScheduledTask({ name, interval })` method, discovered and run by `JobScheduler` (`src/common/scheduling/`), which owns the timer, overlap protection, and error guarding
+    - Cadence comes from `ConfigService`: `SYNC_POLL_INTERVAL` (10s), `METRICS_POLL_INTERVAL` (10s), `INSPECTION_INTERVAL` (30s); no `@nestjs/schedule`/`@Cron` remains
 
 2. **Metrics are operational, not quality**:
     - The MediaMTX `/metrics` endpoint exposes node + path operational data (bytes, readers, conns/sessions, `framesInError`, ready state) — not per-stream bitrate/fps; per-session loss/jitter/RTT exist but are deferred to the inspection feature (ADR-0009/0010)
@@ -684,7 +683,7 @@ There is no `pod.removed` event; pods silently age out of the active window. The
     - Inactive pods age out of the active window but are never deleted, and no `pod.removed` event is emitted
 
 4. **Sequential scheduled processing**:
-    - Inspection processes streams one at a time (`SequentialStreamTaskRunner`); with many streams a cycle can exceed its 30s interval
+    - Inspection processes streams one at a time in an inline loop; with many streams a cycle can exceed its 30s interval, but `JobScheduler`'s overlap guard skips the next tick rather than running cycles concurrently
 
 5. **Discovery source fallback assumes RTSP**:
     - When a discovered stream has no usable source, the pipeline source defaults to `${INGEST_RTSP_URL}/{name}`

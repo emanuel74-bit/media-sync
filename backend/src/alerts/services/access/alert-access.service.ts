@@ -1,8 +1,8 @@
 import { Injectable } from "@nestjs/common";
 
-import { Alert } from "../domain";
-import { AlertRepository } from "../repositories";
-import { AlertReconcileService } from "./alert-reconcile.service";
+import { Alert } from "../../domain";
+import { AlertRepository } from "../../repositories";
+import { AlertReconcileService } from "../reconciliation";
 
 /**
  * Externally-triggered (REST) read + manual-resolve surface for alerts. The

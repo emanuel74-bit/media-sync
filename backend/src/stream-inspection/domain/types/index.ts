@@ -3,4 +3,4 @@
  */
 
 export * from "./stream-inspection.types";
-export * from "./stream-inspection-creation.types";
+export * from "./new-stream-inspection-data.types";
