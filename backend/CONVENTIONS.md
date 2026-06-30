@@ -372,7 +372,7 @@ Current, verified gaps between the rules above and the code. Fix on touch; remov
 
 **DEVN-06** — `npm run barrels:generate` (barrelsby `--delete --location all`) overwrites the curated feature-root barrels with broken self-referential output (`export * from "./index"`), so it cannot be run over the whole tree (blocks the original intent of TOOL-03). Until the script is fixed or scoped to nested folders, barrels are maintained by hand per TOOL-03.
 
-**DEVN-07** — DIR-10 is currently satisfied only by `alerts/domain/types/`. Other type folders still pack multiple shapes per file and use no subject subfolders — e.g. `infrastructure/media-mtx/types/media-mtx.types.ts` (5), `streams/domain/types/stream.types.ts` (3), `pods/domain/types/pod-registration-data.types.ts` (3), `common/domain/types/event-payloads.types.ts` (3), plus several two-shape files. Apply DIR-10 on touch.
+**DEVN-07** — DIR-10 is satisfied by `alerts/domain/types/` and `pods/domain/types/`. Other type folders still pack multiple shapes per file — e.g. `infrastructure/media-mtx/types/media-mtx.types.ts` (5), `streams/domain/types/stream.types.ts` (3), `common/domain/types/event-payloads.types.ts` (3), plus several two-shape files. Apply DIR-10 on touch.
 
 ---
 

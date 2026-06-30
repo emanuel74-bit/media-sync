@@ -1,15 +1,14 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { PodStatus } from "@/common";
-import { SystemEventNames, NodeSampledPayload } from "@/common";
+import { PodStatus, SystemEventNames, NodeSampledPayload } from "@/common";
 
-import { PodRepository } from "../repositories";
-import { Pod, NodeResources, PodHeartbeatData, PodRegistrationData } from "../domain";
+import { PodRepository } from "../../repositories";
+import { Pod, NodeResources, PodHeartbeatData, PodRegistrationData } from "../../domain";
 
 @Injectable()
-export class PodRegistrationService {
-    private readonly logger = new Logger(PodRegistrationService.name);
+export class PodLifecycleService {
+    private readonly logger = new Logger(PodLifecycleService.name);
 
     constructor(
         private readonly podRepository: PodRepository,
@@ -20,10 +19,9 @@ export class PodRegistrationService {
         const fields: Partial<Omit<Pod, "podId" | "createdAt" | "updatedAt">> = {
             status: PodStatus.ACTIVE,
             lastHeartbeatAt: new Date(),
+            host: request.host,
+            type: request.type,
         };
-        if (request.host !== undefined) fields.host = request.host;
-        if (request.tags !== undefined) fields.tags = request.tags;
-        if (request.type !== undefined) fields.type = request.type;
 
         const pod = await this.podRepository.upsertByPodId(request.podId, fields);
         this.logger.log(`Registered/heartbeat pod: ${request.podId}`);

@@ -1,17 +1,15 @@
 import { ApiTags } from "@nestjs/swagger";
 import { Body, Controller, Get, Post } from "@nestjs/common";
 
-import { PodRole } from "@/common";
-
 import { Pod } from "../domain";
 import { RegisterPodDto, HeartbeatDto } from "../dto";
-import { PodRegistrationService, PodQueryService } from "../services";
+import { PodLifecycleService, PodQueryService } from "../services";
 
 @ApiTags("pods")
 @Controller("api/pods")
 export class PodsController {
     constructor(
-        private readonly podRegistration: PodRegistrationService,
+        private readonly podLifecycle: PodLifecycleService,
         private readonly podQuery: PodQueryService,
     ) {}
 
@@ -27,17 +25,16 @@ export class PodsController {
 
     @Post("register")
     async registerPod(@Body() dto: RegisterPodDto): Promise<Pod> {
-        return this.podRegistration.registerPod({
+        return this.podLifecycle.registerPod({
             podId: dto.podId,
             host: dto.host,
-            tags: dto.tags ?? [],
-            type: dto.type ?? PodRole.CLUSTER,
+            type: dto.type,
             resources: dto.resources,
         });
     }
 
     @Post("heartbeat")
     async heartbeat(@Body() dto: HeartbeatDto): Promise<Pod> {
-        return this.podRegistration.heartbeat({ podId: dto.podId, resources: dto.resources });
+        return this.podLifecycle.heartbeat({ podId: dto.podId, resources: dto.resources });
     }
 }

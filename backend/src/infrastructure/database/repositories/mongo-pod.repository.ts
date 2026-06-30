@@ -46,15 +46,6 @@ export class MongoPodRepository
         return this.toDomainList(docs);
     }
 
-    async findActivePodIds(since: Date): Promise<string[]> {
-        const docs = await this.model
-            .find(this.buildFilter(since))
-            .select("podId")
-            .lean<Array<{ podId: string }>>()
-            .exec();
-        return docs.map((pod) => pod.podId);
-    }
-
     private buildFilter(since: Date, role?: PodRole): FilterQuery<PodDocument> {
         const filter: FilterQuery<PodDocument> = {
             status: PodStatus.ACTIVE,
@@ -71,7 +62,6 @@ export class MongoPodRepository
         return {
             podId: raw.podId,
             host: raw.host,
-            tags: raw.tags,
             type: raw.type,
             status: raw.status,
             lastHeartbeatAt: raw.lastHeartbeatAt,

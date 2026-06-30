@@ -217,9 +217,8 @@ Register a pod or refresh an existing one. Upserts by `podId`, sets status to `a
 ```json
 {
   "podId": "string (required)",
-  "host": "string (optional)",
-  "tags": ["string"] (optional),
-  "type": "ingest|cluster (optional, default: cluster)",
+  "host": "string (required) — reachable address used to build the pod's client URL",
+  "type": "ingest|cluster (required)",
   "resources": { "cpu": 0-100, "memory": 0-100, "disk": 0-100 } (optional)
 }
 ```
@@ -687,9 +686,8 @@ All endpoints may return the following error formats:
 {
   _id: string;
   podId: string;                // unique
-  host?: string;
-  type: 'ingest' | 'cluster';   // default: cluster
-  tags: string[];
+  host: string;                 // reachable address (required)
+  type: 'ingest' | 'cluster';   // required
   status: 'active' | 'inactive' | 'draining';
   lastHeartbeatAt: Date;
   createdAt: Date;

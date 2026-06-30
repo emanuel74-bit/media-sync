@@ -11,6 +11,4 @@ export abstract class PodRepository {
     abstract findAll(): Promise<Pod[]>;
 
     abstract findActive(since: Date, role?: PodRole): Promise<Pod[]>;
-
-    abstract findActivePodIds(since: Date): Promise<string[]>;
 }

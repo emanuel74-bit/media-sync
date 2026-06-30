@@ -5,22 +5,21 @@ import { Pod } from "@/pods/domain";
 import { SystemEventNames } from "@/common";
 import { PodRole, PodStatus } from "@/common";
 import { PodRepository } from "@/pods/repositories";
-import { PodRegistrationService } from "@/pods/services";
+import { PodLifecycleService } from "@/pods/services";
 
 const makePod = (overrides: Partial<Pod> = {}): Pod => ({
     podId: "pod-1",
     status: PodStatus.ACTIVE,
     lastHeartbeatAt: new Date(),
     host: "10.0.0.1",
-    tags: [],
     type: PodRole.CLUSTER,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,
 });
 
-describe("PodRegistrationService", () => {
-    let service: PodRegistrationService;
+describe("PodLifecycleService", () => {
+    let service: PodLifecycleService;
     let podRepository: jest.Mocked<PodRepository>;
     let events: jest.Mocked<EventEmitter2>;
 
@@ -29,65 +28,47 @@ describe("PodRegistrationService", () => {
             upsertByPodId: jest.fn(),
             findAll: jest.fn(),
             findActive: jest.fn(),
-            findActivePodIds: jest.fn(),
         } as unknown as jest.Mocked<PodRepository>;
 
         events = { emit: jest.fn() } as unknown as jest.Mocked<EventEmitter2>;
 
         const module: TestingModule = await Test.createTestingModule({
             providers: [
-                PodRegistrationService,
+                PodLifecycleService,
                 { provide: PodRepository, useValue: podRepository },
                 { provide: EventEmitter2, useValue: events },
             ],
         }).compile();
 
-        service = module.get<PodRegistrationService>(PodRegistrationService);
+        service = module.get<PodLifecycleService>(PodLifecycleService);
     });
 
     describe("registerPod", () => {
-        it("upserts the pod with ACTIVE status and emits POD_REGISTERED", async () => {
+        it("upserts the pod with ACTIVE status, host, and type and emits POD_REGISTERED", async () => {
             const pod = makePod();
             podRepository.upsertByPodId.mockResolvedValue(pod);
 
-            const result = await service.registerPod({ podId: "pod-1" });
+            const result = await service.registerPod({
+                podId: "pod-1",
+                host: "10.0.0.2",
+                type: PodRole.INGEST,
+            });
 
-            expect(podRepository.upsertByPodId).toHaveBeenCalledWith(
-                "pod-1",
-                expect.objectContaining({ status: PodStatus.ACTIVE }),
-            );
+            expect(podRepository.upsertByPodId).toHaveBeenCalledWith("pod-1", {
+                status: PodStatus.ACTIVE,
+                lastHeartbeatAt: expect.any(Date),
+                host: "10.0.0.2",
+                type: PodRole.INGEST,
+            });
             expect(result).toBe(pod);
             expect(events.emit).toHaveBeenCalledWith(SystemEventNames.POD_REGISTERED, pod);
-        });
-
-        it("includes optional fields when provided", async () => {
-            const pod = makePod({ host: "10.0.0.2", tags: ["edge"] });
-            podRepository.upsertByPodId.mockResolvedValue(pod);
-
-            await service.registerPod({ podId: "pod-1", host: "10.0.0.2", tags: ["edge"] });
-
-            expect(podRepository.upsertByPodId).toHaveBeenCalledWith(
-                "pod-1",
-                expect.objectContaining({ host: "10.0.0.2", tags: ["edge"] }),
-            );
-        });
-
-        it("omits optional fields when not provided", async () => {
-            podRepository.upsertByPodId.mockResolvedValue(makePod());
-
-            await service.registerPod({ podId: "pod-1" });
-
-            const [, fields] = podRepository.upsertByPodId.mock.calls[0];
-            expect(fields).not.toHaveProperty("host");
-            expect(fields).not.toHaveProperty("tags");
-            expect(fields).not.toHaveProperty("type");
         });
 
         it("updates lastHeartbeatAt with a recent timestamp", async () => {
             const before = new Date();
             podRepository.upsertByPodId.mockResolvedValue(makePod());
 
-            await service.registerPod({ podId: "pod-1" });
+            await service.registerPod({ podId: "pod-1", host: "10.0.0.1", type: PodRole.CLUSTER });
 
             const [, fields] = podRepository.upsertByPodId.mock.calls[0];
             expect(fields.lastHeartbeatAt).toBeInstanceOf(Date);

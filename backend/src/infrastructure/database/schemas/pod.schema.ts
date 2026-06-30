@@ -10,13 +10,10 @@ export class Pod {
     @Prop({ required: true, unique: true })
     podId!: string;
 
-    @Prop({ default: null })
-    host?: string;
+    @Prop({ required: true })
+    host!: string;
 
-    @Prop({ type: [String], default: [] })
-    tags!: string[];
-
-    @Prop({ default: PodRole.CLUSTER, enum: Object.values(PodRole) })
+    @Prop({ required: true, enum: Object.values(PodRole) })
     type!: PodRole;
 
     @Prop({ default: PodStatus.ACTIVE, enum: Object.values(PodStatus) })

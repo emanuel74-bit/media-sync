@@ -75,9 +75,7 @@ export class MediaMtxClientRegistry {
         port: number,
         auth: string,
     ): readonly MediaMtxClient[] {
-        return pods.map((pod) =>
-            this.factory.getOrCreate(`http://${auth}${pod.host || pod.podId}:${port}`),
-        );
+        return pods.map((pod) => this.factory.getOrCreate(`http://${auth}${pod.host}:${port}`));
     }
 
     /**

@@ -3,8 +3,8 @@ import { Injectable } from "@nestjs/common";
 import { PodRole } from "@/common";
 import { ConfigService } from "@/config";
 
-import { Pod, ActivePodRef } from "../domain";
-import { PodRepository } from "../repositories";
+import { Pod, ActivePodRef } from "../../domain";
+import { PodRepository } from "../../repositories";
 
 @Injectable()
 export class PodQueryService {
@@ -29,7 +29,7 @@ export class PodQueryService {
         const pods = await this.podRepository.findActive(this.activeSince(), role);
         return pods.map((pod) => ({
             podId: pod.podId,
-            host: pod.host ?? undefined,
+            host: pod.host,
             type: pod.type,
         }));
     }

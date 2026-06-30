@@ -122,7 +122,7 @@ src/
 │   ├── domain/types/
 │   ├── dto/                      # RegisterPodDto, HeartbeatDto
 │   ├── repositories/             # PodRepository (abstract contract)
-│   └── services/                 # PodQueryService, PodRegistrationService
+│   └── services/                 # query/ (PodQueryService), lifecycle/ (PodLifecycleService)
 ├── streams/
 │   ├── controllers/
 │   ├── domain/types/
@@ -180,8 +180,8 @@ Every folder has a barrelsby-generated `index.ts`; imports between features go t
 
 **Services**:
 
-- `PodRegistrationService.registerPod(data)`: Upsert by `podId`, set status `active`, refresh `lastHeartbeatAt`, emit `pod.registered`
-- `PodRegistrationService.heartbeat(podId)`: Refresh heartbeat only (no `pod.registered`)
+- `PodLifecycleService.registerPod(data)`: Upsert by `podId`, set status `active`, refresh `lastHeartbeatAt`, write `host` + `type` (both required), emit `pod.registered`
+- `PodLifecycleService.heartbeat(podId)`: Refresh heartbeat only (no `pod.registered`)
 - Both register/heartbeat accept optional `resources` (CPU/memory/disk %); when present, emit `node.sampled` for the alerts `NodeResourceRuler` (the pods feature is a node-alert producer)
 - `PodQueryService.getActivePods(role?)`: Pods with a heartbeat within `POD_HEALTH_TOLERANCE_SECONDS`
 - `PodQueryService.listActivePodRefs(role?)` / `listActivePodIds(role?)`: Lightweight projections used by sync/metrics/infrastructure
@@ -335,7 +335,7 @@ Each feature defines an **abstract repository contract** in its own `repositorie
 
 ```
 1. POD REGISTRATION
-   MediaMTX pod ──POST /api/pods/register──▶ PodRegistrationService
+   MediaMTX pod ──POST /api/pods/register──▶ PodLifecycleService
         └─▶ upsert Pod in MongoDB ──▶ emit pod.registered ──▶ Gateway ──▶ clients
    (subsequent POST /api/pods/heartbeat refreshes lastHeartbeatAt, no event)
 ```
@@ -468,9 +468,8 @@ All schemas use `{ timestamps: true }` (automatic `createdAt`/`updatedAt`).
 {
   "_id": ObjectId,
   "podId": String (unique),
-  "host": String | null,
-  "type": String ("ingest" | "cluster", default "cluster"),
-  "tags": [String],
+  "host": String (required),
+  "type": String ("ingest" | "cluster", required),
   "status": String ("active" | "inactive" | "draining", default "active"),
   "lastHeartbeatAt": Date
 }

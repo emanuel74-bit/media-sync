@@ -11,7 +11,6 @@ const makePod = (podId: string, overrides: Partial<Pod> = {}): Pod => ({
     status: PodStatus.ACTIVE,
     lastHeartbeatAt: new Date(),
     host: "10.0.0.1",
-    tags: [],
     type: PodRole.CLUSTER,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -28,7 +27,6 @@ describe("PodQueryService", () => {
             upsertByPodId: jest.fn(),
             findAll: jest.fn(),
             findActive: jest.fn(),
-            findActivePodIds: jest.fn(),
         } as unknown as jest.Mocked<PodRepository>;
 
         config = {
@@ -86,14 +84,17 @@ describe("PodQueryService", () => {
 
     describe("listActivePodRefs", () => {
         it("maps pods to ActivePodRef objects", async () => {
-            const pods = [makePod("pod-1", { host: "10.0.0.5" }), makePod("pod-2", { host: null })];
+            const pods = [
+                makePod("pod-1", { host: "10.0.0.5" }),
+                makePod("pod-2", { host: "10.0.0.6" }),
+            ];
             podRepository.findActive.mockResolvedValue(pods);
 
             const refs = await service.listActivePodRefs();
 
             expect(refs).toEqual([
                 { podId: "pod-1", host: "10.0.0.5", type: PodRole.CLUSTER },
-                { podId: "pod-2", host: undefined, type: PodRole.CLUSTER },
+                { podId: "pod-2", host: "10.0.0.6", type: PodRole.CLUSTER },
             ]);
         });
     });

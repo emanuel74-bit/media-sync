@@ -83,7 +83,7 @@ export class MediaMtxMetricsService {
             return pods.map((pod) => ({
                 context: role,
                 nodeId: pod.podId,
-                url: this.metricsUrl(auth, pod.host || pod.podId),
+                url: this.metricsUrl(auth, pod.host),
             }));
         }
         return fallbackUrls.map((url) => {

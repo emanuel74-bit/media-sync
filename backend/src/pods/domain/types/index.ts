@@ -3,5 +3,7 @@
  */
 
 export * from "./pod.types";
+export * from "./node-resources.types";
 export * from "./active-pod-ref.types";
+export * from "./pod-heartbeat-data.types";
 export * from "./pod-registration-data.types";
