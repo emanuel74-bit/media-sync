@@ -129,10 +129,10 @@ src/
 │   ├── dto/                      # CreateStreamDto, UpdateStreamDto, AssignStreamDto
 │   ├── repositories/             # StreamRepository (abstract contract)
 │   └── services/
-│       ├── assignment/           # StreamAssignmentPolicy (abstract) +
-│       │                         #   HashStreamAssignmentPolicy + assignment service
+│       ├── assignment/           # StreamAssignmentPolicy (abstract) + assignment service;
+│       │                         #   hash/ variant folder (HashStreamAssignmentPolicy)
 │       ├── mutation/             # StreamCrudService, StreamStatusService
-│       ├── orchestration/        # StreamLifecycleService, StreamProvisioningService
+│       ├── orchestration/        # StreamSetupService, StreamPipelineService
 │       ├── query/                # StreamQueryService
 │       └── streams-facade.service.ts  # public entry point for other modules
 ├── alerts/
@@ -190,7 +190,7 @@ Every folder has a barrelsby-generated `index.ts`; imports between features go t
 
 - `IngestStreamListingStrategy`: To discover ingest pods when the primary ingest endpoint fails
 - `SyncQueryAggregatorService`: To select active cluster pod IDs for assignment
-- `StreamFailoverService` / `StreamLifecycleService`: To pick failover/assignment candidates
+- `StreamFailoverService` / `StreamSetupService`: To pick failover/assignment candidates
 
 ---
 
@@ -206,8 +206,8 @@ Internally split by service role; `StreamsFacadeService` is the single entry poi
 - `StreamCrudService` (mutation): `create`, `update`, `patch`, `remove`
 - `StreamStatusService` (mutation): `upsertFromDiscovery`, `markStale`
 - `StreamAssignmentService` (mutation): `assignToPod` (emits `stream.assigned`), `clearAssignment` (emits `stream.unassigned`), `ensureAssigned`, `reassign`
-- `StreamLifecycleService` (orchestration): `create` → assign → provision; marks `pending_assignment` if no active cluster pods
-- `StreamProvisioningService` (orchestration): creates the cluster pull pipeline, sets `synced`/`sync_error`, emits `stream.synced`
+- `StreamSetupService` (orchestration): `create` → assign → provision; marks `pending_assignment` if no active cluster pods
+- `StreamPipelineService` (orchestration): creates the cluster pull pipeline, sets `synced`/`sync_error`, emits `stream.synced`
 - `StreamsFacadeService`: thin facade re-exposing the above for cross-module callers
 
 **Assignment Policy**:

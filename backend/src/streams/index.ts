@@ -5,6 +5,6 @@ export {
     StreamQueryService,
     StreamStatusService,
     StreamsFacadeService,
+    StreamPipelineService,
     StreamAssignmentService,
-    StreamProvisioningService,
 } from "./services";

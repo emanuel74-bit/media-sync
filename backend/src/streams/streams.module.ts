@@ -14,8 +14,8 @@ import {
     StreamsFacadeService,
     StreamCrudService,
     StreamStatusService,
-    StreamProvisioningService,
-    StreamLifecycleService,
+    StreamPipelineService,
+    StreamSetupService,
     StreamAssignmentPolicy,
 } from "./services";
 
@@ -29,20 +29,14 @@ import {
         StreamQueryService,
         StreamsFacadeService,
         StreamCrudService,
-        StreamProvisioningService,
+        StreamPipelineService,
         StreamAssignmentService,
         StreamStatusService,
-        StreamLifecycleService,
+        StreamSetupService,
         { provide: StreamRepository, useClass: MongoStreamRepository },
         { provide: StreamAssignmentPolicy, useClass: HashStreamAssignmentPolicy },
     ],
     controllers: [StreamsController],
-    exports: [
-        StreamsFacadeService,
-        StreamQueryService,
-        StreamProvisioningService,
-        StreamAssignmentService,
-        StreamStatusService,
-    ],
+    exports: [StreamsFacadeService, StreamQueryService],
 })
 export class StreamsModule {}

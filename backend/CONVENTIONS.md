@@ -115,7 +115,7 @@ Example: `sync/` has no controllers or dto — and therefore no such folders.
 **DIR-03** — Rule: `domain/` holds framework-free business definitions, organized as `domain/types/`, `domain/enums/`, `domain/consts/`. No logic in enum/types/const files; no Nest imports in `domain/`.
 
 **DIR-04** — Rule: When `services/` covers more than one concern, split it into purpose subfolders named after the concern, and move every file dedicated to one concern into its folder.
-Example: `metrics/services/{alerts,collection,failover,persistence}/`, `streams/services/{assignment,mutation,orchestration,query}/`.
+Example: `metrics/services/{collection,persistence}/`, `streams/services/{assignment,mutation,orchestration,query}/`.
 
 **DIR-05** — Rule: A file may sit at a feature/`services/` root only if it is an **aggregating entry point** — the feature's public/cross-module contract that *fans out to* the concerns below it (a facade depends downward and is what outsiders call). A service that is merely *shared by* the concerns — a dependency they consume, like a reconciler or an evaluation engine — is itself a concern and gets its own subfolder; do NOT elevate it to root just because it has several consumers (that inverts the facade relationship). A feature with no such entry point has nothing at its `services/` root.
 Example: `streams/services/streams-facade.service.ts` (cross-module entry that uses the concerns below it) sits at root. Alerts has no facade, so every alerts service is foldered — `access/` (REST read surface), `evaluation/` (`RuleEvaluator` engine), `reconciliation/` (the reconciler shared by the rulers), `rulers/` (per-source reactors) — even though the reconciler and evaluator each have multiple consumers.
@@ -202,7 +202,7 @@ Example: `StreamsController.create` maps `CreateStreamDto` → `CreateStreamData
 
 - **query** — reads, no side effects (`StreamQueryService`, `PodQueryService`)
 - **mutation** — state changes (`StreamCrudService`, `StreamStatusService`)
-- **orchestration / lifecycle** — multi-step coordination with side effects (`StreamLifecycleService`, `StreamProvisioningService`, `SyncOrchestratorService`)
+- **orchestration / lifecycle** — multi-step coordination with side effects (`StreamSetupService`, `StreamPipelineService`, `SyncOrchestratorService`)
 - **reaction** — responds to a produced fact, typically via `@OnEvent` (`StreamTrackAlertService`)
 
 **SVC-02** — Rule: Selection/decision logic is a policy class behind an abstract base used as the DI token, so the algorithm is swappable.
@@ -212,7 +212,7 @@ Example: `StreamAssignmentPolicy` (abstract) ← `HashStreamAssignmentPolicy`, b
 Example: `sync/services/{scheduler,query,orchestration,workflows}/`, token `SYNC_WORKFLOWS`.
 
 **SVC-04** — Rule: When several services of one feature are consumed together by other modules, expose a facade and have outsiders depend on it only.
-Example: `StreamsFacadeService` is what `sync/` and `metrics/` import; they never touch `StreamCrudService` directly. (Exception: `metrics/failover` wraps `StreamQueryService`/`StreamAssignmentService` in its own gateway service — `MetricFailoverStreamGatewayService` — which is the same pattern one level down.)
+Example: `StreamsFacadeService` is what `sync/` imports (it needs several stream operations together). A module needing only reads may depend on the exported `StreamQueryService` directly (the alerts track ruler does). The streams module exports **only** those two; outsiders never touch `StreamCrudService`, `StreamPipelineService`, `StreamAssignmentService`, etc.
 
 **SVC-05** — Rule: A service that delegates to another service MUST change at least one of: vocabulary/abstraction level, module boundary, exposed surface area — or carry at least one decision (guard, transformation, defaulting). If inlining the wrapper loses no concept, inline it. A pure same-module, same-vocabulary forwarder is forbidden, and a wrapper whose tests only assert "calls the delegate with the same arguments" is presumptively one. Facades and boundary gateways (SVC-04) are exempt: their value is the seam itself.
 
@@ -221,6 +221,10 @@ Example: the alerts pipeline — metrics/inspection/pods _produce_ data events, 
 Enforced: review.
 Example: `MetricAlertReactionService` and `MetricFailoverReactionService` were deleted under this rule — the metric workflow now calls `MetricAlertInvocationService` directly, and the cluster-only guard moved into `StreamFailoverService` where its sibling preconditions live.
 Decision history: [ADR-0005](../docs/adr/0005-no-pass-through-services.md).
+Enforced: review.
+
+**SVC-07** — Rule: A leaf service (query/crud/status/assignment) owns its persistence access directly through the repository. It MAY depend on a **sibling** service only when that service carries reused _logic_ — events, multi-step orchestration, defaulting — never to borrow a thin read/write it could perform on the repository it already holds. Holding **both** the repository and a sibling data-service for overlapping access is the tell of a redundant wrap: collapse it onto the repository. (Orchestrators compose services and don't touch the repository; SVC-05 covers pure service→service forwarders.)
+Example: `StreamAssignmentService` reads via `streamRepository.findByName` + inline `NotFoundException` — matching its `assignToPod`/`clearAssignment` siblings — rather than injecting `StreamQueryService` for one `findByName`+throw helper. Allowed shape: `AlertAccessService` holds `AlertRepository` for its reads but delegates `resolveAlert` to `AlertReconcileService`, because resolving emits `alert.resolved` (reused logic, not a thin call).
 Enforced: review.
 
 ---
@@ -372,7 +376,7 @@ Current, verified gaps between the rules above and the code. Fix on touch; remov
 
 **DEVN-06** — `npm run barrels:generate` (barrelsby `--delete --location all`) overwrites the curated feature-root barrels with broken self-referential output (`export * from "./index"`), so it cannot be run over the whole tree (blocks the original intent of TOOL-03). Until the script is fixed or scoped to nested folders, barrels are maintained by hand per TOOL-03.
 
-**DEVN-07** — DIR-10 is satisfied by `alerts/domain/types/` and `pods/domain/types/`. Other type folders still pack multiple shapes per file — e.g. `infrastructure/media-mtx/types/media-mtx.types.ts` (5), `streams/domain/types/stream.types.ts` (3), `common/domain/types/event-payloads.types.ts` (3), plus several two-shape files. Apply DIR-10 on touch.
+**DEVN-07** — DIR-10 is satisfied by `alerts/`, `pods/`, and `streams/` domain types. Other type folders still pack multiple shapes per file — e.g. `infrastructure/media-mtx/types/media-mtx.types.ts` (5), `common/domain/types/event-payloads.types.ts` (3), plus several two-shape files. Apply DIR-10 on touch.
 
 ---
 

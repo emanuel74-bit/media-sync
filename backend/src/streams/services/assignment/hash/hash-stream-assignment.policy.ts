@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 
-import { StreamAssignmentPolicy } from "./stream-assignment.policy";
+import { StreamAssignmentPolicy } from "../stream-assignment.policy";
 
 /**
  * Deterministically assigns a stream to a pod using consistent hashing.
@@ -8,7 +8,7 @@ import { StreamAssignmentPolicy } from "./stream-assignment.policy";
  * as long as the pod list order is stable.
  */
 @Injectable()
-export class HashStreamAssignmentPolicy extends StreamAssignmentPolicy {
+export class HashStreamAssignmentPolicy implements StreamAssignmentPolicy {
     selectPod(streamName: string, candidatePodIds: readonly string[]): string {
         if (!candidatePodIds.length) {
             throw new Error("Cannot assign stream: no candidate pods provided");

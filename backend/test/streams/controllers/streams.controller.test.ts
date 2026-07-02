@@ -6,7 +6,7 @@ import { Stream, StreamAssignmentInfo } from "@/streams/domain";
 import {
     StreamAssignmentService,
     StreamCrudService,
-    StreamLifecycleService,
+    StreamSetupService,
     StreamQueryService,
 } from "@/streams/services";
 
@@ -38,7 +38,7 @@ describe("StreamsController", () => {
     let controller: StreamsController;
     let streamQuery: jest.Mocked<StreamQueryService>;
     let streamCrud: jest.Mocked<StreamCrudService>;
-    let streamLifecycle: jest.Mocked<StreamLifecycleService>;
+    let streamSetup: jest.Mocked<StreamSetupService>;
     let streamAssignment: jest.Mocked<StreamAssignmentService>;
 
     beforeEach(async () => {
@@ -53,9 +53,9 @@ describe("StreamsController", () => {
             remove: jest.fn(),
         } as unknown as jest.Mocked<StreamCrudService>;
 
-        streamLifecycle = {
-            create: jest.fn(),
-        } as unknown as jest.Mocked<StreamLifecycleService>;
+        streamSetup = {
+            onboard: jest.fn(),
+        } as unknown as jest.Mocked<StreamSetupService>;
 
         streamAssignment = {
             assignToPod: jest.fn(),
@@ -67,7 +67,7 @@ describe("StreamsController", () => {
             providers: [
                 { provide: StreamQueryService, useValue: streamQuery },
                 { provide: StreamCrudService, useValue: streamCrud },
-                { provide: StreamLifecycleService, useValue: streamLifecycle },
+                { provide: StreamSetupService, useValue: streamSetup },
                 { provide: StreamAssignmentService, useValue: streamAssignment },
             ],
         }).compile();
@@ -85,9 +85,9 @@ describe("StreamsController", () => {
         expect(streamQuery.findAll).toHaveBeenCalledTimes(1);
     });
 
-    it("maps create dto fields to StreamLifecycleService.create", async () => {
+    it("maps create dto fields to StreamSetupService.onboard", async () => {
         const created = makeStream();
-        streamLifecycle.create.mockResolvedValue(created);
+        streamSetup.onboard.mockResolvedValue(created);
 
         const result = await controller.create({
             name: "stream-1",
@@ -96,7 +96,7 @@ describe("StreamsController", () => {
         });
 
         expect(result).toBe(created);
-        expect(streamLifecycle.create).toHaveBeenCalledWith({
+        expect(streamSetup.onboard).toHaveBeenCalledWith({
             name: "stream-1",
             source: "rtsp://source",
             isEnabled: true,

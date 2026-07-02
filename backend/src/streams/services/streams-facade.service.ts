@@ -1,12 +1,10 @@
 import { Injectable } from "@nestjs/common";
 
-import { MediaMtxPipelineService } from "@/infrastructure";
-
 import { Stream } from "../domain";
 import { StreamQueryService } from "./query";
 import { StreamStatusService } from "./mutation";
 import { StreamAssignmentService } from "./assignment";
-import { StreamProvisioningService } from "./orchestration";
+import { StreamPipelineService } from "./orchestration";
 
 @Injectable()
 export class StreamsFacadeService {
@@ -14,8 +12,7 @@ export class StreamsFacadeService {
         private readonly streamQuery: StreamQueryService,
         private readonly streamStatus: StreamStatusService,
         private readonly streamAssignment: StreamAssignmentService,
-        private readonly streamProvisioning: StreamProvisioningService,
-        private readonly mediaMtxPipeline: MediaMtxPipelineService,
+        private readonly streamPipeline: StreamPipelineService,
     ) {}
 
     async findAll(): Promise<Stream[]> {
@@ -31,18 +28,11 @@ export class StreamsFacadeService {
     }
 
     async provisionClusterPipeline(stream: Stream): Promise<Stream> {
-        return this.streamProvisioning.provisionClusterPipeline(stream);
+        return this.streamPipeline.deploy(stream);
     }
 
     async createClusterPipeline(stream: Stream): Promise<void> {
-        await this.mediaMtxPipeline.createClusterPullPipeline(
-            {
-                name: stream.name,
-                source: stream.source,
-                status: stream.status,
-            },
-            stream.assignedPod,
-        );
+        await this.streamPipeline.build(stream);
     }
 
     async markStale(name: string): Promise<void> {

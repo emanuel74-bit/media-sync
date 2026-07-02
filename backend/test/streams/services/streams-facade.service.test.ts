@@ -2,10 +2,9 @@ import { Test, TestingModule } from "@nestjs/testing";
 
 import { StreamStatus } from "@/common";
 import { Stream } from "@/streams/domain";
-import { MediaMtxPipelineService } from "@/infrastructure";
 import {
     StreamAssignmentService,
-    StreamProvisioningService,
+    StreamPipelineService,
     StreamQueryService,
     StreamStatusService,
     StreamsFacadeService,
@@ -32,8 +31,7 @@ describe("StreamsFacadeService", () => {
     let streamQuery: jest.Mocked<StreamQueryService>;
     let streamStatus: jest.Mocked<StreamStatusService>;
     let streamAssignment: jest.Mocked<StreamAssignmentService>;
-    let streamProvisioning: jest.Mocked<StreamProvisioningService>;
-    let mediaMtxPipeline: jest.Mocked<MediaMtxPipelineService>;
+    let streamPipeline: jest.Mocked<StreamPipelineService>;
 
     beforeEach(async () => {
         streamQuery = {
@@ -49,13 +47,10 @@ describe("StreamsFacadeService", () => {
             ensureAssigned: jest.fn(),
         } as unknown as jest.Mocked<StreamAssignmentService>;
 
-        streamProvisioning = {
-            provisionClusterPipeline: jest.fn(),
-        } as unknown as jest.Mocked<StreamProvisioningService>;
-
-        mediaMtxPipeline = {
-            createClusterPullPipeline: jest.fn(),
-        } as unknown as jest.Mocked<MediaMtxPipelineService>;
+        streamPipeline = {
+            deploy: jest.fn(),
+            build: jest.fn(),
+        } as unknown as jest.Mocked<StreamPipelineService>;
 
         const module: TestingModule = await Test.createTestingModule({
             providers: [
@@ -63,8 +58,7 @@ describe("StreamsFacadeService", () => {
                 { provide: StreamQueryService, useValue: streamQuery },
                 { provide: StreamStatusService, useValue: streamStatus },
                 { provide: StreamAssignmentService, useValue: streamAssignment },
-                { provide: StreamProvisioningService, useValue: streamProvisioning },
-                { provide: MediaMtxPipelineService, useValue: mediaMtxPipeline },
+                { provide: StreamPipelineService, useValue: streamPipeline },
             ],
         }).compile();
 
@@ -105,30 +99,23 @@ describe("StreamsFacadeService", () => {
         ]);
     });
 
-    it("delegates provisionClusterPipeline to StreamProvisioningService", async () => {
+    it("delegates provisionClusterPipeline to StreamPipelineService.deploy", async () => {
         const stream = makeStream();
-        streamProvisioning.provisionClusterPipeline.mockResolvedValue(stream);
+        streamPipeline.deploy.mockResolvedValue(stream);
 
         const result = await service.provisionClusterPipeline(stream);
 
         expect(result).toBe(stream);
-        expect(streamProvisioning.provisionClusterPipeline).toHaveBeenCalledWith(stream);
+        expect(streamPipeline.deploy).toHaveBeenCalledWith(stream);
     });
 
-    it("delegates createClusterPipeline to MediaMtxPipelineService, targeting the assigned pod", async () => {
+    it("delegates createClusterPipeline to StreamPipelineService.build", async () => {
         const stream = makeStream({ assignedPod: "pod-2" });
-        mediaMtxPipeline.createClusterPullPipeline.mockResolvedValue({} as never);
+        streamPipeline.build.mockResolvedValue(undefined);
 
         await service.createClusterPipeline(stream);
 
-        expect(mediaMtxPipeline.createClusterPullPipeline).toHaveBeenCalledWith(
-            {
-                name: stream.name,
-                source: stream.source,
-                status: stream.status,
-            },
-            "pod-2",
-        );
+        expect(streamPipeline.build).toHaveBeenCalledWith(stream);
     });
 
     it("delegates markStale to StreamStatusService", async () => {

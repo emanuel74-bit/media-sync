@@ -1,4 +1,4 @@
-import { HashStreamAssignmentPolicy } from "@/streams/services/assignment/hash-stream-assignment.policy";
+import { HashStreamAssignmentPolicy } from "@/streams/services/assignment/hash/hash-stream-assignment.policy";
 
 describe("HashStreamAssignmentPolicy", () => {
     let policy: HashStreamAssignmentPolicy;

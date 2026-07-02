@@ -36,8 +36,4 @@ export class StreamCrudService {
             throw new NotFoundException(`Stream ${name} not found`);
         }
     }
-
-    async patch(name: string, data: Partial<Stream>): Promise<Stream | null> {
-        return this.streamRepository.update(name, data);
-    }
 }

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 
 import { StreamRepository } from "../../repositories";
 import { Stream, StreamAssignmentInfo } from "../../domain";
@@ -13,22 +13,6 @@ export class StreamQueryService {
 
     async findByName(name: string): Promise<Stream | null> {
         return this.streamRepository.findByName(name);
-    }
-
-    async findRequiredByName(name: string): Promise<Stream> {
-        const stream = await this.findByName(name);
-        if (!stream) {
-            throw new NotFoundException(`Stream ${name} not found`);
-        }
-        return stream;
-    }
-
-    async findAssignedByName(name: string): Promise<Stream | null> {
-        const stream = await this.findByName(name);
-        if (!stream?.assignedPod) {
-            return null;
-        }
-        return stream;
     }
 
     async findUnassigned(): Promise<Stream[]> {

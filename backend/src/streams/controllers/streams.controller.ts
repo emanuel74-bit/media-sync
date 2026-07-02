@@ -6,7 +6,7 @@ import { AssignStreamDto, CreateStreamDto, UpdateStreamDto } from "../dto";
 import {
     StreamAssignmentService,
     StreamCrudService,
-    StreamLifecycleService,
+    StreamSetupService,
     StreamQueryService,
 } from "../services";
 
@@ -16,7 +16,7 @@ export class StreamsController {
     constructor(
         private readonly streamQuery: StreamQueryService,
         private readonly streamCrud: StreamCrudService,
-        private readonly streamLifecycle: StreamLifecycleService,
+        private readonly streamSetup: StreamSetupService,
         private readonly streamAssignment: StreamAssignmentService,
     ) {}
 
@@ -27,7 +27,7 @@ export class StreamsController {
 
     @Post()
     create(@Body() dto: CreateStreamDto): Promise<Stream> {
-        return this.streamLifecycle.create({
+        return this.streamSetup.onboard({
             name: dto.name,
             source: dto.source,
             isEnabled: dto.isEnabled,
