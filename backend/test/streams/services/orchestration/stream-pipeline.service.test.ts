@@ -32,6 +32,7 @@ describe("StreamPipelineService", () => {
         } as unknown as jest.Mocked<StreamStatusService>;
         mediaMtx = {
             createClusterPullPipeline: jest.fn(),
+            deleteClusterPipeline: jest.fn(),
         } as unknown as jest.Mocked<MediaMtxPipelineService>;
         events = { emit: jest.fn() } as unknown as jest.Mocked<EventEmitter2>;
 
@@ -86,5 +87,15 @@ describe("StreamPipelineService", () => {
             expect(events.emit).not.toHaveBeenCalled();
             expect(result).toBe(errored);
         });
+    });
+
+    it("teardown deletes the cluster pipeline and emits stream.removed", async () => {
+        const stream = makeStream();
+        mediaMtx.deleteClusterPipeline.mockResolvedValue(undefined);
+
+        await service.teardown(stream);
+
+        expect(mediaMtx.deleteClusterPipeline).toHaveBeenCalledWith("s1");
+        expect(events.emit).toHaveBeenCalledWith(SystemEventNames.STREAM_REMOVED, "s1");
     });
 });

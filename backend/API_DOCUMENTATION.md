@@ -742,7 +742,7 @@ interface StreamTrack {
 | `NODE_MEMORY_HIGH_PERCENT`     | number | `90`                                    | Pod memory% above this raises a `node_memory_high` alert (warning) |
 | `NODE_DISK_HIGH_PERCENT`       | number | `85`                                    | Pod disk% above this raises a `node_disk_high` alert (critical) |
 | `INGEST_RTSP_URL`              | string | `rtsp://mediamtx-ingest:8554`           | RTSP base the cluster pulls relayed paths from (include creds for ingest read auth) |
-| `SYNC_POLL_INTERVAL`           | number | `10000`                                 | Periodic sync interval in ms (`SyncService`)                 |
+| `SYNC_POLL_INTERVAL`           | number | `10000`                                 | Periodic sync interval in ms (`SyncSchedulerService`)        |
 | `METRICS_POLL_INTERVAL`        | number | `10000`                                 | Metrics scrape interval in ms (`MetricCollectionService`)    |
 | `INSPECTION_INTERVAL`          | number | `30000`                                 | Stream inspection interval in ms (`StreamInspectionCollectionService`) |
 

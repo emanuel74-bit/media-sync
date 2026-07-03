@@ -1,12 +1,10 @@
 import { Test, TestingModule } from "@nestjs/testing";
 
 import { PodRole } from "@/common";
-import { Stream } from "@/streams";
 import { PodQueryService } from "@/pods";
-import { StreamsFacadeService } from "@/streams";
-import { MediaMtxStreamInfo } from "@/infrastructure";
-import { SyncQueryAggregatorService } from "@/sync/services";
-import { MediaMtxStreamListingService } from "@/infrastructure";
+import { Stream, StreamsFacadeService } from "@/streams";
+import { SyncContextBuilderService } from "@/sync/services";
+import { MediaMtxStreamInfo, MediaMtxStreamListingService } from "@/infrastructure";
 
 const makeStream = (name: string): MediaMtxStreamInfo => ({
     name,
@@ -14,8 +12,8 @@ const makeStream = (name: string): MediaMtxStreamInfo => ({
     status: "ready",
 });
 
-describe("SyncQueryAggregatorService", () => {
-    let service: SyncQueryAggregatorService;
+describe("SyncContextBuilderService", () => {
+    let service: SyncContextBuilderService;
     let mediaMtxQuery: jest.Mocked<MediaMtxStreamListingService>;
     let streams: jest.Mocked<StreamsFacadeService>;
     let podsService: jest.Mocked<PodQueryService>;
@@ -36,14 +34,14 @@ describe("SyncQueryAggregatorService", () => {
 
         const module: TestingModule = await Test.createTestingModule({
             providers: [
-                SyncQueryAggregatorService,
+                SyncContextBuilderService,
                 { provide: MediaMtxStreamListingService, useValue: mediaMtxQuery },
                 { provide: StreamsFacadeService, useValue: streams },
                 { provide: PodQueryService, useValue: podsService },
             ],
         }).compile();
 
-        service = module.get<SyncQueryAggregatorService>(SyncQueryAggregatorService);
+        service = module.get<SyncContextBuilderService>(SyncContextBuilderService);
     });
 
     describe("buildContext", () => {

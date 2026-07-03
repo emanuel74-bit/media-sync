@@ -1,6 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 
 import { StreamStatus } from "@/common";
+import { SyncContext } from "@/sync/domain";
 import { Stream, StreamsFacadeService } from "@/streams";
 import { StreamReconcileService } from "@/sync/services/workflows/stream-reconcile.service";
 
@@ -20,6 +21,16 @@ const makeStream = (overrides: Partial<Stream> = {}): Stream => ({
     ...overrides,
 });
 
+const makeContext = (overrides: Partial<SyncContext> = {}): SyncContext => ({
+    ingestList: [],
+    clusterList: [],
+    ingestNames: new Set(),
+    clusterNames: new Set(),
+    podIds: ["pod-1"],
+    allStreams: [],
+    ...overrides,
+});
+
 describe("StreamReconcileService", () => {
     let service: StreamReconcileService;
     let streams: jest.Mocked<StreamsFacadeService>;
@@ -27,7 +38,7 @@ describe("StreamReconcileService", () => {
     beforeEach(async () => {
         streams = {
             ensureAssigned: jest.fn(),
-            createClusterPipeline: jest.fn(),
+            buildClusterPipeline: jest.fn(),
         } as unknown as jest.Mocked<StreamsFacadeService>;
 
         const module: TestingModule = await Test.createTestingModule({
@@ -41,46 +52,54 @@ describe("StreamReconcileService", () => {
     });
 
     it("reconciles only manual enabled streams", async () => {
-        const reconcileSpy = jest.spyOn(service, "reconcileStream").mockResolvedValue();
         const manual = makeStream({ name: "manual-1", isManual: true, isEnabled: true });
         const disabled = makeStream({ name: "manual-2", isManual: true, isEnabled: false });
         const discovered = makeStream({ name: "auto-1", isManual: false });
+        streams.ensureAssigned.mockResolvedValue(manual);
 
-        await service.reconcileAll([manual, disabled, discovered], new Set(), ["pod-1"]);
+        await service.execute(
+            makeContext({ allStreams: [manual, disabled, discovered], podIds: ["pod-1"] }),
+        );
 
-        expect(reconcileSpy).toHaveBeenCalledTimes(1);
-        expect(reconcileSpy).toHaveBeenCalledWith(manual, new Set(), ["pod-1"]);
+        expect(streams.ensureAssigned).toHaveBeenCalledTimes(1);
+        expect(streams.ensureAssigned).toHaveBeenCalledWith("manual-1", ["pod-1"]);
     });
 
     it("ensures assignment and creates a cluster pipeline when the stream is missing", async () => {
         const stream = makeStream();
         streams.ensureAssigned.mockResolvedValue(stream);
-        streams.createClusterPipeline.mockResolvedValue(undefined);
+        streams.buildClusterPipeline.mockResolvedValue(undefined);
 
-        await service.reconcileStream(stream, new Set(), ["pod-1"]);
+        await service.execute(makeContext({ allStreams: [stream], podIds: ["pod-1"] }));
 
         expect(streams.ensureAssigned).toHaveBeenCalledWith("stream-1", ["pod-1"]);
-        expect(streams.createClusterPipeline).toHaveBeenCalledWith(stream);
+        expect(streams.buildClusterPipeline).toHaveBeenCalledWith(stream);
     });
 
     it("skips cluster pipeline creation when the stream already exists in the cluster", async () => {
         const stream = makeStream();
         streams.ensureAssigned.mockResolvedValue(stream);
 
-        await service.reconcileStream(stream, new Set(["stream-1"]), ["pod-1"]);
+        await service.execute(
+            makeContext({
+                allStreams: [stream],
+                clusterNames: new Set(["stream-1"]),
+                podIds: ["pod-1"],
+            }),
+        );
 
         expect(streams.ensureAssigned).toHaveBeenCalledTimes(1);
-        expect(streams.createClusterPipeline).not.toHaveBeenCalled();
+        expect(streams.buildClusterPipeline).not.toHaveBeenCalled();
     });
 
     it("logs and swallows cluster pipeline creation failures", async () => {
         const stream = makeStream();
         const errorSpy = jest.spyOn((service as any).logger, "error").mockImplementation();
         streams.ensureAssigned.mockResolvedValue(stream);
-        streams.createClusterPipeline.mockRejectedValue(new Error("boom"));
+        streams.buildClusterPipeline.mockRejectedValue(new Error("boom"));
 
         await expect(
-            service.reconcileStream(stream, new Set(), ["pod-1"]),
+            service.execute(makeContext({ allStreams: [stream], podIds: ["pod-1"] })),
         ).resolves.toBeUndefined();
 
         expect(errorSpy).toHaveBeenCalledWith("Failed manual sync create for stream-1: boom");

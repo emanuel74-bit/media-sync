@@ -1,50 +1,33 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { SystemEventNames } from "@/common";
 import { Stream, StreamsFacadeService } from "@/streams";
-import { MediaMtxPipelineService } from "@/infrastructure";
 
-import { SyncContext, SyncWorkflow } from "../../domain";
+import { SyncContext } from "../../domain";
 
 @Injectable()
-export class StreamStalenessService implements SyncWorkflow {
-    readonly name = "StreamStaleness";
+export class StreamStalenessService {
     private readonly logger = new Logger(StreamStalenessService.name);
 
-    constructor(
-        private readonly mediaMtxPipeline: MediaMtxPipelineService,
-        private readonly streams: StreamsFacadeService,
-        private readonly events: EventEmitter2,
-    ) {}
+    constructor(private readonly streams: StreamsFacadeService) {}
 
-    async removeStale(
-        allStreams: Stream[],
-        ingestNames: Set<string>,
-        clusterNames: Set<string>,
-    ): Promise<void> {
-        const staleStreams = allStreams.filter(
-            (stream) => !stream.isManual && !ingestNames.has(stream.name),
+    async execute(context: SyncContext): Promise<void> {
+        const staleStreams = context.allStreams.filter(
+            (stream) => !stream.isManual && !context.ingestNames.has(stream.name),
         );
         for (const stream of staleStreams) {
-            await this.markStale(stream, clusterNames);
+            await this.removeStale(stream, context.clusterNames);
         }
     }
 
-    async markStale(stream: Stream, clusterNames: Set<string>): Promise<void> {
+    private async removeStale(stream: Stream, clusterNames: Set<string>): Promise<void> {
         try {
             await this.streams.markStale(stream.name);
 
             if (clusterNames.has(stream.name)) {
-                await this.mediaMtxPipeline.deleteClusterPipeline(stream.name);
-                this.events.emit(SystemEventNames.STREAM_REMOVED, stream.name);
+                await this.streams.teardownClusterPipeline(stream);
             }
         } catch (error) {
             this.logger.warn(`Failed to remove stale stream ${stream.name}`, error);
         }
-    }
-
-    async execute(context: SyncContext): Promise<void> {
-        await this.removeStale(context.allStreams, context.ingestNames, context.clusterNames);
     }
 }

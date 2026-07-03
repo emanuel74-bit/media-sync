@@ -4,6 +4,5 @@
 
 export * from "./stream-reconcile.service";
 export * from "./stream-staleness.service";
-export * from "./stream-ingest-discovery.service";
-export * from "./stream-ingest-activation.service";
+export * from "./ingest-stream-discovery.service";
 export * from "./ingest-stream-synchronizer.service";

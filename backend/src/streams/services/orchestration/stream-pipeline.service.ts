@@ -42,4 +42,10 @@ export class StreamPipelineService {
             return this.streamStatus.markSyncError(stream.name, message);
         }
     }
+
+    /** Tear down a stream's cluster pipeline and announce its removal. */
+    async teardown(stream: Stream): Promise<void> {
+        await this.mediaMtxService.deleteClusterPipeline(stream.name);
+        this.events.emit(SystemEventNames.STREAM_REMOVED, stream.name);
+    }
 }

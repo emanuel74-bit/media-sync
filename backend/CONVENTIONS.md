@@ -151,6 +151,10 @@ Example: every controller in the repo is < 75 lines.
 
 **ARCH-05** — Rule: No global mutable state. The only in-memory state is owned by injectable singletons with a clear reason (client cache in `MediaMtxClientFactory`, round-robin index in `MediaMtxClientRegistry`).
 
+**ARCH-07** — Rule: DI tokens are **classes**, never strings or `Symbol`s. Inject a dependency by its class — a concrete service, or an abstract class used as the contract token (SVC-02). If you ever genuinely need to inject a *collection* assembled from several providers, wrap it in a small injectable **registry class** that constructor-injects the members and exposes them, rather than `@Inject(SOME_SYMBOL)`-ing a `useFactory` array; class tokens are type-checked, refactor-safe (a rename follows the type), and greppable, while string/symbol tokens are none of these and scatter an untyped seam through the module. For a small fixed sequence of steps, prefer injecting the step services directly and guarding each call (SVC-03) over introducing a collection at all. Reflection **metadata** keys (`SCHEDULED_TASK`, set with `Reflect.defineMetadata`) are not DI tokens and are exempt.
+Example: `StreamAssignmentPolicy` (abstract) is the DI token for `HashStreamAssignmentPolicy` (SVC-02); there is no string or `Symbol` DI token anywhere in the tree.
+Enforced: review.
+
 **ARCH-06** — Rule: A Nest module is organized around a **capability**, never around "shared/common". There is no catch-all `CommonModule`. A provider used by a single feature lives in that feature and is provided by its module (`RuleEvaluator` lives with the alert rulers in `alerts/`, not in `common/`). A genuinely cross-cutting capability gets its own purpose-named module (`SchedulingModule`). The `common/` folder is allowed only for shared **non-provider** code — domain types/enums/consts and pure utils — which is imported directly and needs no module. The test for "does this belong in common?": if it's an `@Injectable` with one consumer feature, no — move it to that feature.
 
 ---
@@ -208,8 +212,9 @@ Example: `StreamsController.create` maps `CreateStreamDto` → `CreateStreamData
 **SVC-02** — Rule: Selection/decision logic is a policy class behind an abstract base used as the DI token, so the algorithm is swappable.
 Example: `StreamAssignmentPolicy` (abstract) ← `HashStreamAssignmentPolicy`, bound in `streams.module.ts`.
 
-**SVC-03** — Rule: Multi-step background processes are decomposed as: scheduler (`@Cron`, trivial) → context/query aggregator → orchestrator → workflow steps implementing a shared interface, injected as an ordered list via a `Symbol` token.
-Example: `sync/services/{scheduler,query,orchestration,workflows}/`, token `SYNC_WORKFLOWS`.
+**SVC-03** — Rule: Multi-step background processes are decomposed as: scheduler (`@ScheduledTask`, trivial) → context builder (a query-only service that assembles the run's typed input) → orchestrator → step services. The orchestrator injects the step services **directly** (class tokens, ARCH-07) and runs them in a fixed sequence, isolating each behind one private guard helper — `runStep(name, () => step.execute(ctx))` — that catches a per-step failure, logs it by name, and collects the failed names for the tick event, so one failing step aborts neither the others nor the emit. Each step service exposes exactly one public method (`execute(context)`); its per-item work is private. Do not introduce a shared step interface, a collected list, or a registry for a small fixed sequence — the guard is the only shared concern, and it lives once in the orchestrator, not in a strategy abstraction (the failed-step name is supplied at the call site, not carried as a field on each step).
+Example: `sync/services/{scheduler,context,orchestration,workflows}/`; `SyncContextBuilderService.buildContext` produces the `SyncContext`, and `SyncOrchestratorService.runStep` guards `IngestStreamSynchronizerService`, `StreamReconcileService`, and `StreamStalenessService` in order.
+Enforced: review.
 
 **SVC-04** — Rule: When several services of one feature are consumed together by other modules, expose a facade and have outsiders depend on it only.
 Example: `StreamsFacadeService` is what `sync/` imports (it needs several stream operations together). A module needing only reads may depend on the exported `StreamQueryService` directly (the alerts track ruler does). The streams module exports **only** those two; outsiders never touch `StreamCrudService`, `StreamPipelineService`, `StreamAssignmentService`, etc.
@@ -290,7 +295,7 @@ Example: `StreamTrackAlertService` reacts to `stream.inspected`.
 ## 13. JOB — Scheduled jobs
 
 **JOB-01** — Rule: A scheduled job is a single `@ScheduledTask({ name, interval })` on the method that does the work (the decorator + `JobScheduler` live in `common/scheduling/`, re-exported from `@/common`). One declaration defines it — there is no separate scheduler service, lifecycle hook, or registration call to forget. The method itself does nothing but gather → delegate; it does NOT manage a timer, and it does NOT need its own whole-cycle `try/catch` (see JOB-02). Never use `@nestjs/schedule`'s `@Cron`/`@Interval` (removed) — those can't take a config-driven cadence and scatter scheduling across services.
-Example: `MetricCollectionService.collectMetrics`, `StreamInspectionCollectionService.inspectAllStreams`, `SyncService.periodicSync`.
+Example: `MetricCollectionService.collectMetrics`, `StreamInspectionCollectionService.inspectAllStreams`, `SyncSchedulerService.periodicSync`.
 
 **JOB-02** — Rule: Cross-cutting scheduling behavior lives once in `JobScheduler`, not in each job: it discovers every `@ScheduledTask` at bootstrap, runs it on its interval, **guards each run** (a throw is logged + swallowed, never killing the timer), and **prevents overlap** (a run still in flight skips its next tick). A job method therefore throws freely. The only guarding a job writes itself is _per-item isolation_ inside a fan-out loop — wrap each iteration in its own `try/catch` so one bad item doesn't abort the rest.
 Example: `StreamInspectionCollectionService` wraps each per-stream `inspectAndRecord` in `try/catch`, but lets a listing failure propagate to `JobScheduler`; `SyncOrchestratorService` does the same per workflow.
@@ -341,7 +346,7 @@ Example: `src/streams/services/assignment/hash-stream-assignment.policy.ts` → 
 
 **TEST-02** — Rule: Naming: `<name>.test.ts` for unit tests, `<name>.spec.ts` for integration tests. Jest picks up both (`testRegex`).
 
-**TEST-03** — Rule: Co-located `.spec.ts` in `src/` is legacy; migrate on touch. (One remains — see DEVN-03.)
+**TEST-03** — Rule: Co-located `.spec.ts` in `src/` is legacy; migrate on touch. (None remain in `src/`.)
 
 **TEST-04** — Rule: Mock only at external boundaries (repositories, MediaMTX services, EventEmitter2). Pure logic (policies, mappers, parsers, rule consts) is tested directly with no mocks.
 
@@ -371,8 +376,6 @@ Example: SVC-05 ← [ADR-0005](../docs/adr/0005-no-pass-through-services.md).
 Current, verified gaps between the rules above and the code. Fix on touch; remove the entry when fixed.
 
 **DEVN-01** — `ConfigService` getters `bitrateDropPercent` and `staleSeconds` have no consumers (violating CFG-02). The three interval getters (`syncPollInterval`, `metricsPollInterval`, `inspectionInterval`) are now consumed via `@ScheduledTask` resolvers.
-
-**DEVN-03** — `src/sync/services/orchestration/sync-orchestrator.service.spec.ts` is a legacy co-located spec (violates TEST-01/TEST-03); a mirrored test also exists under `test/`.
 
 **DEVN-06** — `npm run barrels:generate` (barrelsby `--delete --location all`) overwrites the curated feature-root barrels with broken self-referential output (`export * from "./index"`), so it cannot be run over the whole tree (blocks the original intent of TOOL-03). Until the script is fixed or scoped to nested folders, barrels are maintained by hand per TOOL-03.
 

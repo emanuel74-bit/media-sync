@@ -8,7 +8,7 @@ import { MediaMtxStreamListingService } from "@/infrastructure";
 import { SyncContext } from "../../domain";
 
 @Injectable()
-export class SyncQueryAggregatorService {
+export class SyncContextBuilderService {
     constructor(
         private readonly mediaMtxQuery: MediaMtxStreamListingService,
         private readonly streams: StreamsFacadeService,

@@ -3,7 +3,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { StreamStatus } from "@/common";
 import { SyncDiscoveredStream } from "@/sync/domain";
 import { Stream, StreamsFacadeService } from "@/streams";
-import { StreamIngestDiscoveryService } from "@/sync/services/workflows/stream-ingest-discovery.service";
+import { IngestStreamDiscoveryService } from "@/sync/services/workflows/ingest-stream-discovery.service";
 
 const makeStream = (overrides: Partial<Stream> = {}): Stream => ({
     name: "stream-1",
@@ -33,8 +33,8 @@ const makeDiscoveredStream = (
     ...overrides,
 });
 
-describe("StreamIngestDiscoveryService", () => {
-    let service: StreamIngestDiscoveryService;
+describe("IngestStreamDiscoveryService", () => {
+    let service: IngestStreamDiscoveryService;
     let streams: jest.Mocked<StreamsFacadeService>;
 
     beforeEach(async () => {
@@ -44,12 +44,12 @@ describe("StreamIngestDiscoveryService", () => {
 
         const module: TestingModule = await Test.createTestingModule({
             providers: [
-                StreamIngestDiscoveryService,
+                IngestStreamDiscoveryService,
                 { provide: StreamsFacadeService, useValue: streams },
             ],
         }).compile();
 
-        service = module.get<StreamIngestDiscoveryService>(StreamIngestDiscoveryService);
+        service = module.get<IngestStreamDiscoveryService>(IngestStreamDiscoveryService);
     });
 
     it("merges discovery track and metadata fields before delegating to StreamsFacadeService", async () => {

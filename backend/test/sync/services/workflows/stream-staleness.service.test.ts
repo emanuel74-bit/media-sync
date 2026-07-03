@@ -1,9 +1,8 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { EventEmitter2 } from "@nestjs/event-emitter";
 
+import { StreamStatus } from "@/common";
+import { SyncContext } from "@/sync/domain";
 import { Stream, StreamsFacadeService } from "@/streams";
-import { StreamStatus, SystemEventNames } from "@/common";
-import { MediaMtxPipelineService } from "@/infrastructure";
 import { StreamStalenessService } from "@/sync/services/workflows/stream-staleness.service";
 
 const makeStream = (overrides: Partial<Stream> = {}): Stream => ({
@@ -22,29 +21,30 @@ const makeStream = (overrides: Partial<Stream> = {}): Stream => ({
     ...overrides,
 });
 
+const makeContext = (overrides: Partial<SyncContext> = {}): SyncContext => ({
+    ingestList: [],
+    clusterList: [],
+    ingestNames: new Set(),
+    clusterNames: new Set(),
+    podIds: ["pod-1"],
+    allStreams: [],
+    ...overrides,
+});
+
 describe("StreamStalenessService", () => {
     let service: StreamStalenessService;
     let streams: jest.Mocked<StreamsFacadeService>;
-    let mediaMtxPipeline: jest.Mocked<MediaMtxPipelineService>;
-    let events: jest.Mocked<EventEmitter2>;
 
     beforeEach(async () => {
         streams = {
             markStale: jest.fn(),
+            teardownClusterPipeline: jest.fn(),
         } as unknown as jest.Mocked<StreamsFacadeService>;
-
-        mediaMtxPipeline = {
-            deleteClusterPipeline: jest.fn(),
-        } as unknown as jest.Mocked<MediaMtxPipelineService>;
-
-        events = { emit: jest.fn() } as unknown as jest.Mocked<EventEmitter2>;
 
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 StreamStalenessService,
-                { provide: MediaMtxPipelineService, useValue: mediaMtxPipeline },
                 { provide: StreamsFacadeService, useValue: streams },
-                { provide: EventEmitter2, useValue: events },
             ],
         }).compile();
 
@@ -52,36 +52,42 @@ describe("StreamStalenessService", () => {
     });
 
     it("marks only non-manual streams that disappeared from ingest", async () => {
-        const markStaleSpy = jest.spyOn(service, "markStale").mockResolvedValue();
         const stale = makeStream({ name: "stale", isManual: false });
         const stillPresent = makeStream({ name: "ingest", isManual: false });
         const manual = makeStream({ name: "manual", isManual: true });
+        streams.markStale.mockResolvedValue(undefined);
 
-        await service.removeStale([stale, stillPresent, manual], new Set(["ingest"]), new Set());
+        await service.execute(
+            makeContext({
+                allStreams: [stale, stillPresent, manual],
+                ingestNames: new Set(["ingest"]),
+            }),
+        );
 
-        expect(markStaleSpy).toHaveBeenCalledTimes(1);
-        expect(markStaleSpy).toHaveBeenCalledWith(stale, new Set());
+        expect(streams.markStale).toHaveBeenCalledTimes(1);
+        expect(streams.markStale).toHaveBeenCalledWith("stale");
     });
 
-    it("marks stale streams and removes the cluster pipeline when the stream exists in cluster", async () => {
+    it("marks stale streams and tears down the cluster pipeline when the stream exists in cluster", async () => {
         const stream = makeStream();
         streams.markStale.mockResolvedValue(undefined);
-        mediaMtxPipeline.deleteClusterPipeline.mockResolvedValue(undefined);
+        streams.teardownClusterPipeline.mockResolvedValue(undefined);
 
-        await service.markStale(stream, new Set(["stream-1"]));
+        await service.execute(
+            makeContext({ allStreams: [stream], clusterNames: new Set(["stream-1"]) }),
+        );
 
         expect(streams.markStale).toHaveBeenCalledWith("stream-1");
-        expect(mediaMtxPipeline.deleteClusterPipeline).toHaveBeenCalledWith("stream-1");
-        expect(events.emit).toHaveBeenCalledWith(SystemEventNames.STREAM_REMOVED, "stream-1");
+        expect(streams.teardownClusterPipeline).toHaveBeenCalledWith(stream);
     });
 
-    it("does not remove a cluster pipeline when the stream is already absent", async () => {
+    it("does not tear down a cluster pipeline when the stream is already absent", async () => {
+        const stream = makeStream();
         streams.markStale.mockResolvedValue(undefined);
 
-        await service.markStale(makeStream(), new Set());
+        await service.execute(makeContext({ allStreams: [stream] }));
 
-        expect(mediaMtxPipeline.deleteClusterPipeline).not.toHaveBeenCalled();
-        expect(events.emit).not.toHaveBeenCalled();
+        expect(streams.teardownClusterPipeline).not.toHaveBeenCalled();
     });
 
     it("logs and swallows stale handling failures", async () => {
@@ -89,7 +95,9 @@ describe("StreamStalenessService", () => {
         const warnSpy = jest.spyOn((service as any).logger, "warn").mockImplementation();
         streams.markStale.mockRejectedValue(error);
 
-        await expect(service.markStale(makeStream(), new Set())).resolves.toBeUndefined();
+        await expect(
+            service.execute(makeContext({ allStreams: [makeStream()] })),
+        ).resolves.toBeUndefined();
 
         expect(warnSpy).toHaveBeenCalledWith("Failed to remove stale stream stream-1", error);
     });

@@ -66,7 +66,7 @@ flowchart TB
         end
         services["Feature Services<br/>(query / mutation / lifecycle / orchestration per feature;<br/>StreamsFacadeService is the cross-module entry into streams)"]
         subgraph workers["Scheduled Workers (@ScheduledTask)"]
-            SyncW["SyncService (10s)<br/>runs SyncWorkflow pipeline"]
+            SyncW["SyncSchedulerService (10s)<br/>runs sync step pipeline"]
             MetricsW["MetricCollectionService (10s)<br/>collect → alerts → failover"]
             InspectW["InspectionScheduler (30s)<br/>inspect + save"]
         end
@@ -158,13 +158,13 @@ src/
 │       ├── query/                # StreamInspectionQueryService
 │       └── collection/           # StreamInspectionCollectionService (@ScheduledTask 30s; sweep → inspect → record → emit)
 ├── sync/
-│   ├── domain/                   # SyncContext/SyncWorkflow types, SYNC_WORKFLOWS token
+│   ├── domain/                   # SyncContext / SyncDiscoveredStream types
 │   └── services/
-│       ├── scheduler/            # SyncService (@ScheduledTask 10s)
-│       ├── query/                # SyncQueryAggregatorService (builds SyncContext)
-│       ├── orchestration/        # SyncOrchestratorService (runs workflow list)
+│       ├── scheduler/            # SyncSchedulerService (@ScheduledTask 10s)
+│       ├── context/              # SyncContextBuilderService (builds SyncContext)
+│       ├── orchestration/        # SyncOrchestratorService (runs each step via a guarded runStep)
 │       └── workflows/            # IngestStreamSynchronizer, StreamReconcile,
-│                                 #   StreamStaleness (+ discovery/activation helpers)
+│                                 #   StreamStaleness (+ discovery helper)
 └── gateway/                      # EventsGateway (Socket.IO broadcast)
 ```
 
@@ -189,7 +189,7 @@ Every folder has a barrelsby-generated `index.ts`; imports between features go t
 **Used By**:
 
 - `IngestStreamListingStrategy`: To discover ingest pods when the primary ingest endpoint fails
-- `SyncQueryAggregatorService`: To select active cluster pod IDs for assignment
+- `SyncContextBuilderService`: To select active cluster pod IDs for assignment
 - `StreamFailoverService` / `StreamSetupService`: To pick failover/assignment candidates
 
 ---
@@ -258,19 +258,19 @@ An alert's **subject** is whatever the source alerts on — a stream name (metri
 
 **Responsibility**: Core orchestration — discovery, assignment, pipeline creation, staleness cleanup.
 
-**Flow** (`SyncService.periodicSync`, `@ScheduledTask` every 10 seconds):
+**Flow** (`SyncSchedulerService.periodicSync`, `@ScheduledTask` every 10 seconds):
 
-1. `SyncQueryAggregatorService.buildContext()` gathers in parallel: ingest stream list, cluster stream list, active cluster pod IDs, all DB streams → `SyncContext`
+1. `SyncContextBuilderService.buildContext()` gathers in parallel: ingest stream list, cluster stream list, active cluster pod IDs, all DB streams → `SyncContext`
 2. `SyncOrchestratorService.execute(context)`:
    - Skips entirely (with a warning) if no active cluster pods are registered
-   - Runs each registered `SyncWorkflow` in order, isolating failures per workflow
+   - Runs each step service in a fixed order, isolating failures per step behind a private `runStep` guard (a failing step is logged by name and collected, without aborting the others)
    - Emits `sync.tick` with `{ ingest, cluster, failures }`
 
-**Workflows** (injected via the `SYNC_WORKFLOWS` token):
+**Steps** (injected directly by the orchestrator and run in this order):
 
-- `IngestStreamSynchronizerService`: For each discovered ingest stream — upsert into DB (`StreamIngestDiscoveryService`), ensure pod assignment, ensure a cluster pipeline exists (`StreamIngestActivationService`)
+- `IngestStreamSynchronizerService`: For each discovered ingest stream — upsert into DB (`IngestStreamDiscoveryService`), ensure pod assignment, and deploy a cluster pipeline if the stream is missing from the cluster
 - `StreamReconcileService`: For enabled manual streams (`isManual`) — ensure assignment and recreate missing cluster pipelines
-- `StreamStalenessService`: For non-manual DB streams no longer present on ingest — mark `stale`, delete the cluster pipeline, emit `stream.removed`
+- `StreamStalenessService`: For non-manual DB streams no longer present on ingest — mark `stale` and, when present in the cluster, tear down the pipeline via `StreamsFacadeService.teardownClusterPipeline` (streams owns the `deleteClusterPipeline` call and the `stream.removed` event)
 
 ---
 
@@ -344,8 +344,8 @@ Each feature defines an **abstract repository contract** in its own `repositorie
 
 ```mermaid
 sequenceDiagram
-    participant Cron as SyncService (@ScheduledTask 10s)
-    participant Agg as SyncQueryAggregator
+    participant Cron as SyncSchedulerService (@ScheduledTask 10s)
+    participant Agg as SyncContextBuilder
     participant MTX as MediaMTX Integration
     participant Pods as PodQueryService
     participant Str as StreamsFacade
@@ -360,7 +360,7 @@ sequenceDiagram
     Agg-->>Cron: SyncContext
     Cron->>Orch: execute(context)
     Note over Orch: skipped entirely if no active cluster pods
-    loop SyncWorkflow[] — IngestSync, Reconcile, Staleness (failures isolated per workflow)
+    loop Sync steps — IngestSync, Reconcile, Staleness (failures isolated per step)
         Orch->>Str: upsertFromDiscovery / ensureAssigned / markStale
         Str->>MTX: POST /v3/config/paths/add|remove/{name}
         Str--)Bus: stream.assigned / stream.synced / stream.removed
@@ -557,7 +557,7 @@ flowchart LR
     end
 
     subgraph cron["Scheduled Services"]
-        SyncS["SyncService (10s)"]
+        SyncS["SyncSchedulerService (10s)"]
         MetricS["MetricCollectionService (10s)"]
         InspS["InspectionScheduler (30s)"]
     end
@@ -568,8 +568,8 @@ flowchart LR
     MetricsC --> MetricPersist[MetricPersistenceService]
     InspC --> InspQuery[StreamInspectionQueryService]
 
-    SyncS --> Agg[SyncQueryAggregator]
-    SyncS --> Orch["SyncOrchestrator<br/>→ SyncWorkflow[] (SYNC_WORKFLOWS)"]
+    SyncS --> Agg[SyncContextBuilder]
+    SyncS --> Orch["SyncOrchestrator<br/>→ guarded steps (runStep)"]
     Agg --> Listing[MediaMtxStreamListingService]
     Agg --> PodSvc
     Agg --> Facade[StreamsFacadeService]

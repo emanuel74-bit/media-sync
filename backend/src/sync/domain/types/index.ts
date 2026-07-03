@@ -3,5 +3,4 @@
  */
 
 export * from "./sync-context.types";
-export * from "./sync-workflow.types";
 export * from "./sync-discovered-stream.types";

@@ -50,6 +50,7 @@ describe("StreamsFacadeService", () => {
         streamPipeline = {
             deploy: jest.fn(),
             build: jest.fn(),
+            teardown: jest.fn(),
         } as unknown as jest.Mocked<StreamPipelineService>;
 
         const module: TestingModule = await Test.createTestingModule({
@@ -99,23 +100,32 @@ describe("StreamsFacadeService", () => {
         ]);
     });
 
-    it("delegates provisionClusterPipeline to StreamPipelineService.deploy", async () => {
+    it("delegates deployClusterPipeline to StreamPipelineService.deploy", async () => {
         const stream = makeStream();
         streamPipeline.deploy.mockResolvedValue(stream);
 
-        const result = await service.provisionClusterPipeline(stream);
+        const result = await service.deployClusterPipeline(stream);
 
         expect(result).toBe(stream);
         expect(streamPipeline.deploy).toHaveBeenCalledWith(stream);
     });
 
-    it("delegates createClusterPipeline to StreamPipelineService.build", async () => {
+    it("delegates buildClusterPipeline to StreamPipelineService.build", async () => {
         const stream = makeStream({ assignedPod: "pod-2" });
         streamPipeline.build.mockResolvedValue(undefined);
 
-        await service.createClusterPipeline(stream);
+        await service.buildClusterPipeline(stream);
 
         expect(streamPipeline.build).toHaveBeenCalledWith(stream);
+    });
+
+    it("delegates teardownClusterPipeline to StreamPipelineService.teardown", async () => {
+        const stream = makeStream({ assignedPod: "pod-3" });
+        streamPipeline.teardown.mockResolvedValue(undefined);
+
+        await service.teardownClusterPipeline(stream);
+
+        expect(streamPipeline.teardown).toHaveBeenCalledWith(stream);
     });
 
     it("delegates markStale to StreamStatusService", async () => {

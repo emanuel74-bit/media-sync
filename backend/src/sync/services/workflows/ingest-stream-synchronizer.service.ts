@@ -1,39 +1,33 @@
 import { Injectable } from "@nestjs/common";
 
-import { SyncContext, SyncDiscoveredStream, SyncWorkflow } from "../../domain";
-import { StreamIngestDiscoveryService } from "./stream-ingest-discovery.service";
-import { StreamIngestActivationService } from "./stream-ingest-activation.service";
+import { StreamsFacadeService } from "@/streams";
+
+import { SyncContext, SyncDiscoveredStream } from "../../domain";
+import { IngestStreamDiscoveryService } from "./ingest-stream-discovery.service";
 
 @Injectable()
-export class IngestStreamSynchronizerService implements SyncWorkflow {
-    readonly name = "IngestStreamSynchronizer";
-
+export class IngestStreamSynchronizerService {
     constructor(
-        private readonly ingestDiscovery: StreamIngestDiscoveryService,
-        private readonly ingestActivation: StreamIngestActivationService,
+        private readonly ingestDiscovery: IngestStreamDiscoveryService,
+        private readonly streams: StreamsFacadeService,
     ) {}
 
-    async syncAll(
-        ingestList: SyncDiscoveredStream[],
-        clusterNames: Set<string>,
-        podIds: string[],
-    ): Promise<void> {
-        for (const ingest of ingestList) {
-            await this.syncStream(ingest, clusterNames, podIds);
+    async execute(context: SyncContext): Promise<void> {
+        for (const ingest of context.ingestList) {
+            await this.syncStream(ingest, context.clusterNames, context.podIds);
         }
     }
 
-    async execute(context: SyncContext): Promise<void> {
-        await this.syncAll(context.ingestList, context.clusterNames, context.podIds);
-    }
-
-    async syncStream(
+    private async syncStream(
         ingest: SyncDiscoveredStream,
         clusterNames: Set<string>,
         podIds: string[],
     ): Promise<void> {
-        let stream = await this.ingestDiscovery.upsertDiscoveredStream(ingest);
-        stream = await this.ingestActivation.ensurePodAssignment(stream, podIds);
-        await this.ingestActivation.ensureClusterPipeline(stream, clusterNames);
+        const discovered = await this.ingestDiscovery.upsertDiscoveredStream(ingest);
+        const assigned = await this.streams.ensureAssigned(discovered.name, podIds);
+
+        if (!clusterNames.has(assigned.name)) {
+            await this.streams.deployClusterPipeline(assigned);
+        }
     }
 }

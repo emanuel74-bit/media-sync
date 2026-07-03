@@ -4,13 +4,11 @@ import { PodsModule } from "@/pods";
 import { StreamsModule } from "@/streams";
 import { MediaMtxModule } from "@/infrastructure";
 
-import { SYNC_WORKFLOWS } from "./domain";
 import {
-    SyncService,
-    SyncQueryAggregatorService,
+    SyncSchedulerService,
+    SyncContextBuilderService,
     SyncOrchestratorService,
-    StreamIngestActivationService,
-    StreamIngestDiscoveryService,
+    IngestStreamDiscoveryService,
     IngestStreamSynchronizerService,
     StreamReconcileService,
     StreamStalenessService,
@@ -19,28 +17,13 @@ import {
 @Module({
     imports: [MediaMtxModule, StreamsModule, PodsModule],
     providers: [
-        SyncService,
+        SyncSchedulerService,
         SyncOrchestratorService,
-        SyncQueryAggregatorService,
-        StreamIngestDiscoveryService,
-        StreamIngestActivationService,
+        SyncContextBuilderService,
+        IngestStreamDiscoveryService,
         IngestStreamSynchronizerService,
         StreamReconcileService,
         StreamStalenessService,
-        {
-            provide: SYNC_WORKFLOWS,
-            useFactory: (
-                ingestSync: IngestStreamSynchronizerService,
-                reconcile: StreamReconcileService,
-                staleness: StreamStalenessService,
-            ) => [ingestSync, reconcile, staleness],
-            inject: [
-                IngestStreamSynchronizerService,
-                StreamReconcileService,
-                StreamStalenessService,
-            ],
-        },
     ],
-    exports: [SyncService],
 })
 export class SyncModule {}

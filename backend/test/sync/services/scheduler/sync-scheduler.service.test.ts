@@ -1,7 +1,11 @@
 import { Test, TestingModule } from "@nestjs/testing";
 
 import { SyncContext } from "@/sync/domain";
-import { SyncOrchestratorService, SyncQueryAggregatorService, SyncService } from "@/sync/services";
+import {
+    SyncContextBuilderService,
+    SyncOrchestratorService,
+    SyncSchedulerService,
+} from "@/sync/services";
 
 const makeContext = (overrides: Partial<SyncContext> = {}): SyncContext => ({
     ingestList: [{ name: "s1", source: "rtsp://ingest", status: "ready" }],
@@ -13,15 +17,15 @@ const makeContext = (overrides: Partial<SyncContext> = {}): SyncContext => ({
     ...overrides,
 });
 
-describe("SyncService", () => {
-    let service: SyncService;
-    let queryAggregator: jest.Mocked<SyncQueryAggregatorService>;
+describe("SyncSchedulerService", () => {
+    let service: SyncSchedulerService;
+    let contextBuilder: jest.Mocked<SyncContextBuilderService>;
     let orchestrator: jest.Mocked<SyncOrchestratorService>;
 
     beforeEach(async () => {
-        queryAggregator = {
+        contextBuilder = {
             buildContext: jest.fn(),
-        } as unknown as jest.Mocked<SyncQueryAggregatorService>;
+        } as unknown as jest.Mocked<SyncContextBuilderService>;
 
         orchestrator = {
             execute: jest.fn(),
@@ -29,29 +33,29 @@ describe("SyncService", () => {
 
         const module: TestingModule = await Test.createTestingModule({
             providers: [
-                SyncService,
-                { provide: SyncQueryAggregatorService, useValue: queryAggregator },
+                SyncSchedulerService,
+                { provide: SyncContextBuilderService, useValue: contextBuilder },
                 { provide: SyncOrchestratorService, useValue: orchestrator },
             ],
         }).compile();
 
-        service = module.get<SyncService>(SyncService);
+        service = module.get<SyncSchedulerService>(SyncSchedulerService);
     });
 
     it("builds context and delegates execution", async () => {
         const context = makeContext();
-        queryAggregator.buildContext.mockResolvedValue(context);
+        contextBuilder.buildContext.mockResolvedValue(context);
         orchestrator.execute.mockResolvedValue(undefined);
 
         await service.periodicSync();
 
-        expect(queryAggregator.buildContext).toHaveBeenCalledTimes(1);
+        expect(contextBuilder.buildContext).toHaveBeenCalledTimes(1);
         expect(orchestrator.execute).toHaveBeenCalledWith(context);
     });
 
     it("propagates a failing cycle (the scheduler guards it) without executing", async () => {
         const error = new Error("periodic sync failed");
-        queryAggregator.buildContext.mockRejectedValue(error);
+        contextBuilder.buildContext.mockRejectedValue(error);
 
         await expect(service.periodicSync()).rejects.toThrow("periodic sync failed");
 

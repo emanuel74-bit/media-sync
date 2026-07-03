@@ -27,12 +27,16 @@ export class StreamsFacadeService {
         return this.streamAssignment.ensureAssigned(name, candidatePods);
     }
 
-    async provisionClusterPipeline(stream: Stream): Promise<Stream> {
+    async deployClusterPipeline(stream: Stream): Promise<Stream> {
         return this.streamPipeline.deploy(stream);
     }
 
-    async createClusterPipeline(stream: Stream): Promise<void> {
+    async buildClusterPipeline(stream: Stream): Promise<void> {
         await this.streamPipeline.build(stream);
+    }
+
+    async teardownClusterPipeline(stream: Stream): Promise<void> {
+        await this.streamPipeline.teardown(stream);
     }
 
     async markStale(name: string): Promise<void> {

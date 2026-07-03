@@ -2,8 +2,13 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
 import { SystemEventNames } from "@/common";
-import { SyncOrchestratorService } from "@/sync/services";
-import { SyncContext, SYNC_WORKFLOWS, SyncWorkflow } from "@/sync/domain";
+import { SyncContext } from "@/sync/domain";
+import {
+    SyncOrchestratorService,
+    StreamReconcileService,
+    StreamStalenessService,
+    IngestStreamSynchronizerService,
+} from "@/sync/services";
 
 const makeContext = (podIds: string[] = ["pod-1"]): SyncContext => ({
     podIds,
@@ -14,61 +19,60 @@ const makeContext = (podIds: string[] = ["pod-1"]): SyncContext => ({
     allStreams: [],
 });
 
-const makeWorkflow = (name = "test-workflow"): jest.Mocked<SyncWorkflow> => ({
-    name,
-    execute: jest.fn().mockResolvedValue(undefined),
-});
-
 describe("SyncOrchestratorService", () => {
     let service: SyncOrchestratorService;
     let events: jest.Mocked<EventEmitter2>;
-    let workflow1: jest.Mocked<SyncWorkflow>;
-    let workflow2: jest.Mocked<SyncWorkflow>;
+    let ingestSync: { execute: jest.Mock };
+    let reconcile: { execute: jest.Mock };
+    let staleness: { execute: jest.Mock };
 
-    const buildModule = async (workflows: SyncWorkflow[]) => {
+    beforeEach(async () => {
         events = { emit: jest.fn() } as unknown as jest.Mocked<EventEmitter2>;
+        ingestSync = { execute: jest.fn().mockResolvedValue(undefined) };
+        reconcile = { execute: jest.fn().mockResolvedValue(undefined) };
+        staleness = { execute: jest.fn().mockResolvedValue(undefined) };
 
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 SyncOrchestratorService,
                 { provide: EventEmitter2, useValue: events },
-                { provide: SYNC_WORKFLOWS, useValue: workflows },
+                { provide: IngestStreamSynchronizerService, useValue: ingestSync },
+                { provide: StreamReconcileService, useValue: reconcile },
+                { provide: StreamStalenessService, useValue: staleness },
             ],
         }).compile();
 
         service = module.get<SyncOrchestratorService>(SyncOrchestratorService);
-    };
+    });
 
     describe("execute — with active pods", () => {
-        beforeEach(async () => {
-            workflow1 = makeWorkflow("workflow-1");
-            workflow2 = makeWorkflow("workflow-2");
-            await buildModule([workflow1, workflow2]);
-        });
-
-        it("runs all registered workflows in order", async () => {
-            const executionOrder: number[] = [];
-            workflow1.execute.mockImplementation(async () => {
-                executionOrder.push(1);
+        it("runs the workflow steps in order", async () => {
+            const executionOrder: string[] = [];
+            ingestSync.execute.mockImplementation(async () => {
+                executionOrder.push("ingest");
             });
-            workflow2.execute.mockImplementation(async () => {
-                executionOrder.push(2);
+            reconcile.execute.mockImplementation(async () => {
+                executionOrder.push("reconcile");
+            });
+            staleness.execute.mockImplementation(async () => {
+                executionOrder.push("staleness");
             });
 
             await service.execute(makeContext());
 
-            expect(executionOrder).toEqual([1, 2]);
+            expect(executionOrder).toEqual(["ingest", "reconcile", "staleness"]);
         });
 
-        it("passes the context to each workflow", async () => {
+        it("passes the context to each step", async () => {
             const ctx = makeContext();
             await service.execute(ctx);
 
-            expect(workflow1.execute).toHaveBeenCalledWith(ctx);
-            expect(workflow2.execute).toHaveBeenCalledWith(ctx);
+            expect(ingestSync.execute).toHaveBeenCalledWith(ctx);
+            expect(reconcile.execute).toHaveBeenCalledWith(ctx);
+            expect(staleness.execute).toHaveBeenCalledWith(ctx);
         });
 
-        it("emits SYNC_TICK with ingest and cluster counts after workflows complete", async () => {
+        it("emits SYNC_TICK with ingest and cluster counts after the steps complete", async () => {
             await service.execute(makeContext());
 
             expect(events.emit).toHaveBeenCalledWith(SystemEventNames.SYNC_TICK, {
@@ -77,36 +81,33 @@ describe("SyncOrchestratorService", () => {
                 failures: [],
             });
         });
+
+        it("isolates a failing step, continues, and reports it by name in SYNC_TICK", async () => {
+            reconcile.execute.mockRejectedValue(new Error("boom"));
+
+            await service.execute(makeContext());
+
+            expect(staleness.execute).toHaveBeenCalledTimes(1);
+            expect(events.emit).toHaveBeenCalledWith(SystemEventNames.SYNC_TICK, {
+                ingest: 1,
+                cluster: 1,
+                failures: ["Reconcile"],
+            });
+        });
     });
 
     describe("execute — no active pods", () => {
-        beforeEach(async () => {
-            workflow1 = makeWorkflow("workflow-1");
-            await buildModule([workflow1]);
-        });
-
-        it("skips all workflows when podIds is empty", async () => {
+        it("skips all steps when podIds is empty", async () => {
             await service.execute(makeContext([]));
-            expect(workflow1.execute).not.toHaveBeenCalled();
+
+            expect(ingestSync.execute).not.toHaveBeenCalled();
+            expect(reconcile.execute).not.toHaveBeenCalled();
+            expect(staleness.execute).not.toHaveBeenCalled();
         });
 
         it("does not emit SYNC_TICK when podIds is empty", async () => {
             await service.execute(makeContext([]));
             expect(events.emit).not.toHaveBeenCalled();
-        });
-    });
-
-    describe("execute — no registered workflows", () => {
-        beforeEach(async () => {
-            await buildModule([]);
-        });
-
-        it("emits SYNC_TICK even with zero workflows", async () => {
-            await service.execute(makeContext());
-            expect(events.emit).toHaveBeenCalledWith(
-                SystemEventNames.SYNC_TICK,
-                expect.any(Object),
-            );
         });
     });
 });
