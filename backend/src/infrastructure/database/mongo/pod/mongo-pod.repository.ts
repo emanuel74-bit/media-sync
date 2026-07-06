@@ -6,8 +6,8 @@ import { Pod } from "@/pods";
 import { PodRepository } from "@/pods";
 import { PodRole, PodStatus } from "@/common";
 
-import { Pod as PodSchema, PodDocument } from "../schemas";
-import { MongoDomainRepository } from "./mongo-domain.repository";
+import { Pod as PodSchema, PodDocument } from "./pod.schema";
+import { MongoDomainRepository } from "../mongo-domain.repository";
 
 type LeanPod = PodSchema & { createdAt: Date; updatedAt: Date };
 

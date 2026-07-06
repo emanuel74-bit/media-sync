@@ -6,8 +6,8 @@ import { StreamStatus } from "@/common";
 import { StreamRepository } from "@/streams";
 import { Stream, StreamAssignmentInfo } from "@/streams";
 
-import { MongoDomainRepository } from "./mongo-domain.repository";
-import { Stream as StreamSchema, StreamDocument } from "../schemas";
+import { MongoDomainRepository } from "../mongo-domain.repository";
+import { Stream as StreamSchema, StreamDocument } from "./stream.schema";
 
 type LeanStream = StreamSchema & { createdAt?: Date; updatedAt?: Date };
 type LeanAssignment = {
@@ -30,7 +30,7 @@ export class MongoStreamRepository
     }
 
     async create(data: Partial<Stream> & Pick<Stream, "name" | "source">): Promise<Stream> {
-        const doc = await new this.model(this.toPersistence(data)).save();
+        const doc = await new this.model(data).save();
         return this.fromDocument(doc);
     }
 
@@ -57,7 +57,7 @@ export class MongoStreamRepository
     async upsert(name: string, data: Partial<Stream>): Promise<Stream> {
         const doc = await this.model.findOneAndUpdate(
             { name },
-            { $set: { ...this.toPersistence(data), isManual: false } },
+            { $set: { ...data, isManual: false } },
             { upsert: true, new: true, setDefaultsOnInsert: true },
         );
         return this.fromDocument(doc!);
@@ -88,11 +88,7 @@ export class MongoStreamRepository
     }
 
     async update(name: string, data: Partial<Stream>): Promise<Stream | null> {
-        const doc = await this.model.findOneAndUpdate(
-            { name },
-            { $set: this.toPersistence(data) },
-            { new: true },
-        );
+        const doc = await this.model.findOneAndUpdate({ name }, { $set: data }, { new: true });
         return doc ? this.fromDocument(doc) : null;
     }
 
@@ -101,7 +97,7 @@ export class MongoStreamRepository
         return result !== null;
     }
 
-    async getAssignmentInfo(): Promise<StreamAssignmentInfo[]> {
+    async findAssignmentInfo(): Promise<StreamAssignmentInfo[]> {
         const docs = await this.model
             .find()
             .select("name assignedPod assignedAt status")
@@ -113,10 +109,6 @@ export class MongoStreamRepository
             assignedAt: d.assignedAt,
             status: d.status,
         }));
-    }
-
-    private toPersistence(data: Partial<Stream>): Record<string, unknown> {
-        return { ...data };
     }
 
     protected toDomain(raw: LeanStream): Stream {

@@ -26,7 +26,7 @@ describe("StreamQueryService", () => {
             findByName: jest.fn(),
             findUnassigned: jest.fn(),
             findByAssignedPod: jest.fn(),
-            getAssignmentInfo: jest.fn(),
+            findAssignmentInfo: jest.fn(),
         } as unknown as jest.Mocked<StreamRepository>;
 
         const module: TestingModule = await Test.createTestingModule({
@@ -54,7 +54,7 @@ describe("StreamQueryService", () => {
     it("findUnassigned / findByAssignedPod / getAssignmentInfo delegate to the repository", async () => {
         repo.findUnassigned.mockResolvedValue([]);
         repo.findByAssignedPod.mockResolvedValue([]);
-        repo.getAssignmentInfo.mockResolvedValue([]);
+        repo.findAssignmentInfo.mockResolvedValue([]);
 
         await service.findUnassigned();
         await service.findByAssignedPod("pod-1");
@@ -62,6 +62,6 @@ describe("StreamQueryService", () => {
 
         expect(repo.findUnassigned).toHaveBeenCalledTimes(1);
         expect(repo.findByAssignedPod).toHaveBeenCalledWith("pod-1");
-        expect(repo.getAssignmentInfo).toHaveBeenCalledTimes(1);
+        expect(repo.findAssignmentInfo).toHaveBeenCalledTimes(1);
     });
 });

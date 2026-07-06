@@ -24,6 +24,6 @@ export class StreamQueryService {
     }
 
     async getAssignmentInfo(): Promise<StreamAssignmentInfo[]> {
-        return this.streamRepository.getAssignmentInfo();
+        return this.streamRepository.findAssignmentInfo();
     }
 }

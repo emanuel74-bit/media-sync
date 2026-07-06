@@ -2,12 +2,14 @@ import { Model } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 
-import { StreamTrack } from "@/common";
 import { StreamInspectionRepository } from "@/stream-inspection";
 import { StreamInspectionRecord, NewStreamInspectionData } from "@/stream-inspection";
 
-import { MongoDomainRepository } from "./mongo-domain.repository";
-import { StreamInspection as StreamInspectionSchema, StreamInspectionDocument } from "../schemas";
+import { MongoDomainRepository } from "../mongo-domain.repository";
+import {
+    StreamInspection as StreamInspectionSchema,
+    StreamInspectionDocument,
+} from "./stream-inspection.schema";
 
 type LeanInspection = StreamInspectionSchema & {
     createdAt: Date;
@@ -62,7 +64,7 @@ export class MongoStreamInspectionRepository
         return {
             streamName: raw.streamName,
             source: raw.source,
-            tracks: raw.tracks as StreamTrack[],
+            tracks: raw.tracks,
             metadata: raw.metadata,
             lastError: raw.lastError ?? null,
             inspectedAt: raw.inspectedAt,

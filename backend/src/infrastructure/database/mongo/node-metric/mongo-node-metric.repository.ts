@@ -4,8 +4,8 @@ import { InjectModel } from "@nestjs/mongoose";
 
 import { NodeMetric, NewNodeMetricData, NodeMetricRepository } from "@/metrics";
 
-import { MongoDomainRepository } from "./mongo-domain.repository";
-import { NodeMetric as NodeMetricSchema, NodeMetricDocument } from "../schemas";
+import { MongoDomainRepository } from "../mongo-domain.repository";
+import { NodeMetric as NodeMetricSchema, NodeMetricDocument } from "./node-metric.schema";
 
 type LeanNodeMetric = NodeMetricSchema & { createdAt: Date };
 

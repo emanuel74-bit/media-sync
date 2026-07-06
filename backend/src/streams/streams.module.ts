@@ -1,11 +1,9 @@
 import { Module } from "@nestjs/common";
-import { MongooseModule } from "@nestjs/mongoose";
 
 import { PodsModule } from "@/pods";
 import { MediaMtxModule } from "@/infrastructure";
-import { MongoStreamRepository, Stream, StreamSchema } from "@/infrastructure";
+import { DatabaseModule } from "@/infrastructure/database";
 
-import { StreamRepository } from "./repositories";
 import { StreamsController } from "./controllers";
 import {
     HashStreamAssignmentPolicy,
@@ -20,11 +18,7 @@ import {
 } from "./services";
 
 @Module({
-    imports: [
-        MongooseModule.forFeature([{ name: Stream.name, schema: StreamSchema }]),
-        MediaMtxModule,
-        PodsModule,
-    ],
+    imports: [DatabaseModule, MediaMtxModule, PodsModule],
     providers: [
         StreamQueryService,
         StreamsFacadeService,
@@ -33,7 +27,6 @@ import {
         StreamAssignmentService,
         StreamStatusService,
         StreamSetupService,
-        { provide: StreamRepository, useClass: MongoStreamRepository },
         { provide: StreamAssignmentPolicy, useClass: HashStreamAssignmentPolicy },
     ],
     controllers: [StreamsController],

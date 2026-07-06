@@ -6,8 +6,8 @@ import { AlertSource } from "@/common";
 import { AlertRepository } from "@/alerts";
 import { Alert, AlertCreateResult, AlertCreationData, AlertUpdateData } from "@/alerts";
 
-import { Alert as AlertSchema, AlertDocument } from "../schemas";
-import { MongoDomainRepository } from "./mongo-domain.repository";
+import { MongoDomainRepository } from "../mongo-domain.repository";
+import { Alert as AlertSchema, AlertDocument } from "./alert.schema";
 
 type LeanAlert = AlertSchema & {
     _id: { toString(): string };

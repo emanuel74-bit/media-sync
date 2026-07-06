@@ -6,8 +6,6 @@ import { StreamMetadata } from "@/streams";
 
 export type StreamDocument = Stream & Document;
 
-export { StreamMetadata };
-
 @Schema({ timestamps: true })
 export class Stream {
     @Prop({ required: true, unique: true })

@@ -21,5 +21,5 @@ export abstract class StreamRepository {
 
     abstract delete(name: string): Promise<boolean>;
 
-    abstract getAssignmentInfo(): Promise<StreamAssignmentInfo[]>;
+    abstract findAssignmentInfo(): Promise<StreamAssignmentInfo[]>;
 }

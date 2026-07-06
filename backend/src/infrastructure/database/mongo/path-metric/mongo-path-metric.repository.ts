@@ -4,8 +4,8 @@ import { InjectModel } from "@nestjs/mongoose";
 
 import { PathMetric, NewPathMetricData, PathMetricRepository } from "@/metrics";
 
-import { MongoDomainRepository } from "./mongo-domain.repository";
-import { PathMetric as PathMetricSchema, PathMetricDocument } from "../schemas";
+import { MongoDomainRepository } from "../mongo-domain.repository";
+import { PathMetric as PathMetricSchema, PathMetricDocument } from "./path-metric.schema";
 
 type LeanPathMetric = PathMetricSchema & { createdAt: Date };
 
