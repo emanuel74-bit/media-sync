@@ -1,13 +1,10 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
+import { StreamsFacadeService } from "@/streams";
 import { ScheduledTask, PodRole, SystemEventNames } from "@/common";
-import {
-    MediaMtxStreamStatsService,
-    MediaMtxStreamListingService,
-    MediaMtxStreamInfo,
-    StreamDetails,
-} from "@/infrastructure";
+import { StreamDetails, MediaMtxStreamInfo } from "@/infrastructure";
+import { MediaMtxStreamStatsService, MediaMtxStreamListingService } from "@/media-nodes";
 
 import { NewStreamInspectionData } from "../../domain";
 import { StreamInspectionRepository } from "../../repositories";
@@ -26,6 +23,7 @@ export class StreamInspectionCollectionService {
         private readonly streamInspectionRepository: StreamInspectionRepository,
         private readonly mediaMtxStats: MediaMtxStreamStatsService,
         private readonly mediaMtxListing: MediaMtxStreamListingService,
+        private readonly streams: StreamsFacadeService,
         private readonly events: EventEmitter2,
     ) {}
 
@@ -34,19 +32,34 @@ export class StreamInspectionCollectionService {
         interval: (config) => config.inspectionInterval,
     })
     async inspectAllStreams(): Promise<void> {
-        const streams = await this.mediaMtxListing.listContextualStreams();
+        const [streams, allStreams] = await Promise.all([
+            this.mediaMtxListing.listContextualStreams(),
+            this.streams.findAll(),
+        ]);
+        const assignedPodByName = new Map(
+            allStreams.map((stream) => [stream.name, stream.assignedPod]),
+        );
+
         for (const { stream, context: source } of streams) {
+            // A cluster stream lives only on its assigned pod; pass that pod id so stats
+            // targets the right node instead of 404ing against a sibling replica.
+            const assignedPodId =
+                source === PodRole.CLUSTER ? assignedPodByName.get(stream.name) : undefined;
             try {
-                await this.inspectAndRecord(stream, source);
+                await this.inspectAndRecord(stream, source, assignedPodId);
             } catch (error) {
                 this.logger.error(`Failed to record inspection for stream ${stream.name}`, error);
             }
         }
     }
 
-    async inspectAndRecord(stream: MediaMtxStreamInfo, source: PodRole): Promise<void> {
+    async inspectAndRecord(
+        stream: MediaMtxStreamInfo,
+        source: PodRole,
+        assignedPodId?: string | null,
+    ): Promise<void> {
         const inspectedAt = new Date();
-        const { details, lastError } = await this.inspectStream(stream, source);
+        const { details, lastError } = await this.inspectStream(stream, source, assignedPodId);
 
         const record: NewStreamInspectionData = {
             streamName: stream.name,
@@ -69,9 +82,10 @@ export class StreamInspectionCollectionService {
     private async inspectStream(
         stream: MediaMtxStreamInfo,
         source: PodRole,
+        assignedPodId?: string | null,
     ): Promise<{ details: StreamDetails | null; lastError: string | null }> {
         try {
-            const details = await this.mediaMtxStats.getStreamDetails(stream.name, source);
+            const details = await this.fetchDetails(stream.name, source, assignedPodId);
             return { details, lastError: null };
         } catch (error) {
             this.logger.error(`Failed to inspect stream ${stream.name}`, error);
@@ -80,5 +94,19 @@ export class StreamInspectionCollectionService {
                 lastError: error instanceof Error ? error.message : String(error),
             };
         }
+    }
+
+    private async fetchDetails(
+        name: string,
+        source: PodRole,
+        assignedPodId?: string | null,
+    ): Promise<StreamDetails> {
+        if (source === PodRole.INGEST) {
+            return this.mediaMtxStats.getIngestStreamDetails(name);
+        }
+        if (!assignedPodId) {
+            throw new Error(`Cluster stream ${name} has no assigned pod`);
+        }
+        return this.mediaMtxStats.getClusterStreamDetails(name, assignedPodId);
     }
 }

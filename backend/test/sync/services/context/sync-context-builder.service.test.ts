@@ -2,9 +2,10 @@ import { Test, TestingModule } from "@nestjs/testing";
 
 import { PodRole } from "@/common";
 import { PodQueryService } from "@/pods";
+import { MediaMtxStreamInfo } from "@/infrastructure";
 import { Stream, StreamsFacadeService } from "@/streams";
 import { SyncContextBuilderService } from "@/sync/services";
-import { MediaMtxStreamInfo, MediaMtxStreamListingService } from "@/infrastructure";
+import { MediaMtxStreamListingService } from "@/media-nodes";
 
 const makeStream = (name: string): MediaMtxStreamInfo => ({
     name,

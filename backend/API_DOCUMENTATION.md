@@ -731,9 +731,8 @@ interface StreamTrack {
 | ------------------------------ | ------ | --------------------------------------- | ------------------------------------------------------------ |
 | `MONGODB_URI`                  | string | `mongodb://localhost:27017/media-sync`  | MongoDB connection string                                    |
 | `PORT`                         | number | `3000`                                  | HTTP server listening port                                   |
-| `INGEST_MEDIAMTX_BASE_URL`     | string | `http://localhost:9000`                 | Primary ingest MediaMTX API URL                              |
-| `CLUSTER_MEDIAMTX_BASE_URL`    | string | `http://localhost:9001`                 | Fallback cluster MediaMTX API URL                            |
-| `CLUSTER_MEDIAMTX_BASE_URLS`   | string | falls back to CLUSTER_MEDIAMTX_BASE_URL | Comma-separated cluster URLs                                 |
+| `INGEST_MEDIAMTX_AUTH`         | string | `""`                                    | HTTP API credentials (`user:pass`) attached to ingest-node clients; pods report only host, so auth is transport config |
+| `CLUSTER_MEDIAMTX_AUTH`        | string | `""`                                    | HTTP API credentials (`user:pass`) attached to cluster-node clients |
 | `POD_HEALTH_TOLERANCE_SECONDS` | number | `120`                                   | Max seconds without heartbeat before pod considered inactive |
 | `INGEST_POD_MEDIAMTX_PORT`     | number | `9000`                                  | MediaMTX API port used when querying registered ingest pods  |
 | `CLUSTER_POD_MEDIAMTX_PORT`    | number | `9000`                                  | MediaMTX API port used when building per-pod cluster clients  |
@@ -742,6 +741,7 @@ interface StreamTrack {
 | `NODE_MEMORY_HIGH_PERCENT`     | number | `90`                                    | Pod memory% above this raises a `node_memory_high` alert (warning) |
 | `NODE_DISK_HIGH_PERCENT`       | number | `85`                                    | Pod disk% above this raises a `node_disk_high` alert (critical) |
 | `INGEST_RTSP_URL`              | string | `rtsp://mediamtx-ingest:8554`           | RTSP base the cluster pulls relayed paths from (include creds for ingest read auth) |
+| `PULLABLE_SOURCE_PROTOCOLS`    | string | `rtsp,rtsps,rtmp,rtmps,srt,http,https,udp` | CSV of protocols a cluster node pulls a stream source from directly instead of relaying from ingest (`MediaMtxPipelineService`) |
 | `SYNC_POLL_INTERVAL`           | number | `10000`                                 | Periodic sync interval in ms (`SyncSchedulerService`)        |
 | `METRICS_POLL_INTERVAL`        | number | `10000`                                 | Metrics scrape interval in ms (`MetricCollectionService`)    |
 | `INSPECTION_INTERVAL`          | number | `30000`                                 | Stream inspection interval in ms (`StreamInspectionCollectionService`) |

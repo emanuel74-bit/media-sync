@@ -1,5 +1,5 @@
 import { PodRole } from "@/common";
-import { parsePrometheusText, mapMetricsToSnapshot } from "@/infrastructure";
+import { parsePrometheusText, mapMetricsToSnapshot } from "@/infrastructure/media-mtx";
 
 // Trimmed real MediaMTX v1.17.0 /metrics output: no streams, then one publishing stream.
 const EMPTY = `paths 0

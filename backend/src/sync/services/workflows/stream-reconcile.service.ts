@@ -24,11 +24,11 @@ export class StreamReconcileService {
         clusterNames: Set<string>,
         podIds: string[],
     ): Promise<void> {
-        await this.streams.ensureAssigned(stream.name, podIds);
+        const assigned = await this.streams.ensureAssigned(stream.name, podIds);
 
-        if (!clusterNames.has(stream.name)) {
+        if (!clusterNames.has(assigned.name)) {
             try {
-                await this.streams.buildClusterPipeline(stream);
+                await this.streams.buildClusterPipeline(assigned);
             } catch (err) {
                 const message = err instanceof Error ? err.message : String(err);
                 this.logger.error(`Failed manual sync create for ${stream.name}: ${message}`);

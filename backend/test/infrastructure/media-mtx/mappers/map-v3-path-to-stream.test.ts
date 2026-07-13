@@ -1,5 +1,5 @@
-import type { V3PathItem } from "@/infrastructure";
-import { mapV3PathToStream } from "@/infrastructure";
+import type { V3PathItem } from "@/infrastructure/media-mtx";
+import { mapV3PathToStream } from "@/infrastructure/media-mtx";
 
 describe("mapV3PathToStream — source description", () => {
     it("describes the real v3 object source by its type", () => {

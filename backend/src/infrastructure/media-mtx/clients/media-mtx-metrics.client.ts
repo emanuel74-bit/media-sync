@@ -1,8 +1,14 @@
 import axios, { AxiosInstance } from "axios";
 
+import { PodRole } from "@/common";
+
+import { MediaMtxMetricsSnapshot } from "../types";
+import { parsePrometheusText, mapMetricsToSnapshot } from "../mappers";
+
 /**
  * Thin adapter for one MediaMTX node's Prometheus metrics endpoint (port 9998).
- * Returns the raw exposition text; parsing happens in the mapper.
+ * Fetches the raw exposition text and maps it to a domain snapshot at the boundary —
+ * raw Prometheus samples never leave the client.
  */
 export class MediaMtxMetricsClient {
     private readonly http: AxiosInstance;
@@ -11,8 +17,9 @@ export class MediaMtxMetricsClient {
         this.http = axios.create({ baseURL: baseUrl, timeout: 8000 });
     }
 
-    async fetchMetricsText(): Promise<string> {
+    async fetchSnapshot(context: PodRole, nodeId: string): Promise<MediaMtxMetricsSnapshot> {
         const res = await this.http.get("/metrics", { responseType: "text" });
-        return typeof res.data === "string" ? res.data : String(res.data);
+        const text = typeof res.data === "string" ? res.data : String(res.data);
+        return mapMetricsToSnapshot(parsePrometheusText(text), context, nodeId);
     }
 }

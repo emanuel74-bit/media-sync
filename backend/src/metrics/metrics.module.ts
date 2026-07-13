@@ -1,13 +1,13 @@
 import { Module } from "@nestjs/common";
 
-import { MediaMtxModule } from "@/infrastructure";
+import { MediaNodesModule } from "@/media-nodes";
 import { DatabaseModule } from "@/infrastructure/database";
 
 import { MetricsController } from "./controllers";
 import { MetricCollectionService, MetricPersistenceService } from "./services";
 
 @Module({
-    imports: [DatabaseModule, MediaMtxModule],
+    imports: [DatabaseModule, MediaNodesModule],
     providers: [MetricCollectionService, MetricPersistenceService],
     controllers: [MetricsController],
     exports: [MetricPersistenceService],

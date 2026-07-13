@@ -64,10 +64,13 @@ describe("PodQueryService", () => {
 
             const result = await service.getActivePods();
 
+            const after = Date.now();
             expect(result).toBe(pods);
             const [since] = podRepository.findActive.mock.calls[0];
             expect(since).toBeInstanceOf(Date);
-            expect(since.getTime()).toBeLessThanOrEqual(before - 120 * 1000);
+            // `since` is computed during the call, so it brackets to [before, after] - 120s.
+            expect(since.getTime()).toBeGreaterThanOrEqual(before - 120 * 1000);
+            expect(since.getTime()).toBeLessThanOrEqual(after - 120 * 1000);
         });
 
         it("forwards role filter to the repository", async () => {

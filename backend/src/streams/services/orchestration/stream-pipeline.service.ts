@@ -2,7 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
 import { SystemEventNames } from "@/common";
-import { MediaMtxPipelineService } from "@/infrastructure";
+import { MediaMtxPipelineService } from "@/media-nodes";
 
 import { Stream } from "../../domain";
 import { StreamStatusService } from "../mutation";
@@ -19,7 +19,10 @@ export class StreamPipelineService {
 
     /** Build the cluster pull pipeline for a stream on its assigned pod (no status side effects). */
     async build(stream: Stream): Promise<void> {
-        await this.mediaMtxService.createClusterPullPipeline(
+        if (!stream.assignedPod) {
+            throw new Error(`Cannot build cluster pipeline for unassigned stream ${stream.name}`);
+        }
+        await this.mediaMtxService.buildClusterPullPipeline(
             {
                 name: stream.name,
                 source: stream.source,
@@ -45,7 +48,7 @@ export class StreamPipelineService {
 
     /** Tear down a stream's cluster pipeline and announce its removal. */
     async teardown(stream: Stream): Promise<void> {
-        await this.mediaMtxService.deleteClusterPipeline(stream.name);
+        await this.mediaMtxService.teardownClusterPullPipeline(stream.name);
         this.events.emit(SystemEventNames.STREAM_REMOVED, stream.name);
     }
 }

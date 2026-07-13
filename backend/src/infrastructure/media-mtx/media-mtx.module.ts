@@ -1,44 +1,22 @@
 import { Module } from "@nestjs/common";
 
-import { PodsModule } from "@/pods";
 import { ConfigModule } from "@/config";
 
 import {
     MediaMtxClientFactory,
     MediaMtxClientRegistry,
-    ClusterNodeResolverService,
+    MediaMtxMetricsClientFactory,
 } from "./registry";
-import {
-    MediaMtxMetricsService,
-    MediaMtxPipelineService,
-    MediaMtxStreamStatsService,
-    MediaMtxStreamListingService,
-    IngestStreamListingStrategy,
-    ClusterStreamListingStrategy,
-    StreamCollectionService,
-} from "./services";
 
+/**
+ * The MediaMTX **gateway**: the driver that talks to MediaMTX nodes. Owns the HTTP
+ * clients, their caching factories, and the registry that vends them. Holds no
+ * application logic — the services that operate the nodes live in the `media-nodes`
+ * feature, which imports this module and injects `MediaMtxClientRegistry` (ARCH-10).
+ */
 @Module({
-    imports: [ConfigModule, PodsModule],
-    providers: [
-        MediaMtxClientFactory,
-        MediaMtxClientRegistry,
-        ClusterNodeResolverService,
-        IngestStreamListingStrategy,
-        ClusterStreamListingStrategy,
-        StreamCollectionService,
-        MediaMtxStreamListingService,
-        MediaMtxStreamStatsService,
-        MediaMtxPipelineService,
-        MediaMtxMetricsService,
-    ],
-    exports: [
-        MediaMtxClientFactory,
-        MediaMtxClientRegistry,
-        MediaMtxStreamListingService,
-        MediaMtxStreamStatsService,
-        MediaMtxPipelineService,
-        MediaMtxMetricsService,
-    ],
+    imports: [ConfigModule],
+    providers: [MediaMtxClientFactory, MediaMtxMetricsClientFactory, MediaMtxClientRegistry],
+    exports: [MediaMtxClientRegistry],
 })
 export class MediaMtxModule {}

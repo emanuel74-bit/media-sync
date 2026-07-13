@@ -2,7 +2,8 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
 import { PodRole, SystemEventNames } from "@/common";
-import { MediaMtxMetricsService, MediaMtxMetricsSnapshot } from "@/infrastructure";
+import { MediaMtxMetricsService } from "@/media-nodes";
+import { MediaMtxMetricsSnapshot } from "@/infrastructure";
 import { MetricCollectionService, MetricPersistenceService } from "@/metrics/services";
 
 const snapshot = (node: string, context: PodRole, streamName: string): MediaMtxMetricsSnapshot => ({

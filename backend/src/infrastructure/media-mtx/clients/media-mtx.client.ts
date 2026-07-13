@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from "axios";
 
-import { mapV3PathToStream } from "../mappers";
-import { MediaMtxStreamInfo, V3PathItem, PipelineCreateResult } from "../types";
+import { mapV3PathToStream, mapV3PathToStreamDetails } from "../mappers";
+import { StreamDetails, MediaMtxStreamInfo, V3PathItem, PipelineCreateResult } from "../types";
 
 /**
  * Thin HTTP adapter for a single MediaMTX node.
@@ -22,11 +22,11 @@ export class MediaMtxClient {
         return items.map((item) => mapV3PathToStream(item));
     }
 
-    async getPathItem(pathName: string): Promise<V3PathItem> {
+    async getStreamDetails(pathName: string): Promise<StreamDetails> {
         const res = await this.http.get<V3PathItem>(
             `/v3/paths/get/${encodeURIComponent(pathName)}`,
         );
-        return res.data;
+        return mapV3PathToStreamDetails(pathName, res.data);
     }
 
     async addPath(pathName: string, source: string): Promise<PipelineCreateResult> {

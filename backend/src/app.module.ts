@@ -10,7 +10,7 @@ import { GatewayModule } from "./gateway";
 import { MetricsModule } from "./metrics";
 import { StreamsModule } from "./streams";
 import { SchedulingModule } from "./common";
-import { MediaMtxModule } from "./infrastructure";
+import { MediaNodesModule } from "./media-nodes";
 import { StreamInspectionModule } from "./stream-inspection";
 
 @Module({
@@ -19,7 +19,7 @@ import { StreamInspectionModule } from "./stream-inspection";
         SchedulingModule,
         EventEmitterModule.forRoot(),
         MongooseModule.forRoot(process.env.MONGODB_URI ?? "mongodb://localhost:27017/media-sync"),
-        MediaMtxModule,
+        MediaNodesModule,
         StreamsModule,
         SyncModule,
         MetricsModule,

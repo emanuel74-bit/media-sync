@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { MediaMtxMetricsService } from "@/infrastructure";
+import { MediaMtxMetricsService } from "@/media-nodes";
 import { ScheduledTask, SystemEventNames, MetricsCollectedPayload } from "@/common";
 
 import { MetricPersistenceService } from "../persistence";

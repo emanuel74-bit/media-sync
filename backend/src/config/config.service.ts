@@ -2,19 +2,18 @@ import { Injectable } from "@nestjs/common";
 
 @Injectable()
 export class ConfigService {
-    get ingestBaseUrl(): string {
-        return process.env.INGEST_MEDIAMTX_BASE_URL ?? "http://localhost:9000";
+    /**
+     * HTTP API credentials (`user:pass`, or `""` when the node needs none) the transport
+     * layer attaches to every ingest-node client. Registered pods report only host/IP, so
+     * auth cannot come from the pod list — it is per-deployment transport config.
+     */
+    get ingestNodeAuth(): string {
+        return process.env.INGEST_MEDIAMTX_AUTH ?? "";
     }
 
-    get clusterBaseUrl(): string {
-        return process.env.CLUSTER_MEDIAMTX_BASE_URL ?? "http://localhost:9001";
-    }
-
-    get clusterBaseUrls(): string[] {
-        return (process.env.CLUSTER_MEDIAMTX_BASE_URLS ?? this.clusterBaseUrl)
-            .split(",")
-            .map((item) => item.trim())
-            .filter((item) => item);
+    /** HTTP API credentials (`user:pass`, or `""`) attached to every cluster-node client. */
+    get clusterNodeAuth(): string {
+        return process.env.CLUSTER_MEDIAMTX_AUTH ?? "";
     }
 
     get syncPollInterval(): number {
@@ -47,12 +46,26 @@ export class ConfigService {
     }
 
     /**
-     * RTSP base the cluster nodes pull from to relay an ingest stream.
-     * The pull source for a path is `${ingestRtspBaseUrl}/${pathName}`.
+     * The stable ingest relay endpoint (a Service/DNS, not a pod) that cluster nodes pull
+     * an ingest stream from over RTSP — media plane, so config not pod discovery (ARCH-11).
+     * `NodeResolver.getIngestPullUrl` owns the path-join convention.
      * Include credentials here if the ingest enforces RTSP auth.
      */
     get ingestRtspBaseUrl(): string {
         return (process.env.INGEST_RTSP_URL ?? "rtsp://mediamtx-ingest:8554").replace(/\/+$/, "");
+    }
+
+    /**
+     * Protocols a cluster node can pull a stream from directly — when a stream's stored
+     * source starts with one of these (`<proto>://…`), it is used as-is instead of relaying
+     * from the ingest. Extend via `PULLABLE_SOURCE_PROTOCOLS` (comma-separated). Consumers
+     * compile these into a matcher once at startup (see `MediaMtxPipelineService`).
+     */
+    get pullableSourceProtocols(): string[] {
+        return (process.env.PULLABLE_SOURCE_PROTOCOLS ?? "rtsp,rtsps,rtmp,rtmps,srt,http,https,udp")
+            .split(",")
+            .map((item) => item.trim())
+            .filter((item) => item);
     }
 
     /** Node-resource alert thresholds (percent); a pod over any of these raises a node alert. */

@@ -2,7 +2,7 @@ import { Module } from "@nestjs/common";
 
 import { PodsModule } from "@/pods";
 import { StreamsModule } from "@/streams";
-import { MediaMtxModule } from "@/infrastructure";
+import { MediaNodesModule } from "@/media-nodes";
 
 import {
     SyncSchedulerService,
@@ -15,7 +15,7 @@ import {
 } from "./services";
 
 @Module({
-    imports: [MediaMtxModule, StreamsModule, PodsModule],
+    imports: [MediaNodesModule, StreamsModule, PodsModule],
     providers: [
         SyncSchedulerService,
         SyncOrchestratorService,

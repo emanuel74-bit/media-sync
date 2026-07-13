@@ -1,5 +1,5 @@
-import { MediaMtxClient } from "@/infrastructure";
-import { MediaMtxClientFactory } from "@/infrastructure";
+import { MediaMtxClient } from "@/infrastructure/media-mtx";
+import { MediaMtxClientFactory } from "@/infrastructure/media-mtx";
 
 describe("MediaMtxClientFactory", () => {
     let factory: MediaMtxClientFactory;

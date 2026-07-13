@@ -1,11 +1,11 @@
 import { TrackType } from "@/common";
-import { V3PathItem, V3TrackItem } from "@/infrastructure";
+import { V3PathItem, V3TrackItem } from "@/infrastructure/media-mtx";
 import {
     TRACK_FIELD_MAP,
     mapV3TrackToStreamTrack,
     mapV3PathToStreamDetails,
     mapV3TracksToStreamTracks,
-} from "@/infrastructure";
+} from "@/infrastructure/media-mtx";
 
 // ─── mapV3TrackToStreamTrack ─────────────────────────────────────────────────
 
