@@ -1,15 +1,15 @@
 import { Injectable, Logger } from "@nestjs/common";
 
-import { StreamDetails, MediaMtxClient } from "@/infrastructure";
+import { PodRole } from "@/common";
+import { StreamDetails } from "@/infrastructure";
 
 import { NodeResolver } from "../topology";
 
 /**
- * Fetches track-level details for individual streams (used by stream inspection).
- * The ingest node and cluster nodes are distinct targets, so each has its own method:
- * an ingest stream lives on the single ingest node; a cluster stream lives on exactly
- * the node it was assigned to, so the caller must supply that pod id — a round-robin
- * pick would hit the wrong node and 404.
+ * Fetches track-level details for an individual stream (used by stream inspection). A stream
+ * lives on exactly one node — the ingest node it was published on, or the cluster node it was
+ * assigned to — so the caller supplies that role + pod id; a pick over the pool would 404
+ * against a sibling.
  */
 @Injectable()
 export class MediaMtxStreamStatsService {
@@ -17,23 +17,12 @@ export class MediaMtxStreamStatsService {
 
     constructor(private readonly nodes: NodeResolver) {}
 
-    async getIngestStreamDetails(name: string): Promise<StreamDetails> {
-        return this.fetch(name, "ingest", await this.nodes.getIngestClient());
-    }
-
-    async getClusterStreamDetails(name: string, assignedPodId: string): Promise<StreamDetails> {
-        return this.fetch(name, "cluster", await this.nodes.getClusterClientForPod(assignedPodId));
-    }
-
-    private async fetch(
-        name: string,
-        source: string,
-        client: MediaMtxClient,
-    ): Promise<StreamDetails> {
+    async getStreamDetails(role: PodRole, name: string, podId: string): Promise<StreamDetails> {
+        const client = await this.nodes.clientForPod(role, podId);
         try {
             return await client.getStreamDetails(name);
         } catch (error) {
-            this.logger.warn(`Failed to get stream details for ${name} on ${source}`, error);
+            this.logger.warn(`Failed to get stream details for ${name} on ${role}`, error);
             throw error;
         }
     }

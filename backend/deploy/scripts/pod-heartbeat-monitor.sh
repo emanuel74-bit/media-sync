@@ -6,6 +6,10 @@ MEDIA_SYNC_API="${MEDIA_SYNC_API:-http://media-sync:3000}"
 POD_ID="${POD_ID:-$(hostname)}"
 POD_HOST="${POD_HOST:-$(hostname -i | awk '{print $1}')}"
 POD_TYPE="${POD_TYPE:-cluster}"
+# Per-node MediaMTX ports (several nodes per VM share a host, differ by port).
+API_PORT="${API_PORT:-9000}"
+RTSP_PORT="${RTSP_PORT:-8554}"
+METRICS_PORT="${METRICS_PORT:-9998}"
 HEARTBEAT_INTERVAL="${HEARTBEAT_INTERVAL:-20}"   # seconds
 REREGISTER_EVERY="${REREGISTER_EVERY:-15}"       # heartbeats between full re-registrations
 REPORT_RESOURCES="${REPORT_RESOURCES:-1}"        # 0 to disable host resource reporting
@@ -36,7 +40,7 @@ resources_json() {
 register_pod() {
   curl -fsS -X POST "$MEDIA_SYNC_API/api/pods/register" \
     -H "Content-Type: application/json" \
-    -d "{\"podId\":\"$POD_ID\",\"host\":\"$POD_HOST\",\"type\":\"$POD_TYPE\"$(resources_json)}" > /dev/null
+    -d "{\"podId\":\"$POD_ID\",\"host\":\"$POD_HOST\",\"type\":\"$POD_TYPE\",\"apiPort\":$API_PORT,\"rtspPort\":$RTSP_PORT,\"metricsPort\":$METRICS_PORT$(resources_json)}" > /dev/null
 }
 
 heartbeat_pod() {

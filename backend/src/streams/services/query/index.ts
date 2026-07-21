@@ -3,3 +3,4 @@
  */
 
 export * from "./stream-query.service";
+export * from "./publish-auth.service";

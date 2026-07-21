@@ -1,0 +1,54 @@
+# Ingest node cluster on a single VM.
+#
+# Runs several ingest MediaMTX nodes on one host, each publishing a distinct set
+# of ports and self-registering those ports with the sync service, so a stream
+# published to any node is addressable on that specific node (several nodes per
+# VM share a host and differ by port). Scale by copying a node block and bumping
+# its ports + POD_ID. Point MEDIA_SYNC_API at the sync service and VM_HOST at
+# this VM's address reachable by the sync service and by publishers.
+#
+# Run on the VM (from backend/):
+#   VM_HOST=<vm-ip> MEDIA_SYNC_API=http://<sync-host>:3000 \
+#     docker-compose -f deploy/docker/compose.ingest.yml up --build -d
+
+x-ingest-node: &ingest-node
+    build:
+        context: ../..
+        dockerfile: deploy/docker/mediamtx-pod.Dockerfile
+    volumes:
+        - ../mediamtx/mediamtx-ingest.yml:/mediamtx.yml
+    restart: unless-stopped
+
+services:
+    ingest-1:
+        <<: *ingest-node
+        ports:
+            - "8554:8554" # RTSP
+            - "8888:8888" # HLS
+            - "9000:9000" # API
+            - "9998:9998" # Prometheus metrics
+        environment:
+            - POD_ID=ingest-${VM_HOST:-vm}-1
+            - POD_TYPE=ingest
+            - POD_HOST=${VM_HOST:?set VM_HOST to this VM's reachable address}
+            - MEDIA_SYNC_API=${MEDIA_SYNC_API:-http://app:3000}
+            # Self-reported ports = the host-published ports the sync service dials.
+            - API_PORT=9000
+            - RTSP_PORT=8554
+            - METRICS_PORT=9998
+
+    ingest-2:
+        <<: *ingest-node
+        ports:
+            - "8564:8554" # RTSP
+            - "8898:8888" # HLS
+            - "9010:9000" # API
+            - "9908:9998" # Prometheus metrics
+        environment:
+            - POD_ID=ingest-${VM_HOST:-vm}-2
+            - POD_TYPE=ingest
+            - POD_HOST=${VM_HOST:?set VM_HOST to this VM's reachable address}
+            - MEDIA_SYNC_API=${MEDIA_SYNC_API:-http://app:3000}
+            - API_PORT=9010
+            - RTSP_PORT=8564
+            - METRICS_PORT=9908

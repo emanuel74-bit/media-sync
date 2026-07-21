@@ -8,6 +8,9 @@ import { PodQueryService, PodLifecycleService } from "@/pods/services";
 const makePod = (overrides: Partial<Pod> = {}): Pod => ({
     podId: "pod-1",
     host: "10.0.0.1",
+    apiPort: 9000,
+    rtspPort: 8554,
+    metricsPort: 9998,
     type: PodRole.CLUSTER,
     status: PodStatus.ACTIVE,
     lastHeartbeatAt: new Date(),

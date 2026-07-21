@@ -2,7 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
 import { SystemEventNames } from "@/common";
-import { MediaMtxPipelineService } from "@/media-nodes";
+import { MediaMtxPipelineService, NodeResolver } from "@/media-nodes";
 
 import { Stream } from "../../domain";
 import { StreamStatusService } from "../mutation";
@@ -14,6 +14,7 @@ export class StreamPipelineService {
     constructor(
         private readonly streamStatus: StreamStatusService,
         private readonly mediaMtxService: MediaMtxPipelineService,
+        private readonly nodes: NodeResolver,
         private readonly events: EventEmitter2,
     ) {}
 
@@ -22,13 +23,17 @@ export class StreamPipelineService {
         if (!stream.assignedPod) {
             throw new Error(`Cannot build cluster pipeline for unassigned stream ${stream.name}`);
         }
+
+        // An ingest-origin stream is pulled from its ingest node; any other stream (a manual
+        // one) already stores a directly pullable source.
+        const pullSource = stream.ingestPod
+            ? await this.nodes.getIngestRtspUrl(stream.ingestPod, stream.name)
+            : stream.source;
+
         await this.mediaMtxService.buildClusterPullPipeline(
-            {
-                name: stream.name,
-                source: stream.source,
-                status: stream.status,
-            },
+            stream.name,
             stream.assignedPod,
+            pullSource,
         );
     }
 

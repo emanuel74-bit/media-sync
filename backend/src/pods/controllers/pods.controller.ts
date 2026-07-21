@@ -28,6 +28,9 @@ export class PodsController {
         return this.podLifecycle.registerPod({
             podId: dto.podId,
             host: dto.host,
+            apiPort: dto.apiPort,
+            rtspPort: dto.rtspPort,
+            metricsPort: dto.metricsPort,
             type: dto.type,
             resources: dto.resources,
         });

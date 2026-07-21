@@ -42,6 +42,15 @@ export class Stream {
     isManual!: boolean;
 
     @Prop({ type: String, required: false, default: null })
+    ingestPod?: string | null;
+
+    @Prop({ type: Date, required: false, default: null })
+    reservedUntil?: Date | null;
+
+    @Prop({ type: String, required: false, default: null })
+    publishToken?: string | null;
+
+    @Prop({ type: String, required: false, default: null })
     assignedPod?: string | null;
 
     @Prop({ type: Date, required: false, default: null })

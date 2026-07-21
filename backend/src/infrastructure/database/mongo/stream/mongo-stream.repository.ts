@@ -54,6 +54,19 @@ export class MongoStreamRepository
         return this.toDomainList(docs);
     }
 
+    async countReservationsByIngestPod(): Promise<Record<string, number>> {
+        const rows = await this.model.aggregate<{ _id: string | null; count: number }>([
+            { $match: { status: StreamStatus.RESERVED, ingestPod: { $ne: null } } },
+            { $group: { _id: "$ingestPod", count: { $sum: 1 } } },
+        ]);
+        return rows.reduce<Record<string, number>>((acc, row) => {
+            if (row._id) {
+                acc[row._id] = row.count;
+            }
+            return acc;
+        }, {});
+    }
+
     async upsert(name: string, data: Partial<Stream>): Promise<Stream> {
         const doc = await this.model.findOneAndUpdate(
             { name },
@@ -123,6 +136,9 @@ export class MongoStreamRepository
             lastError: raw.lastError,
             activeConsumers: raw.activeConsumers,
             isManual: raw.isManual,
+            ingestPod: raw.ingestPod,
+            reservedUntil: raw.reservedUntil,
+            publishToken: raw.publishToken,
             assignedPod: raw.assignedPod,
             assignedAt: raw.assignedAt,
             createdAt: raw.createdAt,

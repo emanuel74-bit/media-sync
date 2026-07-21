@@ -13,6 +13,12 @@ const makeStream = (name: string): MediaMtxStreamInfo => ({
     status: "ready",
 });
 
+const makeContextual = (name: string, context: PodRole, nodeId: string | null) => ({
+    stream: makeStream(name),
+    context,
+    nodeId,
+});
+
 describe("SyncContextBuilderService", () => {
     let service: SyncContextBuilderService;
     let mediaMtxQuery: jest.Mocked<MediaMtxStreamListingService>;
@@ -21,8 +27,7 @@ describe("SyncContextBuilderService", () => {
 
     beforeEach(async () => {
         mediaMtxQuery = {
-            listIngestStreams: jest.fn(),
-            listClusterStreams: jest.fn(),
+            listStreams: jest.fn(),
         } as unknown as jest.Mocked<MediaMtxStreamListingService>;
 
         streams = {
@@ -47,8 +52,11 @@ describe("SyncContextBuilderService", () => {
 
     describe("buildContext", () => {
         beforeEach(() => {
-            mediaMtxQuery.listIngestStreams.mockResolvedValue([makeStream("ingest-1")]);
-            mediaMtxQuery.listClusterStreams.mockResolvedValue([makeStream("cluster-1")]);
+            mediaMtxQuery.listStreams.mockImplementation(async (role) =>
+                role === PodRole.INGEST
+                    ? [makeContextual("ingest-1", PodRole.INGEST, "ingest-a")]
+                    : [makeContextual("cluster-1", PodRole.CLUSTER, null)],
+            );
             podsService.listActivePodIds.mockResolvedValue(["pod-a", "pod-b"]);
             streams.findAll.mockResolvedValue([] as Stream[]);
         });
@@ -56,16 +64,17 @@ describe("SyncContextBuilderService", () => {
         it("calls all four data sources in parallel", async () => {
             await service.buildContext();
 
-            expect(mediaMtxQuery.listIngestStreams).toHaveBeenCalledTimes(1);
-            expect(mediaMtxQuery.listClusterStreams).toHaveBeenCalledTimes(1);
+            expect(mediaMtxQuery.listStreams).toHaveBeenCalledWith(PodRole.INGEST);
+            expect(mediaMtxQuery.listStreams).toHaveBeenCalledWith(PodRole.CLUSTER);
             expect(podsService.listActivePodIds).toHaveBeenCalledWith(PodRole.CLUSTER);
             expect(streams.findAll).toHaveBeenCalledTimes(1);
         });
 
-        it("assembles ingestList correctly", async () => {
+        it("assembles ingestList carrying each stream's ingest node", async () => {
             const ctx = await service.buildContext();
             expect(ctx.ingestList).toHaveLength(1);
             expect(ctx.ingestList[0].name).toBe("ingest-1");
+            expect(ctx.ingestList[0].ingestPod).toBe("ingest-a");
         });
 
         it("assembles clusterList correctly", async () => {
@@ -101,8 +110,7 @@ describe("SyncContextBuilderService", () => {
         });
 
         it("returns empty Sets and arrays when nothing is active", async () => {
-            mediaMtxQuery.listIngestStreams.mockResolvedValue([]);
-            mediaMtxQuery.listClusterStreams.mockResolvedValue([]);
+            mediaMtxQuery.listStreams.mockResolvedValue([]);
             podsService.listActivePodIds.mockResolvedValue([]);
             streams.findAll.mockResolvedValue([]);
 

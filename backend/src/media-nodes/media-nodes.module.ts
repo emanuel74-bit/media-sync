@@ -14,10 +14,10 @@ import {
 } from "./services";
 
 /**
- * Application layer over the MediaMTX gateway (`MediaMtxModule`). Owns the services that
- * operate media nodes — stream discovery, cluster pipeline lifecycle, per-stream stats,
- * and metrics scraping — resolving live pod topology (`PodsModule`) and driving the
- * gateway registry. Other features inject these four services (ARCH-10).
+ * Application layer over the MediaMTX gateway (`MediaMtxModule`): stream discovery, cluster
+ * pipeline lifecycle, per-stream stats, metrics scraping, and node/URL resolution — resolving
+ * live pod topology (`PodsModule`) and driving the gateway registry. Consumed by other
+ * features via the exported services (ARCH-10).
  */
 @Module({
     imports: [ConfigModule, PodsModule, MediaMtxModule],
@@ -30,6 +30,7 @@ import {
         MediaMtxMetricsService,
     ],
     exports: [
+        NodeResolver,
         MediaMtxStreamListingService,
         MediaMtxStreamStatsService,
         MediaMtxPipelineService,

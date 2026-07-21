@@ -46,26 +46,30 @@ export class ConfigService {
     }
 
     /**
-     * The stable ingest relay endpoint (a Service/DNS, not a pod) that cluster nodes pull
-     * an ingest stream from over RTSP — media plane, so config not pod discovery (ARCH-11).
-     * `NodeResolver.getIngestPullUrl` owns the path-join convention.
-     * Include credentials here if the ingest enforces RTSP auth.
+     * Default MediaMTX RTSP port, used to build a node's pull/publish URL when a pod did
+     * not self-report its own `rtspPort`. Per-node ports (several nodes per VM) come from
+     * the pod registration; these role/global getters are the fallback (see `NodeResolver`).
      */
-    get ingestRtspBaseUrl(): string {
-        return (process.env.INGEST_RTSP_URL ?? "rtsp://mediamtx-ingest:8554").replace(/\/+$/, "");
+    get mediaMtxRtspPort(): number {
+        return Number(process.env.MEDIAMTX_RTSP_PORT ?? 8554);
     }
 
     /**
-     * Protocols a cluster node can pull a stream from directly — when a stream's stored
-     * source starts with one of these (`<proto>://…`), it is used as-is instead of relaying
-     * from the ingest. Extend via `PULLABLE_SOURCE_PROTOCOLS` (comma-separated). Consumers
-     * compile these into a matcher once at startup (see `MediaMtxPipelineService`).
+     * How long a reserved publish slot is held before it expires if no media arrives. The sync
+     * loop's TTL GC frees expired `RESERVED` streams. Override via `INGEST_RESERVATION_TTL_MS`.
      */
-    get pullableSourceProtocols(): string[] {
-        return (process.env.PULLABLE_SOURCE_PROTOCOLS ?? "rtsp,rtsps,rtmp,rtmps,srt,http,https,udp")
-            .split(",")
-            .map((item) => item.trim())
-            .filter((item) => item);
+    get ingestReservationTtlMs(): number {
+        return Number(process.env.INGEST_RESERVATION_TTL_MS ?? 300_000);
+    }
+
+    /**
+     * RTSP username an ingest node presents to the sync auth endpoint (`/api/ingest/auth`) when
+     * a client publishes. The client's publish URL embeds this user plus the per-reservation
+     * secret; the endpoint validates the secret against the reservation. Override via
+     * `INGEST_PUBLISH_USER`.
+     */
+    get ingestPublishUser(): string {
+        return process.env.INGEST_PUBLISH_USER ?? "publish";
     }
 
     /** Node-resource alert thresholds (percent); a pod over any of these raises a node alert. */

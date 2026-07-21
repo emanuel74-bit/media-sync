@@ -1,62 +1,50 @@
 import { Injectable } from "@nestjs/common";
 
 import { PodRole } from "@/common";
-import { ConfigService } from "@/config";
-import { PodQueryService } from "@/pods";
-import { MediaMtxClient, MediaMtxMetricsClient, MediaMtxClientRegistry } from "@/infrastructure";
+import { ActivePodRef, PodQueryService } from "@/pods";
+import { MediaMtxClient, MediaMtxClientRegistry } from "@/infrastructure";
 
-/** One MediaMTX node's Prometheus scrape target: which node, and the client to scrape it with. */
-export interface MediaMtxMetricsTarget {
-    context: PodRole;
-    nodeId: string;
-    client: MediaMtxMetricsClient;
+import { MediaMtxMetricsTarget } from "../../domain";
+
+/** One active node and the control client to reach it. */
+export interface ActiveNode {
+    podId: string;
+    client: MediaMtxClient;
 }
 
 /**
- * Resolves live MediaMTX node clients from the pod registry — the application-side
- * bridge between "which pods are active" (pods feature) and "give me a transport client
- * for this host" (the gateway registry). Lives here, not in infrastructure, because
- * deciding *which* node to talk to is domain topology, not transport (ARCH-09, ARCH-10).
- * The live pod set is the single source of truth: no active pod for a role means no
- * client, never a static fallback.
+ * Resolves live MediaMTX node clients from the pod registry — the bridge between "which pods
+ * are active" (pods feature) and "give me a transport client for this host:port" (the gateway
+ * registry). Every method takes the node `role` uniformly, so ingest and cluster resolution
+ * share one implementation. The live pod set is the single source of truth: no active pod
+ * means no client.
  */
 @Injectable()
 export class NodeResolver {
     constructor(
         private readonly pods: PodQueryService,
         private readonly registry: MediaMtxClientRegistry,
-        private readonly config: ConfigService,
     ) {}
 
-    /** The primary ingest client — the first active ingest node. Throws when none is live. */
-    async getIngestClient(): Promise<MediaMtxClient> {
-        const [pod] = await this.pods.listActivePodRefs(PodRole.INGEST);
-        if (!pod) {
-            throw new Error("No active ingest node");
-        }
-        return this.registry.getClient(pod.host, PodRole.INGEST);
+    /** Active nodes of a role as `{ podId, client }` pairs (empty when none live). */
+    async getActiveNodes(role: PodRole): Promise<ActiveNode[]> {
+        const pods = await this.pods.listActivePodRefs(role);
+        return pods.map((pod) => ({ podId: pod.podId, client: this.clientFor(pod, role) }));
     }
 
-    /** All active ingest nodes as clients (per-pod discovery fallback). */
-    async getActiveIngestClients(): Promise<readonly MediaMtxClient[]> {
-        const pods = await this.pods.listActivePodRefs(PodRole.INGEST);
-        return pods.map((pod) => this.registry.getClient(pod.host, PodRole.INGEST));
+    /** Control client for a specific node of a role. Throws when that node is not live. */
+    async clientForPod(role: PodRole, podId: string): Promise<MediaMtxClient> {
+        const pod = await this.requirePod(role, podId);
+        return this.clientFor(pod, role);
     }
 
-    /** All active cluster nodes as clients. Empty when none are live. */
-    async getActiveClusterClients(): Promise<readonly MediaMtxClient[]> {
-        const pods = await this.pods.listActivePodRefs(PodRole.CLUSTER);
-        return pods.map((pod) => this.registry.getClient(pod.host, PodRole.CLUSTER));
-    }
-
-    /** Client for the specific pod a stream is assigned to. Throws when that pod is not live. */
-    async getClusterClientForPod(podId: string): Promise<MediaMtxClient> {
-        const pods = await this.pods.listActivePodRefs(PodRole.CLUSTER);
-        const pod = pods.find((ref) => ref.podId === podId);
-        if (!pod) {
-            throw new Error(`No active cluster node for pod ${podId}`);
-        }
-        return this.registry.getClient(pod.host, PodRole.CLUSTER);
+    /**
+     * The RTSP URL of a path on a specific ingest node — the cluster relay's pull source and a
+     * publisher's push target (same endpoint). Throws when the ingest node is not live.
+     */
+    async getIngestRtspUrl(ingestPodId: string, pathName: string): Promise<string> {
+        const pod = await this.requirePod(PodRole.INGEST, ingestPodId);
+        return `rtsp://${pod.host}:${pod.rtspPort}/${pathName}`;
     }
 
     /** Prometheus scrape targets for one role: one per active pod (empty when none live). */
@@ -65,18 +53,20 @@ export class NodeResolver {
         return pods.map((pod) => ({
             context: role,
             nodeId: pod.podId,
-            client: this.registry.getMetricsClient(pod.host, role),
+            client: this.registry.getMetricsClient(pod.host, pod.metricsPort, role),
         }));
     }
 
-    /**
-     * The URL a cluster node pulls a path from the ingest over RTSP. This targets the
-     * **stable ingest relay endpoint** (a Service/DNS in front of the ingest, media plane),
-     * not a specific ingest pod — so it comes from config, not the pod registry. Control-
-     * plane addressing (per-node HTTP ops) is pod-derived; a stable shared media endpoint
-     * is deployment config, like a database URL (ARCH-11).
-     */
-    getIngestPullUrl(pathName: string): string {
-        return `${this.config.ingestRtspBaseUrl}/${pathName}`;
+    private async requirePod(role: PodRole, podId: string): Promise<ActivePodRef> {
+        const pods = await this.pods.listActivePodRefs(role);
+        const pod = pods.find((ref) => ref.podId === podId);
+        if (!pod) {
+            throw new Error(`No active ${role} node for pod ${podId}`);
+        }
+        return pod;
+    }
+
+    private clientFor(pod: ActivePodRef, role: PodRole): MediaMtxClient {
+        return this.registry.getClient(pod.host, pod.apiPort, role);
     }
 }

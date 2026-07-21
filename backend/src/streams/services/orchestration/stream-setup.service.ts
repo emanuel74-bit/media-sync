@@ -8,6 +8,11 @@ import { StreamAssignmentService } from "../assignment";
 import { StreamPipelineService } from "./stream-pipeline.service";
 import { StreamCrudService, StreamStatusService } from "../mutation";
 
+/**
+ * The manual birth flow (`POST /api/streams`): creates a stream with a known external source and
+ * **immediately** assigns it to a cluster node and deploys the relay. (The ingest birth flow is
+ * separate — `StreamReservationService`.)
+ */
 @Injectable()
 export class StreamSetupService {
     constructor(

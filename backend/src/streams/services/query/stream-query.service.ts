@@ -23,6 +23,11 @@ export class StreamQueryService {
         return this.streamRepository.findByAssignedPod(podId);
     }
 
+    /** Pending reservations grouped by the ingest pod holding each slot. */
+    async countReservationsByIngestPod(): Promise<Record<string, number>> {
+        return this.streamRepository.countReservationsByIngestPod();
+    }
+
     async getAssignmentInfo(): Promise<StreamAssignmentInfo[]> {
         return this.streamRepository.findAssignmentInfo();
     }

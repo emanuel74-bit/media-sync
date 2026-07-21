@@ -1,35 +1,39 @@
 import { Module } from "@nestjs/common";
 
 import { PodsModule } from "@/pods";
+import { ConfigModule } from "@/config";
 import { MediaNodesModule } from "@/media-nodes";
 import { DatabaseModule } from "@/infrastructure/database";
 
-import { StreamsController } from "./controllers";
+import { IngestController, IngestAuthController, StreamsController } from "./controllers";
 import {
-    HashStreamAssignmentPolicy,
     StreamQueryService,
     StreamAssignmentService,
+    IngestPlacementService,
     StreamsFacadeService,
     StreamCrudService,
     StreamStatusService,
     StreamPipelineService,
     StreamSetupService,
-    StreamAssignmentPolicy,
+    StreamReservationService,
+    PublishAuthService,
 } from "./services";
 
 @Module({
-    imports: [DatabaseModule, MediaNodesModule, PodsModule],
+    imports: [DatabaseModule, MediaNodesModule, PodsModule, ConfigModule],
     providers: [
         StreamQueryService,
         StreamsFacadeService,
         StreamCrudService,
         StreamPipelineService,
         StreamAssignmentService,
+        IngestPlacementService,
         StreamStatusService,
         StreamSetupService,
-        { provide: StreamAssignmentPolicy, useClass: HashStreamAssignmentPolicy },
+        StreamReservationService,
+        PublishAuthService,
     ],
-    controllers: [StreamsController],
+    controllers: [IngestController, IngestAuthController, StreamsController],
     exports: [StreamsFacadeService, StreamQueryService],
 })
 export class StreamsModule {}

@@ -1,8 +1,9 @@
 export { MediaNodesModule } from "./media-nodes.module";
 
-export type { ContextualMediaMtxStream } from "./domain";
+export type { NodeLoad, ContextualMediaMtxStream } from "./domain";
 
 export {
+    NodeResolver,
     MediaMtxMetricsService,
     MediaMtxPipelineService,
     MediaMtxStreamStatsService,

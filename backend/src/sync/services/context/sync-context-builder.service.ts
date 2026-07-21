@@ -16,12 +16,22 @@ export class SyncContextBuilderService {
     ) {}
 
     async buildContext(): Promise<SyncContext> {
-        const [ingestList, clusterList, podIds, allStreams] = await Promise.all([
-            this.mediaMtxQuery.listIngestStreams(),
-            this.mediaMtxQuery.listClusterStreams(),
+        const [ingestStreams, clusterStreams, podIds, allStreams] = await Promise.all([
+            this.mediaMtxQuery.listStreams(PodRole.INGEST),
+            this.mediaMtxQuery.listStreams(PodRole.CLUSTER),
             this.podsService.listActivePodIds(PodRole.CLUSTER),
             this.streams.findAll(),
         ]);
+
+        // Carry each ingest stream's owning node forward so the relay pulls from that
+        // specific ingest node (multi-ingest per-node origin).
+        const ingestList = ingestStreams.map(({ stream, nodeId }) => ({
+            name: stream.name,
+            source: stream.source,
+            status: stream.status,
+            ingestPod: nodeId ?? undefined,
+        }));
+        const clusterList = clusterStreams.map(({ stream }) => stream);
 
         return {
             ingestList,

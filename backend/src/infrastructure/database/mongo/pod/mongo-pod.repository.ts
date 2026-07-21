@@ -62,6 +62,9 @@ export class MongoPodRepository
         return {
             podId: raw.podId,
             host: raw.host,
+            apiPort: raw.apiPort,
+            rtspPort: raw.rtspPort,
+            metricsPort: raw.metricsPort,
             type: raw.type,
             status: raw.status,
             lastHeartbeatAt: raw.lastHeartbeatAt,

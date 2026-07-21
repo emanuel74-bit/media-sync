@@ -4,6 +4,7 @@ import { StreamStatus } from "@/common";
 import { Stream } from "@/streams/domain";
 import {
     StreamAssignmentService,
+    StreamCrudService,
     StreamPipelineService,
     StreamQueryService,
     StreamStatusService,
@@ -32,6 +33,7 @@ describe("StreamsFacadeService", () => {
     let streamStatus: jest.Mocked<StreamStatusService>;
     let streamAssignment: jest.Mocked<StreamAssignmentService>;
     let streamPipeline: jest.Mocked<StreamPipelineService>;
+    let streamCrud: jest.Mocked<StreamCrudService>;
 
     beforeEach(async () => {
         streamQuery = {
@@ -53,6 +55,10 @@ describe("StreamsFacadeService", () => {
             teardown: jest.fn(),
         } as unknown as jest.Mocked<StreamPipelineService>;
 
+        streamCrud = {
+            remove: jest.fn(),
+        } as unknown as jest.Mocked<StreamCrudService>;
+
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 StreamsFacadeService,
@@ -60,6 +66,7 @@ describe("StreamsFacadeService", () => {
                 { provide: StreamStatusService, useValue: streamStatus },
                 { provide: StreamAssignmentService, useValue: streamAssignment },
                 { provide: StreamPipelineService, useValue: streamPipeline },
+                { provide: StreamCrudService, useValue: streamCrud },
             ],
         }).compile();
 
@@ -134,5 +141,13 @@ describe("StreamsFacadeService", () => {
         await service.markStale("stream-1");
 
         expect(streamStatus.markStale).toHaveBeenCalledWith("stream-1");
+    });
+
+    it("delegates remove to StreamCrudService", async () => {
+        streamCrud.remove.mockResolvedValue(undefined);
+
+        await service.remove("stream-1");
+
+        expect(streamCrud.remove).toHaveBeenCalledWith("stream-1");
     });
 });

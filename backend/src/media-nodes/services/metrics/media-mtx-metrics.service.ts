@@ -1,9 +1,11 @@
 import { Injectable, Logger } from "@nestjs/common";
 
 import { PodRole } from "@/common";
+import { PodQueryService } from "@/pods";
 import { MediaMtxMetricsSnapshot } from "@/infrastructure";
 
-import { NodeResolver, MediaMtxMetricsTarget } from "../topology";
+import { NodeResolver } from "../topology";
+import { MediaMtxMetricsTarget, NodeLoad } from "../../domain";
 
 /**
  * Scrapes the Prometheus /metrics endpoint of every live MediaMTX node (ingest + cluster)
@@ -15,7 +17,31 @@ import { NodeResolver, MediaMtxMetricsTarget } from "../topology";
 export class MediaMtxMetricsService {
     private readonly logger = new Logger(MediaMtxMetricsService.name);
 
-    constructor(private readonly nodes: NodeResolver) {}
+    constructor(
+        private readonly nodes: NodeResolver,
+        private readonly pods: PodQueryService,
+    ) {}
+
+    /**
+     * Live publish load per active node of a role: the paths each currently serves. Every active
+     * node is reported (a node with no scrape or no paths reports `0`), so the full candidate set
+     * is always visible to placement.
+     */
+    async getNodeLoads(role: PodRole): Promise<NodeLoad[]> {
+        const [podIds, snapshots] = await Promise.all([
+            this.pods.listActivePodIds(role),
+            this.collect(),
+        ]);
+
+        const liveLoad = new Map<string, number>();
+        for (const { node } of snapshots) {
+            if (node.context === role) {
+                liveLoad.set(node.node, node.paths);
+            }
+        }
+
+        return podIds.map((podId) => ({ podId, load: liveLoad.get(podId) ?? 0 }));
+    }
 
     async collect(): Promise<MediaMtxMetricsSnapshot[]> {
         const [ingestTargets, clusterTargets] = await Promise.all([

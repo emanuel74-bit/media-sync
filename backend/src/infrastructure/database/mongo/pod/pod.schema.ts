@@ -13,6 +13,15 @@ export class Pod {
     @Prop({ required: true })
     host!: string;
 
+    @Prop({ type: Number, required: true })
+    apiPort!: number;
+
+    @Prop({ type: Number, required: true })
+    rtspPort!: number;
+
+    @Prop({ type: Number, required: true })
+    metricsPort!: number;
+
     @Prop({ required: true, enum: Object.values(PodRole) })
     type!: PodRole;
 

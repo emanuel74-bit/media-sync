@@ -30,6 +30,9 @@ export class PodQueryService {
         return pods.map((pod) => ({
             podId: pod.podId,
             host: pod.host,
+            apiPort: pod.apiPort,
+            rtspPort: pod.rtspPort,
+            metricsPort: pod.metricsPort,
             type: pod.type,
         }));
     }

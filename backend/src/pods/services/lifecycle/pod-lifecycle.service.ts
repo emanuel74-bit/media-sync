@@ -1,7 +1,8 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { PodStatus, SystemEventNames, NodeSampledPayload } from "@/common";
+import { ConfigService } from "@/config";
+import { PodRole, PodStatus, SystemEventNames, NodeSampledPayload } from "@/common";
 
 import { PodRepository } from "../../repositories";
 import { Pod, NodeResources, PodHeartbeatData, PodRegistrationData } from "../../domain";
@@ -12,18 +13,25 @@ export class PodLifecycleService {
 
     constructor(
         private readonly podRepository: PodRepository,
+        private readonly config: ConfigService,
         private readonly events: EventEmitter2,
     ) {}
 
     async registerPod(request: PodRegistrationData): Promise<Pod> {
-        const fields: Partial<Omit<Pod, "podId" | "createdAt" | "updatedAt">> = {
+        const defaultApiPort =
+            request.type === PodRole.INGEST
+                ? this.config.ingestPodMediaMtxPort
+                : this.config.clusterPodMediaMtxPort;
+
+        const pod = await this.podRepository.upsertByPodId(request.podId, {
             status: PodStatus.ACTIVE,
             lastHeartbeatAt: new Date(),
             host: request.host,
             type: request.type,
-        };
-
-        const pod = await this.podRepository.upsertByPodId(request.podId, fields);
+            apiPort: request.apiPort ?? defaultApiPort,
+            rtspPort: request.rtspPort ?? this.config.mediaMtxRtspPort,
+            metricsPort: request.metricsPort ?? this.config.mediaMtxMetricsPort,
+        });
         this.logger.log(`Registered/heartbeat pod: ${request.podId}`);
         this.events.emit(SystemEventNames.POD_REGISTERED, pod);
         this.emitNodeSample(pod, request.resources);

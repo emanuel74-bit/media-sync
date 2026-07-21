@@ -4,4 +4,5 @@
 
 export * from "./text";
 export * from "./domain";
+export * from "./selection";
 export * from "./scheduling";

@@ -1,5 +1,5 @@
 import { Type } from "class-transformer";
-import { IsEnum, IsObject, IsOptional, IsString, ValidateNested } from "class-validator";
+import { IsEnum, IsInt, IsObject, IsOptional, IsString, ValidateNested } from "class-validator";
 
 import { PodRole } from "@/common";
 
@@ -11,6 +11,18 @@ export class RegisterPodDto {
 
     @IsString()
     host!: string;
+
+    @IsOptional()
+    @IsInt()
+    apiPort?: number;
+
+    @IsOptional()
+    @IsInt()
+    rtspPort?: number;
+
+    @IsOptional()
+    @IsInt()
+    metricsPort?: number;
 
     @IsEnum(PodRole)
     type!: PodRole;

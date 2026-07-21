@@ -39,6 +39,7 @@ describe("StreamStalenessService", () => {
         streams = {
             markStale: jest.fn(),
             teardownClusterPipeline: jest.fn(),
+            remove: jest.fn(),
         } as unknown as jest.Mocked<StreamsFacadeService>;
 
         const module: TestingModule = await Test.createTestingModule({
@@ -88,6 +89,52 @@ describe("StreamStalenessService", () => {
         await service.execute(makeContext({ allStreams: [stream] }));
 
         expect(streams.teardownClusterPipeline).not.toHaveBeenCalled();
+    });
+
+    it("never marks a RESERVED stream stale (it is legitimately absent from ingest)", async () => {
+        const reserved = makeStream({
+            name: "reserved",
+            status: StreamStatus.RESERVED,
+            reservedUntil: new Date(Date.now() + 60_000),
+        });
+
+        await service.execute(makeContext({ allStreams: [reserved] }));
+
+        expect(streams.markStale).not.toHaveBeenCalled();
+        expect(streams.remove).not.toHaveBeenCalled();
+    });
+
+    it("expires (removes) a RESERVED stream whose reservedUntil has passed", async () => {
+        const expired = makeStream({
+            name: "expired",
+            status: StreamStatus.RESERVED,
+            reservedUntil: new Date(Date.now() - 1),
+        });
+        streams.remove.mockResolvedValue(undefined);
+
+        await service.execute(makeContext({ allStreams: [expired] }));
+
+        expect(streams.remove).toHaveBeenCalledWith("expired");
+        expect(streams.markStale).not.toHaveBeenCalled();
+    });
+
+    it("swallows a reservation-expiry failure", async () => {
+        const expired = makeStream({
+            name: "expired",
+            status: StreamStatus.RESERVED,
+            reservedUntil: new Date(Date.now() - 1),
+        });
+        const warnSpy = jest.spyOn((service as any).logger, "warn").mockImplementation();
+        streams.remove.mockRejectedValue(new Error("db down"));
+
+        await expect(
+            service.execute(makeContext({ allStreams: [expired] })),
+        ).resolves.toBeUndefined();
+
+        expect(warnSpy).toHaveBeenCalledWith(
+            "Failed to expire reservation expired",
+            expect.any(Error),
+        );
     });
 
     it("logs and swallows stale handling failures", async () => {

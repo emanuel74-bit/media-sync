@@ -3,10 +3,9 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
 import { Stream } from "@/streams/domain";
-import { StreamStatus, SystemEventNames } from "@/common";
 import { StreamRepository } from "@/streams/repositories";
+import { StreamStatus, SystemEventNames } from "@/common";
 import { StreamAssignmentService } from "@/streams/services";
-import { StreamAssignmentPolicy } from "@/streams/services/assignment/stream-assignment.policy";
 
 const makeStream = (overrides: Partial<Stream> = {}): Stream => ({
     name: "s1",
@@ -25,7 +24,6 @@ describe("StreamAssignmentService", () => {
     let service: StreamAssignmentService;
     let repo: jest.Mocked<StreamRepository>;
     let events: jest.Mocked<EventEmitter2>;
-    let policy: jest.Mocked<StreamAssignmentPolicy>;
 
     beforeEach(async () => {
         repo = {
@@ -34,14 +32,12 @@ describe("StreamAssignmentService", () => {
             findByName: jest.fn(),
         } as unknown as jest.Mocked<StreamRepository>;
         events = { emit: jest.fn() } as unknown as jest.Mocked<EventEmitter2>;
-        policy = { selectPod: jest.fn() } as unknown as jest.Mocked<StreamAssignmentPolicy>;
 
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 StreamAssignmentService,
                 { provide: StreamRepository, useValue: repo },
                 { provide: EventEmitter2, useValue: events },
-                { provide: StreamAssignmentPolicy, useValue: policy },
             ],
         }).compile();
 
@@ -103,21 +99,20 @@ describe("StreamAssignmentService", () => {
             const result = await service.ensureAssigned("s1", ["pod-1", "pod-2"]);
 
             expect(result).toBe(stream);
-            expect(policy.selectPod).not.toHaveBeenCalled();
             expect(repo.assignToPod).not.toHaveBeenCalled();
         });
 
-        it("selects a pod via the policy and assigns when unassigned", async () => {
+        it("hashes the name to a candidate pod and assigns when unassigned", async () => {
             const unassigned = makeStream({ assignedPod: null });
-            const reassigned = makeStream({ assignedPod: "pod-2", assignedAt: new Date() });
+            const reassigned = makeStream({ assignedPod: "pod-1", assignedAt: new Date() });
             repo.findByName.mockResolvedValue(unassigned);
-            policy.selectPod.mockReturnValue("pod-2");
             repo.assignToPod.mockResolvedValue(reassigned);
 
             const result = await service.ensureAssigned("s1", ["pod-1", "pod-2"]);
 
-            expect(policy.selectPod).toHaveBeenCalledWith("s1", ["pod-1", "pod-2"]);
-            expect(repo.assignToPod).toHaveBeenCalledWith("s1", "pod-2", expect.any(Date));
+            const [name, chosenPod] = repo.assignToPod.mock.calls[0];
+            expect(name).toBe("s1");
+            expect(["pod-1", "pod-2"]).toContain(chosenPod);
             expect(result).toBe(reassigned);
         });
 
@@ -127,7 +122,7 @@ describe("StreamAssignmentService", () => {
             await expect(service.ensureAssigned("missing", ["pod-1"])).rejects.toBeInstanceOf(
                 NotFoundException,
             );
-            expect(policy.selectPod).not.toHaveBeenCalled();
+            expect(repo.assignToPod).not.toHaveBeenCalled();
         });
     });
 });

@@ -20,3 +20,5 @@ number, then add a row here.
 | [0009](0009-pod-derived-cluster-topology.md) | Pod-derived cluster topology, assigned-pod pipeline targeting, RTSP pull source | Accepted | INT-06 |
 | [0010](0010-event-driven-alert-pipeline.md) | Event-driven alert pipeline — producers emit, rulers evaluate, alerts reconcile | Accepted | RULE-01..04, SVC-06, DATA-05 |
 | [0011](0011-node-resource-alerts-third-producer.md) | Node resource alerts — pods self-report CPU/memory/disk as a third producer | Accepted | SVC-06, DATA-05 |
+| [0012](0012-cluster-nodes-as-statefulset.md) | Run MediaMTX cluster nodes as a StatefulSet with stable per-pod identity | Accepted | ARCH-11, DIR-09 |
+| [0013](0013-reserve-publish-ingest-cluster.md) | Reserve→publish ingestion on a per-node ingest cluster | Accepted | ARCH-11, INT-06, SVC-02, DATA-05 |

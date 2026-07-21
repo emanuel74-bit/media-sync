@@ -41,8 +41,7 @@ describe("StreamInspectionCollectionService", () => {
     beforeEach(async () => {
         repo = { save: jest.fn() } as unknown as jest.Mocked<StreamInspectionRepository>;
         mediaMtxStats = {
-            getIngestStreamDetails: jest.fn(),
-            getClusterStreamDetails: jest.fn(),
+            getStreamDetails: jest.fn(),
         } as unknown as jest.Mocked<MediaMtxStreamStatsService>;
         mediaMtxListing = {
             listContextualStreams: jest.fn(),
@@ -146,11 +145,16 @@ describe("StreamInspectionCollectionService", () => {
 
     describe("inspectAndRecord — happy path", () => {
         it("saves a record with parsed tracks when stats succeed", async () => {
-            mediaMtxStats.getIngestStreamDetails.mockResolvedValue(makeDetails());
+            mediaMtxStats.getStreamDetails.mockResolvedValue(makeDetails());
             repo.save.mockResolvedValue(undefined);
 
-            await service.inspectAndRecord(makeStream(), PodRole.INGEST);
+            await service.inspectAndRecord(makeStream(), PodRole.INGEST, "ingest-1");
 
+            expect(mediaMtxStats.getStreamDetails).toHaveBeenCalledWith(
+                PodRole.INGEST,
+                "stream-a",
+                "ingest-1",
+            );
             expect(repo.save).toHaveBeenCalledTimes(1);
             const saved = repo.save.mock.calls[0][0];
             expect(saved.streamName).toBe("stream-a");
@@ -160,12 +164,16 @@ describe("StreamInspectionCollectionService", () => {
         });
 
         it("includes bytesReceived, bytesSent, readers in metadata", async () => {
-            mediaMtxStats.getClusterStreamDetails.mockResolvedValue(makeDetails());
+            mediaMtxStats.getStreamDetails.mockResolvedValue(makeDetails());
             repo.save.mockResolvedValue(undefined);
 
             await service.inspectAndRecord(makeStream(), PodRole.CLUSTER, "pod-x");
 
-            expect(mediaMtxStats.getClusterStreamDetails).toHaveBeenCalledWith("stream-a", "pod-x");
+            expect(mediaMtxStats.getStreamDetails).toHaveBeenCalledWith(
+                PodRole.CLUSTER,
+                "stream-a",
+                "pod-x",
+            );
             const saved = repo.save.mock.calls[0][0];
             expect(saved.metadata).toMatchObject({
                 bytesReceived: 1024,
@@ -175,10 +183,10 @@ describe("StreamInspectionCollectionService", () => {
         });
 
         it("emits STREAM_INSPECTED after a successful save", async () => {
-            mediaMtxStats.getIngestStreamDetails.mockResolvedValue(makeDetails());
+            mediaMtxStats.getStreamDetails.mockResolvedValue(makeDetails());
             repo.save.mockResolvedValue(undefined);
 
-            await service.inspectAndRecord(makeStream(), PodRole.INGEST);
+            await service.inspectAndRecord(makeStream(), PodRole.INGEST, "ingest-1");
 
             expect(events.emit).toHaveBeenCalledWith(
                 SystemEventNames.STREAM_INSPECTED,
@@ -189,10 +197,10 @@ describe("StreamInspectionCollectionService", () => {
 
     describe("inspectAndRecord — error path", () => {
         it("saves a record with lastError and empty tracks when stats throw", async () => {
-            mediaMtxStats.getIngestStreamDetails.mockRejectedValue(new Error("connection refused"));
+            mediaMtxStats.getStreamDetails.mockRejectedValue(new Error("connection refused"));
             repo.save.mockResolvedValue(undefined);
 
-            await service.inspectAndRecord(makeStream(), PodRole.INGEST);
+            await service.inspectAndRecord(makeStream(), PodRole.INGEST, "ingest-1");
 
             expect(repo.save).toHaveBeenCalledTimes(1);
             const saved = repo.save.mock.calls[0][0];
@@ -202,10 +210,10 @@ describe("StreamInspectionCollectionService", () => {
         });
 
         it("emits STREAM_INSPECTED even on error", async () => {
-            mediaMtxStats.getIngestStreamDetails.mockRejectedValue(new Error("timeout"));
+            mediaMtxStats.getStreamDetails.mockRejectedValue(new Error("timeout"));
             repo.save.mockResolvedValue(undefined);
 
-            await service.inspectAndRecord(makeStream(), PodRole.INGEST);
+            await service.inspectAndRecord(makeStream(), PodRole.INGEST, "ingest-1");
 
             expect(events.emit).toHaveBeenCalledWith(
                 SystemEventNames.STREAM_INSPECTED,
@@ -214,32 +222,32 @@ describe("StreamInspectionCollectionService", () => {
         });
 
         it("stringifies non-Error thrown values for lastError", async () => {
-            mediaMtxStats.getIngestStreamDetails.mockRejectedValue("raw string error");
+            mediaMtxStats.getStreamDetails.mockRejectedValue("raw string error");
             repo.save.mockResolvedValue(undefined);
 
-            await service.inspectAndRecord(makeStream(), PodRole.INGEST);
+            await service.inspectAndRecord(makeStream(), PodRole.INGEST, "ingest-1");
 
             const saved = repo.save.mock.calls[0][0];
             expect(saved.lastError).toBe("raw string error");
         });
 
         it("does not rethrow a stats error — resolves normally", async () => {
-            mediaMtxStats.getIngestStreamDetails.mockRejectedValue(new Error("boom"));
+            mediaMtxStats.getStreamDetails.mockRejectedValue(new Error("boom"));
             repo.save.mockResolvedValue(undefined);
 
             await expect(
-                service.inspectAndRecord(makeStream(), PodRole.INGEST),
+                service.inspectAndRecord(makeStream(), PodRole.INGEST, "ingest-1"),
             ).resolves.toBeUndefined();
         });
 
-        it("records lastError for a cluster stream with no assigned pod (never round-robins)", async () => {
+        it("records lastError for a stream with no known node (never picks a wrong node)", async () => {
             repo.save.mockResolvedValue(undefined);
 
             await service.inspectAndRecord(makeStream(), PodRole.CLUSTER);
 
-            expect(mediaMtxStats.getClusterStreamDetails).not.toHaveBeenCalled();
+            expect(mediaMtxStats.getStreamDetails).not.toHaveBeenCalled();
             const saved = repo.save.mock.calls[0][0];
-            expect(saved.lastError).toBe("Cluster stream stream-a has no assigned pod");
+            expect(saved.lastError).toBe("cluster stream stream-a has no known node");
             expect(saved.tracks).toEqual([]);
         });
     });

@@ -8,12 +8,13 @@ import { MediaMtxClient, MediaMtxMetricsClient } from "../clients";
 import { MediaMtxClientFactory, MediaMtxMetricsClientFactory } from "./factories";
 
 /**
- * Vends MediaMTX HTTP client instances (control + metrics) for a given node host.
- * Pure transport: it turns a host into a cached client using per-deployment transport
- * config (port + credentials) and nothing else — no knowledge of streams, pipelines, or
- * which pods are live. Callers (the `media-nodes` feature) resolve *which* hosts to talk
- * to from the pod registry and hand them in one at a time (ARCH-09/ARCH-10). There is no
- * static address fallback: an empty live-pod set means no clients, decided upstream.
+ * Vends MediaMTX HTTP client instances (control + metrics) for a given node host + port.
+ * Pure transport: it turns a host:port into a cached client, attaching the role's
+ * credentials, and nothing else — no knowledge of streams, pipelines, or which pods are
+ * live, and it no longer owns node ports (several nodes per VM share a host and differ by
+ * port, so the port belongs to the pod). Callers (the `media-nodes` feature) resolve
+ * *which* host:port to talk to from the pod registry and hand them in (ARCH-09/ARCH-10).
+ * Role is used only to pick credentials. There is no static address fallback.
  */
 @Injectable()
 export class MediaMtxClientRegistry {
@@ -23,29 +24,19 @@ export class MediaMtxClientRegistry {
         private readonly metricsFactory: MediaMtxMetricsClientFactory,
     ) {}
 
-    /** Control-API client for a node host in the given role. */
-    getClient(host: string, role: PodRole): MediaMtxClient {
-        return this.factory.getOrCreate(
-            buildNodeUrl(this.authFor(role), host, this.controlPort(role)),
-        );
+    /** Control-API client for a node at host:port, authenticated for the given role. */
+    getClient(host: string, port: number, role: PodRole): MediaMtxClient {
+        return this.factory.getOrCreate(buildNodeUrl(this.authFor(role), host, port));
     }
 
-    /** Prometheus metrics client for a node host in the given role. */
-    getMetricsClient(host: string, role: PodRole): MediaMtxMetricsClient {
-        return this.metricsFactory.getOrCreate(
-            buildNodeUrl(this.authFor(role), host, this.config.mediaMtxMetricsPort),
-        );
+    /** Prometheus metrics client for a node at host:port, authenticated for the given role. */
+    getMetricsClient(host: string, port: number, role: PodRole): MediaMtxMetricsClient {
+        return this.metricsFactory.getOrCreate(buildNodeUrl(this.authFor(role), host, port));
     }
 
     private authFor(role: PodRole): string {
         return authPrefix(
             role === PodRole.INGEST ? this.config.ingestNodeAuth : this.config.clusterNodeAuth,
         );
-    }
-
-    private controlPort(role: PodRole): number {
-        return role === PodRole.INGEST
-            ? this.config.ingestPodMediaMtxPort
-            : this.config.clusterPodMediaMtxPort;
     }
 }

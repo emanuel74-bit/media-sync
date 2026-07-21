@@ -202,6 +202,65 @@ Remove pod assignment from a stream.
 
 ---
 
+## Ingest API
+
+Publish-side API for the ingest cluster. A client **reserves** a slot (load-balanced onto the least-loaded ingest node) and receives the coordinates to publish to; it then pushes media straight to that node over RTSP. The sync loop relays the stream to a cluster node once media arrives — there is no confirm call. See [ADR-0013](../docs/adr/0013-reserve-publish-ingest-cluster.md).
+
+### Reserve a Publish Slot
+
+Reserve a publish slot for a new stream. Rejects a name that already exists (409) and returns 503 when no ingest nodes are active. Creates a `RESERVED` stream holding the slot until `expiresAt`; the sync staleness GC frees it if no media arrives.
+
+**Endpoint:** `POST /api/ingest/streams`
+
+**Request Body:**
+
+```json
+{
+  "name": "string (required) — path-safe: letters, digits, underscores, hyphens"
+}
+```
+
+**Response:**
+
+```json
+{
+  "name": "cam-42",
+  "ingestPod": "ingest-vm1-2",
+  "publishUrl": "rtsp://publish:<secret>@10.0.0.5:8564/cam-42",
+  "publishToken": "<opaque secret; also embedded in publishUrl>",
+  "expiresAt": "2026-07-16T12:00:00.000Z"
+}
+```
+
+Publish to `publishUrl` as-is (the per-reservation secret is already embedded as RTSP credentials). The reservation is held until `expiresAt`; publishing before then activates it.
+
+### Ingest Publish Auth (internal)
+
+Called by ingest MediaMTX nodes (`authMethod: http`, `authHTTPAddress`), not by clients. MediaMTX POSTs each publish attempt; a `200` permits it, any non-2xx denies. Authorizes a `publish` only when the presented secret matches the reservation for that path. `api`/`metrics`/`read` are excluded at the node and never reach here.
+
+**Endpoint:** `POST /api/ingest/auth`
+
+### Stream Ready Hook (internal)
+
+Called by an ingest node's `runOnReady` hook the instant a path starts publishing. Relays **that** stream to a cluster node immediately — a targeted relay from the hook's `(podId, name)` (record live → assign → deploy), no whole-cluster scan — instead of waiting for the next poll. Node-sourced. Awaits the relay and returns `202`; a failure surfaces as a 5xx to the node's hook.
+
+**Endpoint:** `POST /api/pods/{podId}/stream-ready`
+
+**Request Body:**
+
+```json
+{ "name": "string (required) — the path that went live" }
+```
+
+**Ingest environment:**
+
+- `INGEST_MEDIAMTX_AUTH` — `user:pass` the sync control-plane uses for a node's API/metrics (`""` when none).
+- `INGEST_PUBLISH_USER` — RTSP username embedded in publish URLs (default `publish`).
+- `INGEST_RESERVATION_TTL_MS` — how long a reserved slot is held before GC (default `300000`).
+- Per-node MediaMTX ports are self-reported at registration (`apiPort`/`rtspPort`/`metricsPort`).
+
+---
+
 ## Pods API
 
 Pods automatically register on startup and send periodic heartbeats to stay active.
@@ -218,6 +277,9 @@ Register a pod or refresh an existing one. Upserts by `podId`, sets status to `a
 {
   "podId": "string (required)",
   "host": "string (required) — reachable address used to build the pod's client URL",
+  "apiPort": "number (optional) — MediaMTX API port on this node; defaults from config",
+  "rtspPort": "number (optional) — MediaMTX RTSP port on this node; defaults from config",
+  "metricsPort": "number (optional) — MediaMTX metrics port on this node; defaults from config",
   "type": "ingest|cluster (required)",
   "resources": { "cpu": 0-100, "memory": 0-100, "disk": 0-100 } (optional)
 }

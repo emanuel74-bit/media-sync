@@ -4,11 +4,11 @@ import { PodsModule } from "@/pods";
 import { StreamsModule } from "@/streams";
 import { MediaNodesModule } from "@/media-nodes";
 
+import { IngestActivationController } from "./controllers";
 import {
     SyncSchedulerService,
     SyncContextBuilderService,
     SyncOrchestratorService,
-    IngestStreamDiscoveryService,
     IngestStreamSynchronizerService,
     StreamReconcileService,
     StreamStalenessService,
@@ -20,10 +20,10 @@ import {
         SyncSchedulerService,
         SyncOrchestratorService,
         SyncContextBuilderService,
-        IngestStreamDiscoveryService,
         IngestStreamSynchronizerService,
         StreamReconcileService,
         StreamStalenessService,
     ],
+    controllers: [IngestActivationController],
 })
 export class SyncModule {}

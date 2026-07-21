@@ -31,9 +31,7 @@ describe("StreamSetupService", () => {
     let streamPipeline: jest.Mocked<StreamPipelineService>;
 
     beforeEach(async () => {
-        streamCrud = {
-            create: jest.fn(),
-        } as unknown as jest.Mocked<StreamCrudService>;
+        streamCrud = { create: jest.fn() } as unknown as jest.Mocked<StreamCrudService>;
         streamStatus = {
             markPendingAssignment: jest.fn(),
         } as unknown as jest.Mocked<StreamStatusService>;
@@ -43,9 +41,7 @@ describe("StreamSetupService", () => {
         podsService = {
             listActivePodIds: jest.fn(),
         } as unknown as jest.Mocked<PodQueryService>;
-        streamPipeline = {
-            deploy: jest.fn(),
-        } as unknown as jest.Mocked<StreamPipelineService>;
+        streamPipeline = { deploy: jest.fn() } as unknown as jest.Mocked<StreamPipelineService>;
 
         const module: TestingModule = await Test.createTestingModule({
             providers: [

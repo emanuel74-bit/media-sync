@@ -11,6 +11,9 @@ const makePod = (podId: string, overrides: Partial<Pod> = {}): Pod => ({
     status: PodStatus.ACTIVE,
     lastHeartbeatAt: new Date(),
     host: "10.0.0.1",
+    apiPort: 9000,
+    rtspPort: 8554,
+    metricsPort: 9998,
     type: PodRole.CLUSTER,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -96,9 +99,44 @@ describe("PodQueryService", () => {
             const refs = await service.listActivePodRefs();
 
             expect(refs).toEqual([
-                { podId: "pod-1", host: "10.0.0.5", type: PodRole.CLUSTER },
-                { podId: "pod-2", host: "10.0.0.6", type: PodRole.CLUSTER },
+                {
+                    podId: "pod-1",
+                    host: "10.0.0.5",
+                    apiPort: 9000,
+                    rtspPort: 8554,
+                    metricsPort: 9998,
+                    type: PodRole.CLUSTER,
+                },
+                {
+                    podId: "pod-2",
+                    host: "10.0.0.6",
+                    apiPort: 9000,
+                    rtspPort: 8554,
+                    metricsPort: 9998,
+                    type: PodRole.CLUSTER,
+                },
             ]);
+        });
+
+        it("carries the pod's self-reported ports (several nodes per VM)", async () => {
+            podRepository.findActive.mockResolvedValue([
+                makePod("pod-1", {
+                    host: "10.0.3.10",
+                    apiPort: 9001,
+                    rtspPort: 8555,
+                    metricsPort: 9999,
+                }),
+            ]);
+
+            const [ref] = await service.listActivePodRefs();
+
+            expect(ref).toMatchObject({
+                podId: "pod-1",
+                host: "10.0.3.10",
+                apiPort: 9001,
+                rtspPort: 8555,
+                metricsPort: 9999,
+            });
         });
     });
 

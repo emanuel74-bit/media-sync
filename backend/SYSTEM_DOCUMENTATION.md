@@ -129,10 +129,10 @@ src/
 │   ├── dto/                      # CreateStreamDto, UpdateStreamDto, AssignStreamDto
 │   ├── repositories/             # StreamRepository (abstract contract)
 │   └── services/
-│       ├── assignment/           # StreamAssignmentPolicy (abstract) + assignment service;
-│       │                         #   hash/ variant folder (HashStreamAssignmentPolicy)
+│       ├── assignment/           # StreamAssignmentService (cluster assignment, persists assignedPod);
+│       │                         #   selection math is pure fns in @/common/selection
 │       ├── mutation/             # StreamCrudService, StreamStatusService
-│       ├── orchestration/        # StreamSetupService, StreamPipelineService
+│       ├── orchestration/        # StreamSetupService (onboard), StreamReservationService (reserve), StreamPipelineService
 │       ├── query/                # StreamQueryService
 │       └── streams-facade.service.ts  # public entry point for other modules
 ├── alerts/
@@ -210,10 +210,11 @@ Internally split by service role; `StreamsFacadeService` is the single entry poi
 - `StreamPipelineService` (orchestration): creates the cluster pull pipeline, sets `synced`/`sync_error`, emits `stream.synced`
 - `StreamsFacadeService`: thin facade re-exposing the above for cross-module callers
 
-**Assignment Policy**:
+**Assignment algorithms** (`@/common/selection`, context-free pure functions):
 
-- `StreamAssignmentPolicy` is an abstract class used as a DI token
-- `HashStreamAssignmentPolicy` implements it: djb2-style hash of the stream name modulo the candidate pod count — deterministic as long as pod list order is stable
+- `selectByHash(name, candidatePods)` — cluster placement: djb2-style hash of the stream name modulo the candidate pod count; deterministic as long as pod list order is stable
+- `selectLeastLoaded(candidates)` — ingest placement: fewest live publishers + pending reservations, ties broken by id
+- `StreamAssignmentService` gathers the domain inputs and persists the outcome; neither algorithm is a swappable policy (single algorithm each)
 
 ---
 

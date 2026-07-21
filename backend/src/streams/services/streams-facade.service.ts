@@ -2,9 +2,9 @@ import { Injectable } from "@nestjs/common";
 
 import { Stream } from "../domain";
 import { StreamQueryService } from "./query";
-import { StreamStatusService } from "./mutation";
 import { StreamAssignmentService } from "./assignment";
 import { StreamPipelineService } from "./orchestration";
+import { StreamCrudService, StreamStatusService } from "./mutation";
 
 @Injectable()
 export class StreamsFacadeService {
@@ -13,6 +13,7 @@ export class StreamsFacadeService {
         private readonly streamStatus: StreamStatusService,
         private readonly streamAssignment: StreamAssignmentService,
         private readonly streamPipeline: StreamPipelineService,
+        private readonly streamCrud: StreamCrudService,
     ) {}
 
     async findAll(): Promise<Stream[]> {
@@ -41,5 +42,9 @@ export class StreamsFacadeService {
 
     async markStale(name: string): Promise<void> {
         await this.streamStatus.markStale(name);
+    }
+
+    async remove(name: string): Promise<void> {
+        await this.streamCrud.remove(name);
     }
 }

@@ -40,13 +40,14 @@ export class StreamInspectionCollectionService {
             allStreams.map((stream) => [stream.name, stream.assignedPod]),
         );
 
-        for (const { stream, context: source } of streams) {
-            // A cluster stream lives only on its assigned pod; pass that pod id so stats
-            // targets the right node instead of 404ing against a sibling replica.
-            const assignedPodId =
-                source === PodRole.CLUSTER ? assignedPodByName.get(stream.name) : undefined;
+        for (const { stream, context: source, nodeId } of streams) {
+            // A stream lives on exactly one node: the cluster pod it was assigned to, or the
+            // ingest pod it was discovered on (`nodeId`). Pass that pod id so stats target the
+            // right node instead of 404ing against a sibling.
+            const nodePodId =
+                source === PodRole.CLUSTER ? assignedPodByName.get(stream.name) : nodeId;
             try {
-                await this.inspectAndRecord(stream, source, assignedPodId);
+                await this.inspectAndRecord(stream, source, nodePodId);
             } catch (error) {
                 this.logger.error(`Failed to record inspection for stream ${stream.name}`, error);
             }
@@ -56,10 +57,10 @@ export class StreamInspectionCollectionService {
     async inspectAndRecord(
         stream: MediaMtxStreamInfo,
         source: PodRole,
-        assignedPodId?: string | null,
+        nodePodId?: string | null,
     ): Promise<void> {
         const inspectedAt = new Date();
-        const { details, lastError } = await this.inspectStream(stream, source, assignedPodId);
+        const { details, lastError } = await this.inspectStream(stream, source, nodePodId);
 
         const record: NewStreamInspectionData = {
             streamName: stream.name,
@@ -82,10 +83,10 @@ export class StreamInspectionCollectionService {
     private async inspectStream(
         stream: MediaMtxStreamInfo,
         source: PodRole,
-        assignedPodId?: string | null,
+        nodePodId?: string | null,
     ): Promise<{ details: StreamDetails | null; lastError: string | null }> {
         try {
-            const details = await this.fetchDetails(stream.name, source, assignedPodId);
+            const details = await this.fetchDetails(stream.name, source, nodePodId);
             return { details, lastError: null };
         } catch (error) {
             this.logger.error(`Failed to inspect stream ${stream.name}`, error);
@@ -99,14 +100,11 @@ export class StreamInspectionCollectionService {
     private async fetchDetails(
         name: string,
         source: PodRole,
-        assignedPodId?: string | null,
+        nodePodId?: string | null,
     ): Promise<StreamDetails> {
-        if (source === PodRole.INGEST) {
-            return this.mediaMtxStats.getIngestStreamDetails(name);
+        if (!nodePodId) {
+            throw new Error(`${source} stream ${name} has no known node`);
         }
-        if (!assignedPodId) {
-            throw new Error(`Cluster stream ${name} has no assigned pod`);
-        }
-        return this.mediaMtxStats.getClusterStreamDetails(name, assignedPodId);
+        return this.mediaMtxStats.getStreamDetails(source, name, nodePodId);
     }
 }

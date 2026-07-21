@@ -53,9 +53,8 @@ describe("SyncSchedulerService", () => {
         expect(orchestrator.execute).toHaveBeenCalledWith(context);
     });
 
-    it("propagates a failing cycle (the scheduler guards it) without executing", async () => {
-        const error = new Error("periodic sync failed");
-        contextBuilder.buildContext.mockRejectedValue(error);
+    it("propagates a failing cycle without executing", async () => {
+        contextBuilder.buildContext.mockRejectedValue(new Error("periodic sync failed"));
 
         await expect(service.periodicSync()).rejects.toThrow("periodic sync failed");
 

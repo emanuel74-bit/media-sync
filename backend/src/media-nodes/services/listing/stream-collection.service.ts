@@ -1,38 +1,44 @@
 import { Injectable, Logger } from "@nestjs/common";
 
+import { PodRole } from "@/common";
 import { MediaMtxClient, MediaMtxStreamInfo } from "@/infrastructure";
 
-/**
- * Fans out stream listing across a set of MediaMTX clients.
- * Isolates per-client failures so a single unreachable node does not
- * prevent collection from healthy nodes.
- */
+import { ContextualMediaMtxStream } from "../../domain";
+
+/** Fans out stream listing across MediaMTX clients, isolating per-node failures. */
 @Injectable()
 export class StreamCollectionService {
     private readonly logger = new Logger(StreamCollectionService.name);
 
     async collectFromClients(clients: readonly MediaMtxClient[]): Promise<MediaMtxStreamInfo[]> {
-        if (clients.length === 0) {
-            return [];
-        }
-
-        const allStreams: MediaMtxStreamInfo[] = [];
-
+        const collected: MediaMtxStreamInfo[] = [];
         for (const client of clients) {
             const streams = await this.listFromClient(client);
-            allStreams.push(...streams);
+            collected.push(...streams);
         }
+        return collected;
+    }
 
-        return allStreams;
+    /** Like {@link collectFromClients}, but tags every stream with its role and owning node. */
+    async collectFromNodes(
+        nodes: readonly { podId: string; client: MediaMtxClient }[],
+        context: PodRole,
+    ): Promise<ContextualMediaMtxStream[]> {
+        const tagged: ContextualMediaMtxStream[] = [];
+        for (const { podId, client } of nodes) {
+            const streams = await this.collectFromClients([client]);
+            const contextual = streams.map((stream) => ({ stream, context, nodeId: podId }));
+            tagged.push(...contextual);
+        }
+        return tagged;
     }
 
     private async listFromClient(client: MediaMtxClient): Promise<MediaMtxStreamInfo[]> {
         try {
             return await client.listPaths();
         } catch (error) {
-            this.logger.warn(
-                `Failed to list paths from client: ${error instanceof Error ? error.message : String(error)}`,
-            );
+            const message = error instanceof Error ? error.message : String(error);
+            this.logger.warn(`Failed to list paths from client: ${message}`);
             return [];
         }
     }

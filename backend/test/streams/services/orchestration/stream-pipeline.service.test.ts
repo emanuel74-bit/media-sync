@@ -2,8 +2,8 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
 import { Stream } from "@/streams/domain";
-import { MediaMtxPipelineService } from "@/media-nodes";
 import { StreamStatus, SystemEventNames } from "@/common";
+import { MediaMtxPipelineService, NodeResolver } from "@/media-nodes";
 import { StreamPipelineService, StreamStatusService } from "@/streams/services";
 
 const makeStream = (overrides: Partial<Stream> = {}): Stream => ({
@@ -23,6 +23,7 @@ describe("StreamPipelineService", () => {
     let service: StreamPipelineService;
     let streamStatus: jest.Mocked<StreamStatusService>;
     let mediaMtx: jest.Mocked<MediaMtxPipelineService>;
+    let nodes: jest.Mocked<NodeResolver>;
     let events: jest.Mocked<EventEmitter2>;
 
     beforeEach(async () => {
@@ -34,6 +35,9 @@ describe("StreamPipelineService", () => {
             buildClusterPullPipeline: jest.fn(),
             teardownClusterPullPipeline: jest.fn(),
         } as unknown as jest.Mocked<MediaMtxPipelineService>;
+        nodes = {
+            getIngestRtspUrl: jest.fn().mockResolvedValue("rtsp://ingest:8554/s1"),
+        } as unknown as jest.Mocked<NodeResolver>;
         events = { emit: jest.fn() } as unknown as jest.Mocked<EventEmitter2>;
 
         const module: TestingModule = await Test.createTestingModule({
@@ -41,6 +45,7 @@ describe("StreamPipelineService", () => {
                 StreamPipelineService,
                 { provide: StreamStatusService, useValue: streamStatus },
                 { provide: MediaMtxPipelineService, useValue: mediaMtx },
+                { provide: NodeResolver, useValue: nodes },
                 { provide: EventEmitter2, useValue: events },
             ],
         }).compile();
@@ -48,17 +53,38 @@ describe("StreamPipelineService", () => {
         service = module.get<StreamPipelineService>(StreamPipelineService);
     });
 
-    it("build hands the assigned pod id to the pipeline (no status side effects)", async () => {
-        const stream = makeStream({ assignedPod: "pod-2" });
+    it("build pulls an ingest stream from its ingest node, deploying to the assigned pod", async () => {
+        const stream = makeStream({ assignedPod: "pod-2", ingestPod: "ingest-9" });
+        nodes.getIngestRtspUrl.mockResolvedValue("rtsp://ingest:8554/s1");
         mediaMtx.buildClusterPullPipeline.mockResolvedValue({} as never);
 
         await service.build(stream);
 
+        expect(nodes.getIngestRtspUrl).toHaveBeenCalledWith("ingest-9", stream.name);
         expect(mediaMtx.buildClusterPullPipeline).toHaveBeenCalledWith(
-            { name: stream.name, source: stream.source, status: stream.status },
+            stream.name,
             "pod-2",
+            "rtsp://ingest:8554/s1",
         );
         expect(streamStatus.markSynced).not.toHaveBeenCalled();
+    });
+
+    it("build uses the stored source directly for a manual stream (no ingest node)", async () => {
+        const stream = makeStream({
+            assignedPod: "pod-2",
+            ingestPod: null,
+            source: "rtsp://cam/feed",
+        });
+        mediaMtx.buildClusterPullPipeline.mockResolvedValue({} as never);
+
+        await service.build(stream);
+
+        expect(nodes.getIngestRtspUrl).not.toHaveBeenCalled();
+        expect(mediaMtx.buildClusterPullPipeline).toHaveBeenCalledWith(
+            stream.name,
+            "pod-2",
+            "rtsp://cam/feed",
+        );
     });
 
     it("build throws for an unassigned stream (no pipeline call)", async () => {

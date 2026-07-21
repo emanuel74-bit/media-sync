@@ -1,18 +1,36 @@
+###############################################################################
+# Ingest MediaMTX node — the reserve/publish edge.
+#
+# Several ingest nodes run per VM, each with its own published api/rtsp/metrics
+# ports (see deploy/docker/compose.ingest.yml); each self-registers those ports
+# with the sync service (pod registry), so a published stream is addressable on
+# the specific node it landed on. A client first reserves a slot
+# (POST /api/ingest/streams) and receives a publish URL whose RTSP credentials
+# embed a per-reservation secret; the sync service authorizes the publish below.
+###############################################################################
+
 api: true
 apiAddress: :9000
 
 metrics: true
 metricsAddress: :9998
 
-authMethod: internal
-authInternalUsers:
-    - user: sync
-      pass: syncpass
-      permissions:
-          - action: api
-          - action: metrics
-          - action: read
-          - action: publish
+# External HTTP auth: MediaMTX POSTs each action to the sync service, which
+# validates the publisher's secret against the reservation table. Override the
+# URL per-deployment with the MTX_AUTHHTTPADDRESS environment variable.
+authMethod: http
+authHTTPAddress: http://app:3000/api/ingest/auth
+
+# Actions the sync service does NOT gate through the auth backend:
+#   - api / metrics: the sync control-plane scrapes these directly (no token).
+#   - read: the internal cluster relay pulls each stream over RTSP with an
+#     authless URL; ingest RTSP read is trusted within the deployment network.
+# Publish is therefore the only authorized action. (To lock down read as well,
+# thread control credentials into the cluster pull URL and drop `read` here.)
+authHTTPExclude:
+    - action: api
+    - action: metrics
+    - action: read
 
 rtsp: true
 rtspAddress: :8554
@@ -28,8 +46,19 @@ srtAddress: :8890
 
 record: false
 
-# Accept publishers (and readers) on any path name. Without a catch-all path
-# MediaMTX rejects every publish with "path is not configured", so the sync
-# service would never discover any ingest stream.
+# Low-latency activation: the instant a path starts publishing, notify the sync
+# service so it relays the stream to a cluster node without waiting for the next
+# poll. $MTX_PATH is set by MediaMTX; $MEDIA_SYNC_API and $POD_ID come from the
+# container environment (see the compose file / heartbeat script).
+pathDefaults:
+    runOnReady: >
+        curl -fsS -X POST
+        "$MEDIA_SYNC_API/api/pods/$POD_ID/stream-ready"
+        -H "Content-Type: application/json"
+        -d "{\"name\":\"$MTX_PATH\"}"
+    runOnReadyRestart: no
+
+# Accept publishers on any path name; a reserved path is created on demand and
+# the sync service adds specific pull pipelines via the API when relaying.
 paths:
     all_others:

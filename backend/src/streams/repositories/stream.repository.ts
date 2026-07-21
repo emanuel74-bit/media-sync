@@ -11,6 +11,9 @@ export abstract class StreamRepository {
 
     abstract findByAssignedPod(podId: string): Promise<Stream[]>;
 
+    /** Count `RESERVED` streams grouped by the ingest pod they hold a slot on. */
+    abstract countReservationsByIngestPod(): Promise<Record<string, number>>;
+
     abstract upsert(name: string, data: Partial<Stream>): Promise<Stream>;
 
     abstract assignToPod(name: string, podId: string, assignedAt: Date): Promise<Stream | null>;
