@@ -20,21 +20,21 @@ This Vite + React application is the control plane, dashboard, and metrics UI fo
 
 ## Pages
 
-| Route | Page | Purpose |
-| --- | --- | --- |
-| `/` | Dashboard | KPI overview |
-| `/streams` | Streams | Stream list with create/edit/delete/enable dialogs |
-| `/streams/:name` | Stream Detail | Per-stream metrics, inspection panel, assignment |
-| `/pods` | Pods | Registered pods and heartbeat status |
-| `/metrics` | Metrics | Stream performance charts |
-| `/alerts` | Alerts | Alert list with resolve action |
-| `/cluster` | Cluster | Cluster pod / assignment view |
+| Route            | Page          | Purpose                                                      |
+| ---------------- | ------------- | ------------------------------------------------------------ |
+| `/`              | Dashboard     | KPI overview                                                 |
+| `/streams`       | Streams       | Stream list with create/edit/delete/enable dialogs           |
+| `/streams/:name` | Stream Detail | Per-stream metrics, inspection panel, assignment             |
+| `/nodes`         | Nodes         | Registered ingest/cluster nodes, ports, and heartbeat status |
+| `/metrics`       | Metrics       | Stream performance charts                                    |
+| `/alerts`        | Alerts        | Alert list with resolve action                               |
+| `/cluster`       | Cluster       | Cluster pod / assignment view                                |
 
 ## Code Layout
 
 - `src/services/api.ts` — typed fetch wrappers for all backend REST endpoints (streams, pods, alerts, metrics, stream-inspection)
 - `src/services/websocket.ts` — Socket.IO connection manager; subscribes to `stream.synced`, `stream.removed`, `alert.created`, `stream.inspected`
-- `src/hooks/use-streams.ts` — TanStack Query hooks (10s polling for streams/pods/alerts, 30s for inspections) plus `useRealtimeSync()`, which invalidates query caches on WebSocket events
+- `src/hooks/use-streams.ts` — TanStack Query hooks (10s polling for streams/nodes/alerts, 30s for inspections) plus `useRealtimeSync()`, which invalidates query caches on WebSocket events
 - `src/types/index.ts` — API response types
 - `src/pages/` — route components, `src/components/` — app components, `src/components/ui/` — shadcn/ui primitives
 
@@ -60,10 +60,10 @@ VITE_DEV_BACKEND_URL=http://your-backend-host:3000
 
 ### Environment Variables
 
-| Variable | Used in | Purpose |
-| --- | --- | --- |
-| `VITE_DEV_BACKEND_URL` | dev server | Proxy target for `/api` and `/socket.io` |
-| `VITE_API_URL` | build/runtime | Absolute backend base URL; when unset, requests stay same-origin (recommended behind the nginx proxy) |
+| Variable               | Used in       | Purpose                                                                                               |
+| ---------------------- | ------------- | ----------------------------------------------------------------------------------------------------- |
+| `VITE_DEV_BACKEND_URL` | dev server    | Proxy target for `/api` and `/socket.io`                                                              |
+| `VITE_API_URL`         | build/runtime | Absolute backend base URL; when unset, requests stay same-origin (recommended behind the nginx proxy) |
 
 ## Testing
 
