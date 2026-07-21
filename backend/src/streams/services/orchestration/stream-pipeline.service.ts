@@ -18,21 +18,21 @@ export class StreamPipelineService {
         private readonly events: EventEmitter2,
     ) {}
 
-    /** Build the cluster pull pipeline for a stream on its assigned pod (no status side effects). */
+    /** Build the cluster pull pipeline for a stream on its assigned node (no status side effects). */
     async build(stream: Stream): Promise<void> {
-        if (!stream.assignedPod) {
+        if (!stream.assignedNode) {
             throw new Error(`Cannot build cluster pipeline for unassigned stream ${stream.name}`);
         }
 
         // An ingest-origin stream is pulled from its ingest node; any other stream (a manual
         // one) already stores a directly pullable source.
-        const pullSource = stream.ingestPod
-            ? await this.nodes.getIngestRtspUrl(stream.ingestPod, stream.name)
+        const pullSource = stream.ingestNode
+            ? await this.nodes.getIngestRtspUrl(stream.ingestNode, stream.name)
             : stream.source;
 
         await this.mediaMtxService.buildClusterPullPipeline(
             stream.name,
-            stream.assignedPod,
+            stream.assignedNode,
             pullSource,
         );
     }

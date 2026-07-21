@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 
-import { PodRole } from "@/common";
+import { NodeRole } from "@/common";
 import { StreamDetails } from "@/infrastructure";
 
 import { NodeResolver } from "../topology";
@@ -8,7 +8,7 @@ import { NodeResolver } from "../topology";
 /**
  * Fetches track-level details for an individual stream (used by stream inspection). A stream
  * lives on exactly one node — the ingest node it was published on, or the cluster node it was
- * assigned to — so the caller supplies that role + pod id; a pick over the pool would 404
+ * assigned to — so the caller supplies that role + node id; a pick over the pool would 404
  * against a sibling.
  */
 @Injectable()
@@ -17,8 +17,8 @@ export class MediaMtxStreamStatsService {
 
     constructor(private readonly nodes: NodeResolver) {}
 
-    async getStreamDetails(role: PodRole, name: string, podId: string): Promise<StreamDetails> {
-        const client = await this.nodes.clientForPod(role, podId);
+    async getStreamDetails(role: NodeRole, name: string, nodeId: string): Promise<StreamDetails> {
+        const client = await this.nodes.clientForNode(role, nodeId);
         try {
             return await client.getStreamDetails(name);
         } catch (error) {

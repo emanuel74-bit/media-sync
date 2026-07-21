@@ -1,8 +1,8 @@
 import { Test, TestingModule } from "@nestjs/testing";
 
-import { PodQueryService } from "@/pods";
+import { NodeQueryService } from "@/nodes";
 import { SyncContext } from "@/sync/domain";
-import { PodRole, StreamStatus } from "@/common";
+import { NodeRole, StreamStatus } from "@/common";
 import { Stream, StreamsFacadeService } from "@/streams";
 import { IngestStreamSynchronizerService } from "@/sync/services/workflows/ingest-stream-synchronizer.service";
 
@@ -14,7 +14,7 @@ const makeStream = (overrides: Partial<Stream> = {}): Stream => ({
     isEnabled: true,
     isManual: false,
     activeConsumers: 0,
-    assignedPod: null,
+    assignedNode: null,
     assignedAt: null,
     lastSeenAt: new Date(),
     lastSyncedAt: null,
@@ -27,7 +27,7 @@ const makeContext = (overrides: Partial<SyncContext> = {}): SyncContext => ({
     clusterList: [],
     ingestNames: new Set(["stream-1"]),
     clusterNames: new Set(),
-    podIds: ["pod-1"],
+    nodeIds: ["node-1"],
     allStreams: [],
     ...overrides,
 });
@@ -35,23 +35,23 @@ const makeContext = (overrides: Partial<SyncContext> = {}): SyncContext => ({
 describe("IngestStreamSynchronizerService", () => {
     let service: IngestStreamSynchronizerService;
     let streams: jest.Mocked<StreamsFacadeService>;
-    let pods: jest.Mocked<PodQueryService>;
+    let nodes: jest.Mocked<NodeQueryService>;
 
     beforeEach(async () => {
         streams = {
             upsertFromDiscovery: jest.fn().mockResolvedValue(makeStream()),
-            ensureAssigned: jest.fn().mockResolvedValue(makeStream({ assignedPod: "pod-1" })),
+            ensureAssigned: jest.fn().mockResolvedValue(makeStream({ assignedNode: "node-1" })),
             deployClusterPipeline: jest.fn(),
         } as unknown as jest.Mocked<StreamsFacadeService>;
-        pods = {
-            listActivePodIds: jest.fn().mockResolvedValue(["pod-1"]),
-        } as unknown as jest.Mocked<PodQueryService>;
+        nodes = {
+            listActiveNodeIds: jest.fn().mockResolvedValue(["node-1"]),
+        } as unknown as jest.Mocked<NodeQueryService>;
 
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 IngestStreamSynchronizerService,
                 { provide: StreamsFacadeService, useValue: streams },
-                { provide: PodQueryService, useValue: pods },
+                { provide: NodeQueryService, useValue: nodes },
             ],
         }).compile();
 
@@ -59,7 +59,7 @@ describe("IngestStreamSynchronizerService", () => {
     });
 
     it("records, assigns, and relays each ingest stream missing from the cluster", async () => {
-        const assigned = makeStream({ assignedPod: "pod-1", status: StreamStatus.ASSIGNED });
+        const assigned = makeStream({ assignedNode: "node-1", status: StreamStatus.ASSIGNED });
         streams.ensureAssigned.mockResolvedValue(assigned);
 
         await service.execute(makeContext());
@@ -73,7 +73,7 @@ describe("IngestStreamSynchronizerService", () => {
                 isEnabled: true,
             }),
         );
-        expect(streams.ensureAssigned).toHaveBeenCalledWith("stream-1", ["pod-1"]);
+        expect(streams.ensureAssigned).toHaveBeenCalledWith("stream-1", ["node-1"]);
         expect(streams.deployClusterPipeline).toHaveBeenCalledWith(assigned);
     });
 
@@ -84,7 +84,7 @@ describe("IngestStreamSynchronizerService", () => {
                     name: "cam",
                     source: "rtsp://source",
                     status: "ready",
-                    ingestPod: "ingest-1",
+                    ingestNode: "ingest-1",
                     video: { codec: "H264", width: 1920, height: 1080, fps: 30 },
                     audio: { codec: "AAC", channels: 2, sampleRate: 48000 },
                     metadata: { readers: 3 },
@@ -97,7 +97,7 @@ describe("IngestStreamSynchronizerService", () => {
         expect(streams.upsertFromDiscovery).toHaveBeenCalledWith(
             expect.objectContaining({
                 name: "cam",
-                ingestPod: "ingest-1",
+                ingestNode: "ingest-1",
                 reservedUntil: null,
                 metadata: {
                     codec: "AAC",
@@ -121,7 +121,7 @@ describe("IngestStreamSynchronizerService", () => {
 
     describe("activate — the targeted hook", () => {
         it("records the stream live on its ingest node, assigns, and deploys — no node scan", async () => {
-            const assigned = makeStream({ name: "cam", assignedPod: "pod-1" });
+            const assigned = makeStream({ name: "cam", assignedNode: "node-1" });
             streams.ensureAssigned.mockResolvedValue(assigned);
 
             await service.activate("ingest-1", "cam");
@@ -129,17 +129,17 @@ describe("IngestStreamSynchronizerService", () => {
             expect(streams.upsertFromDiscovery).toHaveBeenCalledWith(
                 expect.objectContaining({
                     name: "cam",
-                    ingestPod: "ingest-1",
+                    ingestNode: "ingest-1",
                     reservedUntil: null,
                 }),
             );
-            expect(pods.listActivePodIds).toHaveBeenCalledWith(PodRole.CLUSTER);
-            expect(streams.ensureAssigned).toHaveBeenCalledWith("cam", ["pod-1"]);
+            expect(nodes.listActiveNodeIds).toHaveBeenCalledWith(NodeRole.CLUSTER);
+            expect(streams.ensureAssigned).toHaveBeenCalledWith("cam", ["node-1"]);
             expect(streams.deployClusterPipeline).toHaveBeenCalledWith(assigned);
         });
 
         it("records but does not assign/deploy when no cluster nodes are live", async () => {
-            pods.listActivePodIds.mockResolvedValue([]);
+            nodes.listActiveNodeIds.mockResolvedValue([]);
 
             await service.activate("ingest-1", "cam");
 

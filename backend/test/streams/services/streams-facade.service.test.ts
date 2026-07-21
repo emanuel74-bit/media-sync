@@ -19,7 +19,7 @@ const makeStream = (overrides: Partial<Stream> = {}): Stream => ({
     isEnabled: true,
     isManual: false,
     activeConsumers: 0,
-    assignedPod: null,
+    assignedNode: null,
     assignedAt: null,
     lastSeenAt: new Date(),
     lastSyncedAt: null,
@@ -95,15 +95,15 @@ describe("StreamsFacadeService", () => {
     });
 
     it("delegates ensureAssigned to StreamAssignmentService", async () => {
-        const stream = makeStream({ assignedPod: "pod-1", assignedAt: new Date() });
+        const stream = makeStream({ assignedNode: "node-1", assignedAt: new Date() });
         streamAssignment.ensureAssigned.mockResolvedValue(stream);
 
-        const result = await service.ensureAssigned("stream-1", ["pod-1", "pod-2"]);
+        const result = await service.ensureAssigned("stream-1", ["node-1", "node-2"]);
 
         expect(result).toBe(stream);
         expect(streamAssignment.ensureAssigned).toHaveBeenCalledWith("stream-1", [
-            "pod-1",
-            "pod-2",
+            "node-1",
+            "node-2",
         ]);
     });
 
@@ -118,7 +118,7 @@ describe("StreamsFacadeService", () => {
     });
 
     it("delegates buildClusterPipeline to StreamPipelineService.build", async () => {
-        const stream = makeStream({ assignedPod: "pod-2" });
+        const stream = makeStream({ assignedNode: "node-2" });
         streamPipeline.build.mockResolvedValue(undefined);
 
         await service.buildClusterPipeline(stream);
@@ -127,7 +127,7 @@ describe("StreamsFacadeService", () => {
     });
 
     it("delegates teardownClusterPipeline to StreamPipelineService.teardown", async () => {
-        const stream = makeStream({ assignedPod: "pod-3" });
+        const stream = makeStream({ assignedNode: "node-3" });
         streamPipeline.teardown.mockResolvedValue(undefined);
 
         await service.teardownClusterPipeline(stream);

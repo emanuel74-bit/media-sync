@@ -3,8 +3,8 @@
  */
 
 export * from "./main";
-export * from "./pods";
 export * from "./sync";
+export * from "./nodes";
 export * from "./alerts";
 export * from "./common";
 export * from "./config";

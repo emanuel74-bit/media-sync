@@ -7,7 +7,7 @@ export enum AlertType {
     MISSING_VIDEO_TRACK = "missing_video_track",
     MISSING_AUDIO_TRACK = "missing_audio_track",
     UNEXPECTED_TRACK_TYPES = "unexpected_track_types",
-    // Node resources (source: node) — derived from pod-reported host metrics.
+    // Node resources (source: node) — derived from node-reported host metrics.
     NODE_CPU_HIGH = "node_cpu_high",
     NODE_MEMORY_HIGH = "node_memory_high",
     NODE_DISK_HIGH = "node_disk_high",

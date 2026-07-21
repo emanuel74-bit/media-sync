@@ -1,7 +1,7 @@
 import { isAxiosError } from "axios";
 import { Injectable, Logger } from "@nestjs/common";
 
-import { PodRole } from "@/common";
+import { NodeRole } from "@/common";
 import { MediaMtxClient, PipelineCreateResult } from "@/infrastructure";
 
 import { NodeResolver } from "../topology";
@@ -19,11 +19,11 @@ export class MediaMtxPipelineService {
 
     async buildClusterPullPipeline(
         streamName: string,
-        assignedPodId: string,
+        assignedNodeId: string,
         pullSource: string,
     ): Promise<PipelineCreateResult> {
         try {
-            const client = await this.nodes.clientForPod(PodRole.CLUSTER, assignedPodId);
+            const client = await this.nodes.clientForNode(NodeRole.CLUSTER, assignedNodeId);
             const result = await client.addPath(streamName, pullSource);
             if (result.alreadyExists) {
                 this.logger.debug(`Cluster pull pipeline already exists for ${streamName}`);
@@ -40,7 +40,7 @@ export class MediaMtxPipelineService {
     }
 
     async teardownClusterPullPipeline(streamName: string): Promise<void> {
-        const nodes = await this.nodes.getActiveNodes(PodRole.CLUSTER);
+        const nodes = await this.nodes.getActiveNodes(NodeRole.CLUSTER);
         for (const { client } of nodes) {
             await this.removePathFromClusterClient(client, streamName);
         }
@@ -53,7 +53,7 @@ export class MediaMtxPipelineService {
         try {
             await client.removePath(streamName);
         } catch (error) {
-            // 404 = the path isn't on this node (expected: only the assigned pod
+            // 404 = the path isn't on this node (expected: only the assigned node
             // hosts it, but delete fans out across all of them).
             if (isAxiosError(error) && error.response?.status === 404) {
                 return;

@@ -77,14 +77,14 @@ describe("StreamReservationService", () => {
         const result = await service.reserve("cam");
 
         expect(nodes.getIngestRtspUrl).toHaveBeenCalledWith("ingest-b", "cam");
-        expect(result.ingestPod).toBe("ingest-b");
+        expect(result.ingestNode).toBe("ingest-b");
         expect(result.publishToken).toMatch(/^[A-Za-z0-9_-]+$/);
         expect(result.publishUrl).toBe(`rtsp://publish:${result.publishToken}@10.0.0.1:8554/cam`);
         expect(streamCrud.createReservation).toHaveBeenCalledWith(
             expect.objectContaining({
                 name: "cam",
                 source: "rtsp://10.0.0.1:8554/cam",
-                ingestPod: "ingest-b",
+                ingestNode: "ingest-b",
                 publishToken: result.publishToken,
             }),
         );
@@ -92,7 +92,7 @@ describe("StreamReservationService", () => {
         expect(created.reservedUntil.getTime()).toBeGreaterThanOrEqual(before + 300_000);
         expect(events.emit).toHaveBeenCalledWith(SystemEventNames.STREAM_RESERVED, {
             streamName: "cam",
-            ingestPod: "ingest-b",
+            ingestNode: "ingest-b",
             expiresAt: result.expiresAt,
         });
     });

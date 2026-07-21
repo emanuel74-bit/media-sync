@@ -1,15 +1,15 @@
 import { Document } from "mongoose";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 
-import { PodRole } from "@/common";
+import { NodeRole } from "@/common";
 
 export type NodeMetricDocument = NodeMetric & Document;
 
 /** Operational counters for a whole MediaMTX node, sampled from its /metrics endpoint. */
 @Schema({ timestamps: true, collection: "nodemetrics" })
 export class NodeMetric {
-    @Prop({ required: true, enum: Object.values(PodRole) })
-    context!: PodRole;
+    @Prop({ required: true, enum: Object.values(NodeRole) })
+    context!: NodeRole;
 
     @Prop({ required: true })
     node!: string;

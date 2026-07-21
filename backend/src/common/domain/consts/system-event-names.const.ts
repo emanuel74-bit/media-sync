@@ -10,7 +10,7 @@ export const SystemEventNames = {
     ALERT_CREATED: "alert.created",
     ALERT_UPDATED: "alert.updated",
     ALERT_RESOLVED: "alert.resolved",
-    POD_REGISTERED: "pod.registered",
+    NODE_REGISTERED: "node.registered",
     SYNC_TICK: "sync.tick",
 } as const;
 

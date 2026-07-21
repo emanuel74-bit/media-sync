@@ -2,7 +2,7 @@
 export interface StreamReservation {
     name: string;
     /** The ingest node the slot was placed on. */
-    ingestPod: string;
+    ingestNode: string;
     /** RTSP URL the client publishes to, with the publish user + secret already embedded. */
     publishUrl: string;
     /** Opaque secret authorizing publish on this path; also embedded in `publishUrl`. */

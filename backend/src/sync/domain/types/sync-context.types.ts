@@ -7,6 +7,6 @@ export interface SyncContext {
     clusterList: SyncDiscoveredStream[];
     ingestNames: Set<string>;
     clusterNames: Set<string>;
-    podIds: string[];
+    nodeIds: string[];
     allStreams: Stream[];
 }

@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 
-import { PodRole } from "@/common";
-import { PodQueryService } from "@/pods";
+import { NodeRole } from "@/common";
+import { NodeQueryService } from "@/nodes";
 import { StreamsFacadeService } from "@/streams";
 import { MediaMtxStreamListingService } from "@/media-nodes";
 
@@ -12,14 +12,14 @@ export class SyncContextBuilderService {
     constructor(
         private readonly mediaMtxQuery: MediaMtxStreamListingService,
         private readonly streams: StreamsFacadeService,
-        private readonly podsService: PodQueryService,
+        private readonly nodesService: NodeQueryService,
     ) {}
 
     async buildContext(): Promise<SyncContext> {
-        const [ingestStreams, clusterStreams, podIds, allStreams] = await Promise.all([
-            this.mediaMtxQuery.listStreams(PodRole.INGEST),
-            this.mediaMtxQuery.listStreams(PodRole.CLUSTER),
-            this.podsService.listActivePodIds(PodRole.CLUSTER),
+        const [ingestStreams, clusterStreams, nodeIds, allStreams] = await Promise.all([
+            this.mediaMtxQuery.listStreams(NodeRole.INGEST),
+            this.mediaMtxQuery.listStreams(NodeRole.CLUSTER),
+            this.nodesService.listActiveNodeIds(NodeRole.CLUSTER),
             this.streams.findAll(),
         ]);
 
@@ -29,7 +29,7 @@ export class SyncContextBuilderService {
             name: stream.name,
             source: stream.source,
             status: stream.status,
-            ingestPod: nodeId ?? undefined,
+            ingestNode: nodeId ?? undefined,
         }));
         const clusterList = clusterStreams.map(({ stream }) => stream);
 
@@ -38,7 +38,7 @@ export class SyncContextBuilderService {
             clusterList,
             ingestNames: new Set(ingestList.map((stream) => stream.name)),
             clusterNames: new Set(clusterList.map((stream) => stream.name)),
-            podIds,
+            nodeIds,
             allStreams,
         };
     }

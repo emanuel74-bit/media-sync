@@ -22,8 +22,8 @@ export class SyncOrchestratorService {
     ) {}
 
     async execute(context: SyncContext): Promise<void> {
-        if (!context.podIds.length) {
-            this.logger.warn("No active cluster pods registered, skipping stream assignment");
+        if (!context.nodeIds.length) {
+            this.logger.warn("No active cluster nodes registered, skipping stream assignment");
             return;
         }
 

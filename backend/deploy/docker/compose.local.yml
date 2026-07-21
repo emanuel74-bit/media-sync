@@ -16,7 +16,7 @@ services:
     mediamtx-ingest:
         build:
             context: ../..
-            dockerfile: deploy/docker/mediamtx-pod.Dockerfile
+            dockerfile: deploy/docker/mediamtx-node.Dockerfile
         ports:
             - "8554:8554" # RTSP
             - "8888:8888" # HLS
@@ -25,15 +25,15 @@ services:
         volumes:
             - ../mediamtx/mediamtx-ingest.yml:/mediamtx.yml
         environment:
-            - POD_ID=ingest-pod-${POD_INDEX:-1}
-            - POD_TYPE=ingest
+            - NODE_ID=ingest-node-${NODE_INDEX:-1}
+            - NODE_TYPE=ingest
             - MEDIA_SYNC_API=http://app:3000
         restart: unless-stopped
 
     mediamtx-cluster:
         build:
             context: ../..
-            dockerfile: deploy/docker/mediamtx-pod.Dockerfile
+            dockerfile: deploy/docker/mediamtx-node.Dockerfile
         ports:
             - "8555:8554" # RTSP
             - "8889:8888" # HLS
@@ -41,7 +41,7 @@ services:
         volumes:
             - ../mediamtx/mediamtx-cluster.yml:/mediamtx.yml
         environment:
-            - POD_ID=cluster-pod-${POD_INDEX:-1}
+            - NODE_ID=cluster-node-${NODE_INDEX:-1}
             - MEDIA_SYNC_API=http://app:3000
         depends_on:
             - app

@@ -1,8 +1,8 @@
-import { PodRole } from "../enums";
+import { NodeRole } from "../enums";
 
 /** Operational counters for a whole MediaMTX node (how loaded the service is). */
 export interface NodeMetricSample {
-    context: PodRole;
+    context: NodeRole;
     node: string;
     paths: number;
     rtspConns: number;
@@ -16,7 +16,7 @@ export interface NodeMetricSample {
 /** Operational data for a single path on a single MediaMTX node. */
 export interface PathMetricSample {
     streamName: string;
-    context: PodRole;
+    context: NodeRole;
     node: string;
     state: string;
     ready: boolean;

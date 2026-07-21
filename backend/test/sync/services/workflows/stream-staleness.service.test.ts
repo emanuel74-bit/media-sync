@@ -13,7 +13,7 @@ const makeStream = (overrides: Partial<Stream> = {}): Stream => ({
     isEnabled: true,
     isManual: false,
     activeConsumers: 0,
-    assignedPod: null,
+    assignedNode: null,
     assignedAt: null,
     lastSeenAt: new Date(),
     lastSyncedAt: null,
@@ -26,7 +26,7 @@ const makeContext = (overrides: Partial<SyncContext> = {}): SyncContext => ({
     clusterList: [],
     ingestNames: new Set(),
     clusterNames: new Set(),
-    podIds: ["pod-1"],
+    nodeIds: ["node-1"],
     allStreams: [],
     ...overrides,
 });

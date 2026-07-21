@@ -9,7 +9,7 @@ import { AlertReconcileService } from "../reconciliation";
 import { NODE_RESOURCE_RULES, NodeResourceAlertContext } from "../../domain";
 
 /**
- * Reacts to `node.sampled` (a pod's self-reported CPU/memory/disk), evaluates the
+ * Reacts to `node.sampled` (a node's self-reported CPU/memory/disk), evaluates the
  * resource thresholds, and reconciles the signals into alerts for that one node.
  */
 @Injectable()
@@ -29,12 +29,12 @@ export class NodeResourceRuler {
         };
 
         const signals = this.ruleEvaluator.evaluate(
-            payload.podId,
+            payload.nodeId,
             payload,
             thresholds,
             NODE_RESOURCE_RULES,
         );
 
-        await this.reconcile.reconcileSubject(AlertSource.NODE, payload.podId, signals);
+        await this.reconcile.reconcileSubject(AlertSource.NODE, payload.nodeId, signals);
     }
 }

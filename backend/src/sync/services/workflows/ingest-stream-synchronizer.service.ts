@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 
-import { PodQueryService } from "@/pods";
-import { PodRole, StreamStatus } from "@/common";
+import { NodeQueryService } from "@/nodes";
+import { NodeRole, StreamStatus } from "@/common";
 import { Stream, StreamMetadata, StreamsFacadeService } from "@/streams";
 
 import { SyncContext, SyncDiscoveredStream } from "../../domain";
@@ -26,43 +26,43 @@ import { SyncContext, SyncDiscoveredStream } from "../../domain";
 export class IngestStreamSynchronizerService {
     constructor(
         private readonly streams: StreamsFacadeService,
-        private readonly pods: PodQueryService,
+        private readonly nodes: NodeQueryService,
     ) {}
 
     async execute(context: SyncContext): Promise<void> {
         for (const ingest of context.ingestList) {
-            await this.relayIngestStreamToCluster(ingest, context.clusterNames, context.podIds);
+            await this.relayIngestStreamToCluster(ingest, context.clusterNames, context.nodeIds);
         }
     }
 
     /**
      * Relay one just-published stream to the cluster now (the activation hook). Uses only the
-     * hook's `(ingestPodId, name)` — no node fan-out; source and track metadata are left absent
+     * hook's `(ingestNodeId, name)` — no node fan-out; source and track metadata are left absent
      * (the reservation's source is preserved, the periodic sync/inspection fills the tracks).
      */
-    async activate(ingestPodId: string, name: string): Promise<void> {
+    async activate(ingestNodeId: string, name: string): Promise<void> {
         await this.upsertDiscoveredStream({
             name,
-            ingestPod: ingestPodId,
+            ingestNode: ingestNodeId,
             status: StreamStatus.DISCOVERED,
         });
 
-        const clusterPods = await this.pods.listActivePodIds(PodRole.CLUSTER);
-        if (!clusterPods.length) {
+        const clusterNodes = await this.nodes.listActiveNodeIds(NodeRole.CLUSTER);
+        if (!clusterNodes.length) {
             return; // no cluster nodes yet — the periodic sync will relay it later
         }
 
-        const assigned = await this.streams.ensureAssigned(name, clusterPods);
+        const assigned = await this.streams.ensureAssigned(name, clusterNodes);
         await this.streams.deployClusterPipeline(assigned);
     }
 
     private async relayIngestStreamToCluster(
         ingest: SyncDiscoveredStream,
         clusterNames: Set<string>,
-        clusterPodIds: string[],
+        clusterNodeIds: string[],
     ): Promise<void> {
         const discovered = await this.upsertDiscoveredStream(ingest);
-        const assigned = await this.streams.ensureAssigned(discovered.name, clusterPodIds);
+        const assigned = await this.streams.ensureAssigned(discovered.name, clusterNodeIds);
 
         const alreadyRelayed = clusterNames.has(assigned.name);
         if (!alreadyRelayed) {
@@ -82,7 +82,7 @@ export class IngestStreamSynchronizerService {
         const data: Partial<Stream> & { name: string } = {
             name: ingest.name,
             status: (ingest.status as StreamStatus) || StreamStatus.DISCOVERED,
-            ingestPod: ingest.ingestPod,
+            ingestNode: ingest.ingestNode,
             reservedUntil: null,
             lastSeenAt: new Date(),
             isEnabled: true,

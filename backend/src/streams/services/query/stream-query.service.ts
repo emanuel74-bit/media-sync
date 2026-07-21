@@ -19,13 +19,13 @@ export class StreamQueryService {
         return this.streamRepository.findUnassigned();
     }
 
-    async findByAssignedPod(podId: string): Promise<Stream[]> {
-        return this.streamRepository.findByAssignedPod(podId);
+    async findByAssignedNode(nodeId: string): Promise<Stream[]> {
+        return this.streamRepository.findByAssignedNode(nodeId);
     }
 
-    /** Pending reservations grouped by the ingest pod holding each slot. */
-    async countReservationsByIngestPod(): Promise<Record<string, number>> {
-        return this.streamRepository.countReservationsByIngestPod();
+    /** Pending reservations grouped by the ingest node holding each slot. */
+    async countReservationsByIngestNode(): Promise<Record<string, number>> {
+        return this.streamRepository.countReservationsByIngestNode();
     }
 
     async getAssignmentInfo(): Promise<StreamAssignmentInfo[]> {

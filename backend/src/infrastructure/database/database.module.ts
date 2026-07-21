@@ -1,17 +1,17 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
-import { PodRepository } from "@/pods/repositories";
+import { NodeRepository } from "@/nodes/repositories";
 import { AlertRepository } from "@/alerts/repositories";
 import { StreamRepository } from "@/streams/repositories";
 import { StreamInspectionRepository } from "@/stream-inspection/repositories";
 import { NodeMetricRepository, PathMetricRepository } from "@/metrics/repositories";
 
 import {
-    Pod,
+    Node,
     Alert,
     Stream,
-    PodSchema,
+    NodeSchema,
     NodeMetric,
     PathMetric,
     AlertSchema,
@@ -19,7 +19,7 @@ import {
     NodeMetricSchema,
     PathMetricSchema,
     StreamInspection,
-    MongoPodRepository,
+    MongoNodeRepository,
     MongoAlertRepository,
     MongoStreamRepository,
     StreamInspectionSchema,
@@ -30,7 +30,7 @@ import {
 
 const MODELS = [
     { name: Alert.name, schema: AlertSchema },
-    { name: Pod.name, schema: PodSchema },
+    { name: Node.name, schema: NodeSchema },
     { name: Stream.name, schema: StreamSchema },
     { name: NodeMetric.name, schema: NodeMetricSchema },
     { name: PathMetric.name, schema: PathMetricSchema },
@@ -42,7 +42,7 @@ const MODELS = [
 // only on the port tokens it exports — never on a schema or a Mongo* class.
 const BINDINGS = [
     { provide: AlertRepository, useClass: MongoAlertRepository },
-    { provide: PodRepository, useClass: MongoPodRepository },
+    { provide: NodeRepository, useClass: MongoNodeRepository },
     { provide: StreamRepository, useClass: MongoStreamRepository },
     { provide: NodeMetricRepository, useClass: MongoNodeMetricRepository },
     { provide: PathMetricRepository, useClass: MongoPathMetricRepository },

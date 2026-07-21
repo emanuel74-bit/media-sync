@@ -6,14 +6,14 @@ NestJS backend for synchronizing streams between ingest and cluster MediaMTX ins
 
 - Discovers ingest streams via the MediaMTX v3 paths API
 - Creates pull pipelines on cluster MediaMTX nodes (round-robin across configured nodes)
-- Deterministic stream-to-pod assignment (hash policy) with automatic failover on degraded metrics
+- Deterministic stream-to-node assignment (hash policy) with automatic failover on degraded metrics
 - Metrics collection and threshold-based alerting (thresholds configurable via env)
 - **Stream inspection**: periodic analysis of stream tracks (video, audio, subtitles, data) with alerting for missing/unexpected content
 - CRUD stream control via REST
 - Realtime notifications via Socket.IO WebSocket
 - Persisted state/metrics/alerts/inspections in MongoDB
 - OpenAPI docs at `/api/docs`
-- Multi-pod registration and heartbeat-based health tracking
+- Multi-node registration and heartbeat-based health tracking
 
 ## Setup
 
@@ -53,7 +53,7 @@ npm run stack:down
 
 Requirements: Docker and Docker Compose installed, Docker Desktop running.
 
-The MediaMTX pods (built from `deploy/docker/mediamtx-pod.Dockerfile`) automatically register themselves with the sync service on startup (`POST /api/pods/register`) and maintain heartbeats via `deploy/scripts/pod-heartbeat-monitor.sh`. Streams are dynamically assigned to available cluster pods.
+The MediaMTX nodes (built from `deploy/docker/mediamtx-node.Dockerfile`) automatically register themselves with the sync service on startup (`POST /api/nodes/register`) and maintain heartbeats via `deploy/scripts/node-heartbeat-monitor.sh`. Streams are dynamically assigned to available cluster nodes.
 
 ## Testing
 
@@ -61,7 +61,7 @@ The MediaMTX pods (built from `deploy/docker/mediamtx-pod.Dockerfile`) automatic
 # Unit tests (Jest)
 npm test
 
-# E2E API smoke test (streams, pods, alerts, metrics, inspection lifecycle)
+# E2E API smoke test (streams, nodes, alerts, metrics, inspection lifecycle)
 .\test.ps1          # against an already-running stack
 .\test.ps1 -Up      # starts the compose stack first
 ```
@@ -81,12 +81,12 @@ npm test
 - `GET /api/streams/:name`
 - `PATCH /api/streams/:name`
 - `DELETE /api/streams/:name`
-- `PATCH /api/streams/:name/assign` (assign to pod)
+- `PATCH /api/streams/:name/assign` (assign to node)
 - `PATCH /api/streams/:name/unassign`
-- `GET /api/pods`
-- `GET /api/pods/active`
-- `POST /api/pods/register`
-- `POST /api/pods/heartbeat`
+- `GET /api/nodes`
+- `GET /api/nodes/active`
+- `POST /api/nodes/register`
+- `POST /api/nodes/heartbeat`
 - `GET /api/alerts`
 - `PATCH /api/alerts/:id/resolve`
 - `GET /api/metrics/stream/:name`
@@ -95,7 +95,7 @@ npm test
 - `GET /api/stream-inspection/:streamName/history`
 - `GET /api/docs`
 
-WebSocket: connect via Socket.IO and listen for `stream.synced`, `stream.removed`, `stream.assigned`, `stream.unassigned`, `stream.inspected`, `alert.created`, `alert.resolved`, `pod.registered`.
+WebSocket: connect via Socket.IO and listen for `stream.synced`, `stream.removed`, `stream.assigned`, `stream.unassigned`, `stream.inspected`, `alert.created`, `alert.resolved`, `node.registered`.
 
 ## Notes
 

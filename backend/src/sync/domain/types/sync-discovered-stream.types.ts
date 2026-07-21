@@ -10,7 +10,7 @@ export interface SyncDiscoveredStream {
     source?: string;
     status: string;
     /** The ingest node this stream was discovered on (multi-ingest per-node origin). */
-    ingestPod?: string;
+    ingestNode?: string;
     video?: { codec: string; width: number; height: number; fps: number };
     audio?: { codec: string; channels: number; sampleRate: number };
     metadata?: SyncDiscoveryMetadata;

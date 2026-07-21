@@ -1,4 +1,4 @@
-export * from "./pod";
+export * from "./node";
 export * from "./alert";
 export * from "./stream";
 export * from "./node-metric";

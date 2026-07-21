@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 
-import { PodRole } from "@/common";
-import { PodQueryService } from "@/pods";
+import { NodeRole } from "@/common";
+import { NodeQueryService } from "@/nodes";
 
 import { CreateStreamData, Stream } from "../../domain";
 import { StreamAssignmentService } from "../assignment";
@@ -19,7 +19,7 @@ export class StreamSetupService {
         private readonly streamCrud: StreamCrudService,
         private readonly streamStatus: StreamStatusService,
         private readonly streamAssignment: StreamAssignmentService,
-        private readonly podsService: PodQueryService,
+        private readonly nodesService: NodeQueryService,
         private readonly streamPipeline: StreamPipelineService,
     ) {}
 
@@ -29,16 +29,16 @@ export class StreamSetupService {
     }
 
     private async assignAndDeploy(stream: Stream): Promise<Stream> {
-        const consumerPods = await this.podsService.listActivePodIds(PodRole.CLUSTER);
+        const consumerNodes = await this.nodesService.listActiveNodeIds(NodeRole.CLUSTER);
 
-        if (!consumerPods.length) {
+        if (!consumerNodes.length) {
             return this.streamStatus.markPendingAssignment(
                 stream.name,
-                "No active cluster pods available",
+                "No active cluster nodes available",
             );
         }
 
-        const current = await this.streamAssignment.ensureAssigned(stream.name, consumerPods);
+        const current = await this.streamAssignment.ensureAssigned(stream.name, consumerNodes);
 
         return this.streamPipeline.deploy(current);
     }

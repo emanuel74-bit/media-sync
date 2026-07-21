@@ -4,7 +4,7 @@
 # of ports and self-registering those ports with the sync service, so a stream
 # published to any node is addressable on that specific node (several nodes per
 # VM share a host and differ by port). Scale by copying a node block and bumping
-# its ports + POD_ID. Point MEDIA_SYNC_API at the sync service and VM_HOST at
+# its ports + NODE_ID. Point MEDIA_SYNC_API at the sync service and VM_HOST at
 # this VM's address reachable by the sync service and by publishers.
 #
 # Run on the VM (from backend/):
@@ -14,7 +14,7 @@
 x-ingest-node: &ingest-node
     build:
         context: ../..
-        dockerfile: deploy/docker/mediamtx-pod.Dockerfile
+        dockerfile: deploy/docker/mediamtx-node.Dockerfile
     volumes:
         - ../mediamtx/mediamtx-ingest.yml:/mediamtx.yml
     restart: unless-stopped
@@ -28,9 +28,9 @@ services:
             - "9000:9000" # API
             - "9998:9998" # Prometheus metrics
         environment:
-            - POD_ID=ingest-${VM_HOST:-vm}-1
-            - POD_TYPE=ingest
-            - POD_HOST=${VM_HOST:?set VM_HOST to this VM's reachable address}
+            - NODE_ID=ingest-${VM_HOST:-vm}-1
+            - NODE_TYPE=ingest
+            - NODE_HOST=${VM_HOST:?set VM_HOST to this VM's reachable address}
             - MEDIA_SYNC_API=${MEDIA_SYNC_API:-http://app:3000}
             # Self-reported ports = the host-published ports the sync service dials.
             - API_PORT=9000
@@ -45,9 +45,9 @@ services:
             - "9010:9000" # API
             - "9908:9998" # Prometheus metrics
         environment:
-            - POD_ID=ingest-${VM_HOST:-vm}-2
-            - POD_TYPE=ingest
-            - POD_HOST=${VM_HOST:?set VM_HOST to this VM's reachable address}
+            - NODE_ID=ingest-${VM_HOST:-vm}-2
+            - NODE_TYPE=ingest
+            - NODE_HOST=${VM_HOST:?set VM_HOST to this VM's reachable address}
             - MEDIA_SYNC_API=${MEDIA_SYNC_API:-http://app:3000}
             - API_PORT=9010
             - RTSP_PORT=8564

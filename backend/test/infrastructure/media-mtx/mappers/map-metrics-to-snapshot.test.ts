@@ -1,4 +1,4 @@
-import { PodRole } from "@/common";
+import { NodeRole } from "@/common";
 import { parsePrometheusText, mapMetricsToSnapshot } from "@/infrastructure/media-mtx";
 
 // Trimmed real MediaMTX v1.17.0 /metrics output: no streams, then one publishing stream.
@@ -37,9 +37,9 @@ describe("parsePrometheusText", () => {
 
 describe("mapMetricsToSnapshot", () => {
     it("reports zero node counts and no paths when idle", () => {
-        const snap = mapMetricsToSnapshot(parsePrometheusText(EMPTY), PodRole.INGEST, "ingest-1");
+        const snap = mapMetricsToSnapshot(parsePrometheusText(EMPTY), NodeRole.INGEST, "ingest-1");
         expect(snap.node).toEqual({
-            context: PodRole.INGEST,
+            context: NodeRole.INGEST,
             node: "ingest-1",
             paths: 0,
             rtspConns: 0,
@@ -55,7 +55,7 @@ describe("mapMetricsToSnapshot", () => {
     it("counts node-level families by summing series, not by prefix", () => {
         const snap = mapMetricsToSnapshot(
             parsePrometheusText(ONE_STREAM),
-            PodRole.INGEST,
+            NodeRole.INGEST,
             "ingest-1",
         );
         // exactly one path + one rtsp conn + one rtsp session; bytes_received must NOT
@@ -68,13 +68,13 @@ describe("mapMetricsToSnapshot", () => {
     it("builds a per-path snapshot keyed by the name label", () => {
         const snap = mapMetricsToSnapshot(
             parsePrometheusText(ONE_STREAM),
-            PodRole.INGEST,
+            NodeRole.INGEST,
             "ingest-1",
         );
         expect(snap.paths).toEqual([
             {
                 streamName: "probe",
-                context: PodRole.INGEST,
+                context: NodeRole.INGEST,
                 node: "ingest-1",
                 state: "ready",
                 ready: true,

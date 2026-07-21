@@ -1,17 +1,17 @@
 import { Test, TestingModule } from "@nestjs/testing";
 
-import { PodRole } from "@/common";
-import { PodQueryService } from "@/pods";
+import { NodeRole } from "@/common";
+import { NodeQueryService } from "@/nodes";
 import { NodeResolver } from "@/media-nodes/services";
 import { MediaMtxClientRegistry } from "@/infrastructure";
 
 describe("NodeResolver — per-node port resolution", () => {
     let resolver: NodeResolver;
-    let pods: jest.Mocked<PodQueryService>;
+    let nodes: jest.Mocked<NodeQueryService>;
     let registry: jest.Mocked<MediaMtxClientRegistry>;
 
     beforeEach(async () => {
-        pods = { listActivePodRefs: jest.fn() } as unknown as jest.Mocked<PodQueryService>;
+        nodes = { listActiveNodeRefs: jest.fn() } as unknown as jest.Mocked<NodeQueryService>;
         registry = {
             getClient: jest.fn().mockReturnValue({}),
             getMetricsClient: jest.fn().mockReturnValue({}),
@@ -20,7 +20,7 @@ describe("NodeResolver — per-node port resolution", () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 NodeResolver,
-                { provide: PodQueryService, useValue: pods },
+                { provide: NodeQueryService, useValue: nodes },
                 { provide: MediaMtxClientRegistry, useValue: registry },
             ],
         }).compile();
@@ -28,58 +28,58 @@ describe("NodeResolver — per-node port resolution", () => {
         resolver = module.get(NodeResolver);
     });
 
-    it("uses a pod's self-reported api port (several nodes per VM share a host)", async () => {
-        pods.listActivePodRefs.mockResolvedValue([
+    it("uses a node's self-reported api port (several nodes per VM share a host)", async () => {
+        nodes.listActiveNodeRefs.mockResolvedValue([
             {
-                podId: "a",
+                nodeId: "a",
                 host: "10.0.3.10",
                 apiPort: 9001,
                 rtspPort: 8554,
                 metricsPort: 9998,
-                type: PodRole.CLUSTER,
+                type: NodeRole.CLUSTER,
             },
         ]);
 
-        await resolver.clientForPod(PodRole.CLUSTER, "a");
+        await resolver.clientForNode(NodeRole.CLUSTER, "a");
 
-        expect(registry.getClient).toHaveBeenCalledWith("10.0.3.10", 9001, PodRole.CLUSTER);
+        expect(registry.getClient).toHaveBeenCalledWith("10.0.3.10", 9001, NodeRole.CLUSTER);
     });
 
     it("scrapes each node on its reported metrics port", async () => {
-        pods.listActivePodRefs.mockResolvedValue([
+        nodes.listActiveNodeRefs.mockResolvedValue([
             {
-                podId: "a",
+                nodeId: "a",
                 host: "10.0.3.10",
                 apiPort: 9000,
                 rtspPort: 8554,
                 metricsPort: 9999,
-                type: PodRole.INGEST,
+                type: NodeRole.INGEST,
             },
             {
-                podId: "b",
+                nodeId: "b",
                 host: "10.0.3.11",
                 apiPort: 9000,
                 rtspPort: 8554,
                 metricsPort: 9998,
-                type: PodRole.INGEST,
+                type: NodeRole.INGEST,
             },
         ]);
 
-        await resolver.getMetricsTargets(PodRole.INGEST);
+        await resolver.getMetricsTargets(NodeRole.INGEST);
 
-        expect(registry.getMetricsClient).toHaveBeenCalledWith("10.0.3.10", 9999, PodRole.INGEST);
-        expect(registry.getMetricsClient).toHaveBeenCalledWith("10.0.3.11", 9998, PodRole.INGEST);
+        expect(registry.getMetricsClient).toHaveBeenCalledWith("10.0.3.10", 9999, NodeRole.INGEST);
+        expect(registry.getMetricsClient).toHaveBeenCalledWith("10.0.3.11", 9998, NodeRole.INGEST);
     });
 
     it("builds an ingest node's RTSP url from its host + reported rtsp port", async () => {
-        pods.listActivePodRefs.mockResolvedValue([
+        nodes.listActiveNodeRefs.mockResolvedValue([
             {
-                podId: "ingest-1",
+                nodeId: "ingest-1",
                 host: "10.0.3.10",
                 apiPort: 9000,
                 rtspPort: 8555,
                 metricsPort: 9998,
-                type: PodRole.INGEST,
+                type: NodeRole.INGEST,
             },
         ]);
 
@@ -89,10 +89,10 @@ describe("NodeResolver — per-node port resolution", () => {
     });
 
     it("throws when the ingest node for a stream is not live", async () => {
-        pods.listActivePodRefs.mockResolvedValue([]);
+        nodes.listActiveNodeRefs.mockResolvedValue([]);
 
         await expect(resolver.getIngestRtspUrl("ingest-gone", "live")).rejects.toThrow(
-            "No active ingest node for pod ingest-gone",
+            "No active ingest node for node ingest-gone",
         );
     });
 });

@@ -30,7 +30,7 @@ export class StreamCrudService {
     async createReservation(data: {
         name: string;
         source: string;
-        ingestPod: string;
+        ingestNode: string;
         reservedUntil: Date;
         publishToken: string;
     }): Promise<Stream> {
@@ -38,7 +38,7 @@ export class StreamCrudService {
             name: data.name,
             source: data.source,
             status: StreamStatus.RESERVED,
-            ingestPod: data.ingestPod,
+            ingestNode: data.ingestNode,
             reservedUntil: data.reservedUntil,
             publishToken: data.publishToken,
             isEnabled: true,

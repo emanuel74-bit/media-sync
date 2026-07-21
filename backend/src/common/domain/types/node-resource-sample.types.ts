@@ -1,9 +1,9 @@
-import { PodRole } from "../enums";
+import { NodeRole } from "../enums";
 
-/** Host resource usage a pod self-reports (percentages 0–100). */
+/** Host resource usage a node self-reports (percentages 0–100). */
 export interface NodeResourceSample {
-    podId: string;
-    context: PodRole;
+    nodeId: string;
+    context: NodeRole;
     cpu: number;
     memory: number;
     disk: number;

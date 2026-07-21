@@ -24,8 +24,8 @@ export class StreamsFacadeService {
         return this.streamStatus.upsertFromDiscovery(info);
     }
 
-    async ensureAssigned(name: string, candidatePods: string[]): Promise<Stream> {
-        return this.streamAssignment.ensureAssigned(name, candidatePods);
+    async ensureAssigned(name: string, candidateNodes: string[]): Promise<Stream> {
+        return this.streamAssignment.ensureAssigned(name, candidateNodes);
     }
 
     async deployClusterPipeline(stream: Stream): Promise<Stream> {

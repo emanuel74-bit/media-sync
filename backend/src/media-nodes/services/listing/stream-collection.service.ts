@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 
-import { PodRole } from "@/common";
+import { NodeRole } from "@/common";
 import { MediaMtxClient, MediaMtxStreamInfo } from "@/infrastructure";
 
 import { ContextualMediaMtxStream } from "../../domain";
@@ -21,13 +21,13 @@ export class StreamCollectionService {
 
     /** Like {@link collectFromClients}, but tags every stream with its role and owning node. */
     async collectFromNodes(
-        nodes: readonly { podId: string; client: MediaMtxClient }[],
-        context: PodRole,
+        nodes: readonly { nodeId: string; client: MediaMtxClient }[],
+        context: NodeRole,
     ): Promise<ContextualMediaMtxStream[]> {
         const tagged: ContextualMediaMtxStream[] = [];
-        for (const { podId, client } of nodes) {
+        for (const { nodeId, client } of nodes) {
             const streams = await this.collectFromClients([client]);
-            const contextual = streams.map((stream) => ({ stream, context, nodeId: podId }));
+            const contextual = streams.map((stream) => ({ stream, context, nodeId: nodeId }));
             tagged.push(...contextual);
         }
         return tagged;

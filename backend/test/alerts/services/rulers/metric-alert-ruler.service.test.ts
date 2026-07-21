@@ -1,11 +1,11 @@
 import { RuleEvaluator } from "@/alerts/services";
-import { PodRole, AlertType, AlertSource, MetricsCollectedPayload } from "@/common";
+import { NodeRole, AlertType, AlertSource, MetricsCollectedPayload } from "@/common";
 import { MetricAlertRuler } from "@/alerts/services/rulers/metric-alert-ruler.service";
 import type { AlertReconcileService } from "@/alerts/services/reconciliation/alert-reconcile.service";
 
 const pathSample = (streamName: string, ready: boolean, framesInError = 0) => ({
     streamName,
-    context: PodRole.CLUSTER,
+    context: NodeRole.CLUSTER,
     node: "cluster-1",
     state: ready ? "ready" : "notReady",
     ready,

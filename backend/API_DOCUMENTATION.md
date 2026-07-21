@@ -37,7 +37,7 @@ Provides Swagger UI for testing all endpoints.
 
 The MediaMTX Stream Sync system is a NestJS-based distributed streaming orchestration platform that:
 
-- Discovers streams from the ingest MediaMTX node (with fallback to registered ingest pods)
+- Discovers streams from the ingest MediaMTX node (with fallback to registered ingest nodes)
 - Automatically synchronizes them to a cluster of MediaMTX nodes via pull pipelines
 - Distributes load across cluster nodes using a deterministic hash assignment policy
 - Monitors stream health with periodic metrics and threshold-based alerts
@@ -46,10 +46,10 @@ The MediaMTX Stream Sync system is a NestJS-based distributed streaming orchestr
 
 ### Key Concepts
 
-- **Pod**: A MediaMTX instance (ingest or cluster type) that registers with the system
-- **Stream**: A media stream discovered from ingest (or created manually), tracked in the database, and assigned to cluster pods
-- **Assignment**: A stream's current pod assignment, used for load distribution and failover
-- **Metric**: A timestamped performance sample (bitrate, FPS, latency, etc.) for a stream on a pod
+- **Node**: A MediaMTX instance (ingest or cluster type) that registers with the system
+- **Stream**: A media stream discovered from ingest (or created manually), tracked in the database, and assigned to cluster nodes
+- **Assignment**: A stream's current node assignment, used for load distribution and failover
+- **Metric**: A timestamped performance sample (bitrate, FPS, latency, etc.) for a stream on a node
 - **Alert**: A system-generated notification for conditions like low bitrate or packet loss
 - **Inspection**: Analysis of a stream's media tracks (video/audio/subtitle/data) and their codecs
 
@@ -77,7 +77,7 @@ Retrieve a list of all streams.
     "lastError": "string|null",
     "activeConsumers": number,
     "isManual": boolean,
-    "assignedPod": "string|null",
+    "assignedNode": "string|null",
     "assignedAt": "2023-01-01T00:00:00.000Z|null",
     "createdAt": "2023-01-01T00:00:00.000Z",
     "updatedAt": "2023-01-01T00:00:00.000Z"
@@ -87,7 +87,7 @@ Retrieve a list of all streams.
 
 ### Create Stream
 
-Create a new stream. The stream is immediately assigned to an active cluster pod and a pull pipeline is provisioned. If no cluster pods are active, the stream is stored with status `pending_assignment`.
+Create a new stream. The stream is immediately assigned to an active cluster node and a pull pipeline is provisioned. If no cluster nodes are active, the stream is stored with status `pending_assignment`.
 
 **Endpoint:** `POST /api/streams`
 
@@ -116,7 +116,7 @@ Get assignment information for all streams. (Declared before `GET /api/streams/{
     {
         "name": "string",
         "status": "created|discovered|pending_assignment|assigned|synced|sync_error|stale",
-        "assignedPod": "string|null",
+        "assignedNode": "string|null",
         "assignedAt": "2023-01-01T00:00:00.000Z|null"
     }
 ]
@@ -168,9 +168,9 @@ Delete a stream.
 
 **Response:** Empty
 
-### Assign Stream to Pod
+### Assign Stream to Node
 
-Assign a stream to a specific pod.
+Assign a stream to a specific node.
 
 **Endpoint:** `PATCH /api/streams/{name}/assign`
 
@@ -182,15 +182,15 @@ Assign a stream to a specific pod.
 
 ```json
 {
-    "podId": "string (required)"
+    "nodeId": "string (required)"
 }
 ```
 
-**Response:** Updated stream object with `assignedPod` and `assignedAt`
+**Response:** Updated stream object with `assignedNode` and `assignedAt`
 
 ### Unassign Stream
 
-Remove pod assignment from a stream.
+Remove node assignment from a stream.
 
 **Endpoint:** `PATCH /api/streams/{name}/unassign`
 
@@ -198,7 +198,7 @@ Remove pod assignment from a stream.
 
 - `name` (path): Stream name
 
-**Response:** Updated stream object with `assignedPod: null`
+**Response:** Updated stream object with `assignedNode: null`
 
 ---
 
@@ -225,7 +225,7 @@ Reserve a publish slot for a new stream. Rejects a name that already exists (409
 ```json
 {
   "name": "cam-42",
-  "ingestPod": "ingest-vm1-2",
+  "ingestNode": "ingest-vm1-2",
   "publishUrl": "rtsp://publish:<secret>@10.0.0.5:8564/cam-42",
   "publishToken": "<opaque secret; also embedded in publishUrl>",
   "expiresAt": "2026-07-16T12:00:00.000Z"
@@ -242,9 +242,9 @@ Called by ingest MediaMTX nodes (`authMethod: http`, `authHTTPAddress`), not by 
 
 ### Stream Ready Hook (internal)
 
-Called by an ingest node's `runOnReady` hook the instant a path starts publishing. Relays **that** stream to a cluster node immediately — a targeted relay from the hook's `(podId, name)` (record live → assign → deploy), no whole-cluster scan — instead of waiting for the next poll. Node-sourced. Awaits the relay and returns `202`; a failure surfaces as a 5xx to the node's hook.
+Called by an ingest node's `runOnReady` hook the instant a path starts publishing. Relays **that** stream to a cluster node immediately — a targeted relay from the hook's `(nodeId, name)` (record live → assign → deploy), no whole-cluster scan — instead of waiting for the next poll. Node-sourced. Awaits the relay and returns `202`; a failure surfaces as a 5xx to the node's hook.
 
-**Endpoint:** `POST /api/pods/{podId}/stream-ready`
+**Endpoint:** `POST /api/nodes/{nodeId}/stream-ready`
 
 **Request Body:**
 
@@ -261,22 +261,22 @@ Called by an ingest node's `runOnReady` hook the instant a path starts publishin
 
 ---
 
-## Pods API
+## Nodes API
 
-Pods automatically register on startup and send periodic heartbeats to stay active.
+Nodes automatically register on startup and send periodic heartbeats to stay active.
 
-### Register Pod
+### Register Node
 
-Register a pod or refresh an existing one. Upserts by `podId`, sets status to `active`, and updates `lastHeartbeatAt`. Emits the `pod.registered` WebSocket event.
+Register a node or refresh an existing one. Upserts by `nodeId`, sets status to `active`, and updates `lastHeartbeatAt`. Emits the `node.registered` WebSocket event.
 
-**Endpoint:** `POST /api/pods/register`
+**Endpoint:** `POST /api/nodes/register`
 
 **Request Body:**
 
 ```json
 {
-  "podId": "string (required)",
-  "host": "string (required) — reachable address used to build the pod's client URL",
+  "nodeId": "string (required)",
+  "host": "string (required) — reachable address used to build the node's client URL",
   "apiPort": "number (optional) — MediaMTX API port on this node; defaults from config",
   "rtspPort": "number (optional) — MediaMTX RTSP port on this node; defaults from config",
   "metricsPort": "number (optional) — MediaMTX metrics port on this node; defaults from config",
@@ -285,41 +285,41 @@ Register a pod or refresh an existing one. Upserts by `podId`, sets status to `a
 }
 ```
 
-When `resources` are present the pod's host CPU/memory/disk usage is forwarded to
+When `resources` are present the node's host CPU/memory/disk usage is forwarded to
 the alert pipeline (`node.sampled`), which can raise `node_*_high` alerts.
 
-**Response:** Pod object
+**Response:** Node object
 
-### Pod Heartbeat
+### Node Heartbeat
 
-Refresh a pod's heartbeat timestamp to keep it active. Unlike `register`, it does not emit `pod.registered`. Accepts the same optional `resources` as register.
+Refresh a node's heartbeat timestamp to keep it active. Unlike `register`, it does not emit `node.registered`. Accepts the same optional `resources` as register.
 
-**Endpoint:** `POST /api/pods/heartbeat`
+**Endpoint:** `POST /api/nodes/heartbeat`
 
 **Request Body:**
 
 ```json
 {
-    "podId": "string (required)",
+    "nodeId": "string (required)",
     "resources": { "cpu": 0-100, "memory": 0-100, "disk": 0-100 } (optional)
 }
 ```
 
-**Response:** Pod object
+**Response:** Node object
 
-### List Pods
+### List Nodes
 
-**Endpoint:** `GET /api/pods`
+**Endpoint:** `GET /api/nodes`
 
-**Response:** Array of Pod objects
+**Response:** Array of Node objects
 
-### List Active Pods
+### List Active Nodes
 
-Get pods that have sent heartbeats within the configured tolerance window (default: 120 seconds).
+Get nodes that have sent heartbeats within the configured tolerance window (default: 120 seconds).
 
-**Endpoint:** `GET /api/pods/active`
+**Endpoint:** `GET /api/nodes/active`
 
-**Response:** Array of Pod objects active in heartbeat window
+**Response:** Array of Node objects active in heartbeat window
 
 ---
 
@@ -338,7 +338,7 @@ Retrieve a list of all alerts.
   {
     "_id": "string",
     "source": "metrics|inspection|node",
-    "subject": "string (stream name, or pod id for node alerts)",
+    "subject": "string (stream name, or node id for node alerts)",
     "type": "stream_not_ready|frames_in_error|missing_video_track|missing_audio_track|unexpected_track_types|node_cpu_high|node_memory_high|node_disk_high",
     "severity": "info|warning|critical",
     "message": "string",
@@ -515,7 +515,7 @@ Connect to the Socket.IO server at the base URL (path `/socket.io`) for real-tim
 
 #### Stream Synced
 
-Emitted when a stream is successfully synchronized to a cluster pod (pipeline created).
+Emitted when a stream is successfully synchronized to a cluster node (pipeline created).
 
 **Event Name:** `stream.synced`
 
@@ -531,7 +531,7 @@ Emitted when a stale stream's cluster pipeline is removed.
 
 #### Stream Assigned
 
-Emitted when a stream is assigned to a pod.
+Emitted when a stream is assigned to a node.
 
 **Event Name:** `stream.assigned`
 
@@ -540,14 +540,14 @@ Emitted when a stream is assigned to a pod.
 ```json
 {
     "streamName": "string",
-    "podId": "string",
+    "nodeId": "string",
     "assignedAt": "2023-01-01T00:00:00.000Z"
 }
 ```
 
 #### Stream Unassigned
 
-Emitted when a stream is unassigned from a pod.
+Emitted when a stream is unassigned from a node.
 
 **Event Name:** `stream.unassigned`
 
@@ -608,13 +608,13 @@ Emitted when a stream inspection completes (successfully or with error).
 }
 ```
 
-#### Pod Registered
+#### Node Registered
 
-Emitted when a pod registers (not on plain heartbeats).
+Emitted when a node registers (not on plain heartbeats).
 
-**Event Name:** `pod.registered`
+**Event Name:** `node.registered`
 
-**Payload:** Full pod document
+**Payload:** Full node document
 
 ### Internal Events (not broadcast)
 
@@ -622,7 +622,7 @@ These are emitted on the in-process event bus only and are not forwarded to WebS
 
 - `sync.tick` — `{ ingest: number, cluster: number, failures: string[] }` inventory counts and failed workflow names per sync cycle
 - `metrics.collected` — `{ nodes: NodeMetric[], paths: PathMetric[], collectedAt }` every metrics scrape; the alerts ruler consumes it to produce alerts
-- `node.sampled` — `{ podId, context, cpu, memory, disk }` when a pod reports host resources on register/heartbeat; the alerts ruler consumes it to produce `node_*_high` alerts
+- `node.sampled` — `{ nodeId, context, cpu, memory, disk }` when a node reports host resources on register/heartbeat; the alerts ruler consumes it to produce `node_*_high` alerts
 
 ---
 
@@ -679,7 +679,7 @@ All endpoints may return the following error formats:
   lastError?: string | null;
   activeConsumers: number;
   isManual: boolean;
-  assignedPod?: string | null;
+  assignedNode?: string | null;
   assignedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -692,7 +692,7 @@ All endpoints may return the following error formats:
 {
   _id: string;
   source: 'metrics' | 'inspection' | 'node';
-  subject: string; // stream name (metrics/inspection) or pod id (node)
+  subject: string; // stream name (metrics/inspection) or node id (node)
   type: 'stream_not_ready' | 'frames_in_error'
       | 'missing_video_track' | 'missing_audio_track' | 'unexpected_track_types'
       | 'node_cpu_high' | 'node_memory_high' | 'node_disk_high';
@@ -742,12 +742,12 @@ All endpoints may return the following error formats:
 }
 ```
 
-### Pod
+### Node
 
 ```typescript
 {
   _id: string;
-  podId: string;                // unique
+  nodeId: string;                // unique
   host: string;                 // reachable address (required)
   type: 'ingest' | 'cluster';   // required
   status: 'active' | 'inactive' | 'draining';
@@ -793,15 +793,15 @@ interface StreamTrack {
 | ------------------------------ | ------ | --------------------------------------- | ------------------------------------------------------------ |
 | `MONGODB_URI`                  | string | `mongodb://localhost:27017/media-sync`  | MongoDB connection string                                    |
 | `PORT`                         | number | `3000`                                  | HTTP server listening port                                   |
-| `INGEST_MEDIAMTX_AUTH`         | string | `""`                                    | HTTP API credentials (`user:pass`) attached to ingest-node clients; pods report only host, so auth is transport config |
+| `INGEST_MEDIAMTX_AUTH`         | string | `""`                                    | HTTP API credentials (`user:pass`) attached to ingest-node clients; nodes report only host, so auth is transport config |
 | `CLUSTER_MEDIAMTX_AUTH`        | string | `""`                                    | HTTP API credentials (`user:pass`) attached to cluster-node clients |
-| `POD_HEALTH_TOLERANCE_SECONDS` | number | `120`                                   | Max seconds without heartbeat before pod considered inactive |
-| `INGEST_POD_MEDIAMTX_PORT`     | number | `9000`                                  | MediaMTX API port used when querying registered ingest pods  |
-| `CLUSTER_POD_MEDIAMTX_PORT`    | number | `9000`                                  | MediaMTX API port used when building per-pod cluster clients  |
+| `NODE_HEALTH_TOLERANCE_SECONDS` | number | `120`                                   | Max seconds without heartbeat before node considered inactive |
+| `INGEST_NODE_MEDIAMTX_PORT`     | number | `9000`                                  | MediaMTX API port used when querying registered ingest nodes  |
+| `CLUSTER_NODE_MEDIAMTX_PORT`    | number | `9000`                                  | MediaMTX API port used when building per-node cluster clients  |
 | `MEDIAMTX_METRICS_PORT`        | number | `9998`                                  | MediaMTX Prometheus `/metrics` port on every node            |
-| `NODE_CPU_HIGH_PERCENT`        | number | `85`                                    | Pod CPU% above this raises a `node_cpu_high` alert (warning)  |
-| `NODE_MEMORY_HIGH_PERCENT`     | number | `90`                                    | Pod memory% above this raises a `node_memory_high` alert (warning) |
-| `NODE_DISK_HIGH_PERCENT`       | number | `85`                                    | Pod disk% above this raises a `node_disk_high` alert (critical) |
+| `NODE_CPU_HIGH_PERCENT`        | number | `85`                                    | Node CPU% above this raises a `node_cpu_high` alert (warning)  |
+| `NODE_MEMORY_HIGH_PERCENT`     | number | `90`                                    | Node memory% above this raises a `node_memory_high` alert (warning) |
+| `NODE_DISK_HIGH_PERCENT`       | number | `85`                                    | Node disk% above this raises a `node_disk_high` alert (critical) |
 | `INGEST_RTSP_URL`              | string | `rtsp://mediamtx-ingest:8554`           | RTSP base the cluster pulls relayed paths from (include creds for ingest read auth) |
 | `PULLABLE_SOURCE_PROTOCOLS`    | string | `rtsp,rtsps,rtmp,rtmps,srt,http,https,udp` | CSV of protocols a cluster node pulls a stream source from directly instead of relaying from ingest (`MediaMtxPipelineService`) |
 | `SYNC_POLL_INTERVAL`           | number | `10000`                                 | Periodic sync interval in ms (`SyncSchedulerService`)        |
@@ -835,7 +835,7 @@ For multiple cluster instances:
 docker-compose -f deploy/docker/compose.local.yml -f deploy/docker/compose.cluster.yml up --build
 ```
 
-The MediaMTX cluster instances automatically register themselves with the sync service on startup and send periodic heartbeats. No manual pod configuration required.
+The MediaMTX cluster instances automatically register themselves with the sync service on startup and send periodic heartbeats. No manual node configuration required.
 
 ## OpenShift/Kubernetes Deployment
 
@@ -844,7 +844,7 @@ For production deployment on OpenShift/Kubernetes, use the manifests in `deploy/
 - **Automatic restarts** when MediaMTX crashes
 - **Health monitoring** via Kubernetes probes
 - **Proper lifecycle management** by the orchestrator
-- **Pod registration** that stops when MediaMTX is unhealthy
+- **Node registration** that stops when MediaMTX is unhealthy
 
 ### Deployment Steps:
 
@@ -872,7 +872,7 @@ The deployment includes:
 
 - **Readiness Probe**: Ensures MediaMTX API is responding before receiving traffic
 - **Liveness Probe**: Restarts container if MediaMTX becomes unresponsive
-- **Pod Registration**: Automatically deregisters unhealthy pods from stream assignment
+- **Node Registration**: Automatically deregisters unhealthy nodes from stream assignment
 
 ## Testing
 

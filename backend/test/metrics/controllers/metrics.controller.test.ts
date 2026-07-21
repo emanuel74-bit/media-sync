@@ -1,13 +1,13 @@
 import { Test, TestingModule } from "@nestjs/testing";
 
-import { PodRole } from "@/common";
+import { NodeRole } from "@/common";
 import { PathMetric, NodeMetric } from "@/metrics/domain";
 import { MetricsController } from "@/metrics/controllers";
 import { MetricPersistenceService } from "@/metrics/services";
 
 const makePathMetric = (overrides: Partial<PathMetric> = {}): PathMetric => ({
     streamName: "stream-1",
-    context: PodRole.CLUSTER,
+    context: NodeRole.CLUSTER,
     node: "cluster-1",
     state: "ready",
     ready: true,
@@ -20,7 +20,7 @@ const makePathMetric = (overrides: Partial<PathMetric> = {}): PathMetric => ({
 });
 
 const makeNodeMetric = (overrides: Partial<NodeMetric> = {}): NodeMetric => ({
-    context: PodRole.INGEST,
+    context: NodeRole.INGEST,
     node: "ingest-1",
     paths: 2,
     rtspConns: 1,

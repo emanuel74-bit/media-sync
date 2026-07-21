@@ -11,22 +11,22 @@ describe("selectByHash", () => {
     });
 
     it("is deterministic for the same key and candidate order", () => {
-        const pods = ["pod-0", "pod-1", "pod-2"];
-        expect(selectByHash("cam", pods)).toBe(selectByHash("cam", pods));
+        const nodes = ["node-0", "node-1", "node-2"];
+        expect(selectByHash("cam", nodes)).toBe(selectByHash("cam", nodes));
     });
 
     it("always returns one of the candidates, even for negative/overflowing hashes", () => {
-        const pods = ["pod-0", "pod-1", "pod-2", "pod-3"];
-        expect(pods).toContain(selectByHash("a".repeat(100), pods));
-        expect(pods).toContain(selectByHash("α", pods));
+        const nodes = ["node-0", "node-1", "node-2", "node-3"];
+        expect(nodes).toContain(selectByHash("a".repeat(100), nodes));
+        expect(nodes).toContain(selectByHash("α", nodes));
     });
 
     it("distributes distinct keys across candidates", () => {
-        const pods = ["pod-0", "pod-1", "pod-2"];
+        const nodes = ["node-0", "node-1", "node-2"];
         // hash('a')=97→1, hash('b')=98→2, hash('c')=99→0
-        expect(selectByHash("a", pods)).toBe("pod-1");
-        expect(selectByHash("b", pods)).toBe("pod-2");
-        expect(selectByHash("c", pods)).toBe("pod-0");
+        expect(selectByHash("a", nodes)).toBe("node-1");
+        expect(selectByHash("b", nodes)).toBe("node-2");
+        expect(selectByHash("c", nodes)).toBe("node-0");
     });
 });
 

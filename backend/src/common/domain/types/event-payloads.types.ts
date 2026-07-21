@@ -1,4 +1,4 @@
-import { PodRole } from "../enums";
+import { NodeRole } from "../enums";
 import { StreamTrack } from "./stream-track.types";
 import { NodeResourceSample } from "./node-resource-sample.types";
 import { NodeMetricSample, PathMetricSample } from "./metric-sample.types";
@@ -6,7 +6,7 @@ import { NodeMetricSample, PathMetricSample } from "./metric-sample.types";
 /** Emitted after each stream inspection cycle for a single stream. */
 export interface StreamInspectedPayload {
     streamName: string;
-    source: PodRole;
+    source: NodeRole;
     tracks: StreamTrack[];
     metadata: Record<string, unknown>;
     inspectedAt: Date;
@@ -20,5 +20,5 @@ export interface MetricsCollectedPayload {
     collectedAt: Date;
 }
 
-/** Emitted when a pod reports its host resource usage (on register/heartbeat). */
+/** Emitted when a node reports its host resource usage (on register/heartbeat). */
 export type NodeSampledPayload = NodeResourceSample;

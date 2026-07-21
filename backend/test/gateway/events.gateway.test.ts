@@ -36,7 +36,7 @@ describe("EventsGateway", () => {
         expect(events.on).toHaveBeenCalledTimes(9);
         expect(handlers.has(SystemEventNames.ALERT_CREATED)).toBe(true);
         expect(handlers.has(SystemEventNames.ALERT_UPDATED)).toBe(true);
-        expect(handlers.has(SystemEventNames.POD_REGISTERED)).toBe(true);
+        expect(handlers.has(SystemEventNames.NODE_REGISTERED)).toBe(true);
         expect(handlers.has(SystemEventNames.SYNC_TICK)).toBe(false);
     });
 

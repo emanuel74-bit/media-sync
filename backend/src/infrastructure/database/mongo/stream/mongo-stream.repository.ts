@@ -12,7 +12,7 @@ import { Stream as StreamSchema, StreamDocument } from "./stream.schema";
 type LeanStream = StreamSchema & { createdAt?: Date; updatedAt?: Date };
 type LeanAssignment = {
     name: string;
-    assignedPod?: string | null;
+    assignedNode?: string | null;
     assignedAt?: Date | null;
     status: StreamStatus;
 };
@@ -45,19 +45,19 @@ export class MongoStreamRepository
     }
 
     async findUnassigned(): Promise<Stream[]> {
-        const docs = await this.model.find({ assignedPod: null }).lean<LeanStream[]>().exec();
+        const docs = await this.model.find({ assignedNode: null }).lean<LeanStream[]>().exec();
         return this.toDomainList(docs);
     }
 
-    async findByAssignedPod(podId: string): Promise<Stream[]> {
-        const docs = await this.model.find({ assignedPod: podId }).lean<LeanStream[]>().exec();
+    async findByAssignedNode(nodeId: string): Promise<Stream[]> {
+        const docs = await this.model.find({ assignedNode: nodeId }).lean<LeanStream[]>().exec();
         return this.toDomainList(docs);
     }
 
-    async countReservationsByIngestPod(): Promise<Record<string, number>> {
+    async countReservationsByIngestNode(): Promise<Record<string, number>> {
         const rows = await this.model.aggregate<{ _id: string | null; count: number }>([
-            { $match: { status: StreamStatus.RESERVED, ingestPod: { $ne: null } } },
-            { $group: { _id: "$ingestPod", count: { $sum: 1 } } },
+            { $match: { status: StreamStatus.RESERVED, ingestNode: { $ne: null } } },
+            { $group: { _id: "$ingestNode", count: { $sum: 1 } } },
         ]);
         return rows.reduce<Record<string, number>>((acc, row) => {
             if (row._id) {
@@ -76,12 +76,12 @@ export class MongoStreamRepository
         return this.fromDocument(doc!);
     }
 
-    async assignToPod(name: string, podId: string, assignedAt: Date): Promise<Stream | null> {
+    async assignToNode(name: string, nodeId: string, assignedAt: Date): Promise<Stream | null> {
         const doc = await this.model.findOneAndUpdate(
             { name },
             {
                 $set: {
-                    assignedPod: podId,
+                    assignedNode: nodeId,
                     assignedAt,
                     status: StreamStatus.ASSIGNED,
                 },
@@ -94,7 +94,7 @@ export class MongoStreamRepository
     async clearAssignment(name: string): Promise<Stream | null> {
         const doc = await this.model.findOneAndUpdate(
             { name },
-            { $set: { assignedPod: null, assignedAt: null } },
+            { $set: { assignedNode: null, assignedAt: null } },
             { new: true },
         );
         return doc ? this.fromDocument(doc) : null;
@@ -113,12 +113,12 @@ export class MongoStreamRepository
     async findAssignmentInfo(): Promise<StreamAssignmentInfo[]> {
         const docs = await this.model
             .find()
-            .select("name assignedPod assignedAt status")
+            .select("name assignedNode assignedAt status")
             .lean<LeanAssignment[]>()
             .exec();
         return docs.map((d) => ({
             name: d.name,
-            assignedPod: d.assignedPod,
+            assignedNode: d.assignedNode,
             assignedAt: d.assignedAt,
             status: d.status,
         }));
@@ -136,10 +136,10 @@ export class MongoStreamRepository
             lastError: raw.lastError,
             activeConsumers: raw.activeConsumers,
             isManual: raw.isManual,
-            ingestPod: raw.ingestPod,
+            ingestNode: raw.ingestNode,
             reservedUntil: raw.reservedUntil,
             publishToken: raw.publishToken,
-            assignedPod: raw.assignedPod,
+            assignedNode: raw.assignedNode,
             assignedAt: raw.assignedAt,
             createdAt: raw.createdAt,
             updatedAt: raw.updatedAt,

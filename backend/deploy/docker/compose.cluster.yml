@@ -7,12 +7,12 @@ services:
     mediamtx-cluster:
         scale: 3
         # Replicas cannot share host port bindings; in scaled mode the cluster
-        # pods are reached over the compose network (http://mediamtx-cluster:9000)
+        # nodes are reached over the compose network (http://mediamtx-cluster:9000)
         # and register their container IP with the sync service.
         ports: !reset []
         environment:
-            # Empty POD_ID → pod-heartbeat-monitor.sh falls back to the container
+            # Empty NODE_ID → node-heartbeat-monitor.sh falls back to the container
             # hostname, which is unique per replica. (The old {{.Task.Slot}}
             # template is Swarm-only and gave every replica the same literal ID.)
-            - POD_ID=
+            - NODE_ID=
             - MEDIA_SYNC_API=http://app:3000

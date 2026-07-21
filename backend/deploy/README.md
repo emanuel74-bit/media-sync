@@ -1,25 +1,25 @@
 # Deployment artifacts
 
-All build, compose, Kubernetes, and pod-runtime files for the backend stack.
+All build, compose, Kubernetes, and node-runtime files for the backend stack.
 Layout decision: [ADR-0007](../../docs/adr/0007-backend-deploy-layout.md); rule DIR-09 in `../CONVENTIONS.md`.
 
 ```
 deploy/
 ├── docker/
 │   ├── app.Dockerfile              # sync service image (build context: backend/)
-│   ├── mediamtx-pod.Dockerfile     # MediaMTX + heartbeat monitor image
+│   ├── mediamtx-node.Dockerfile     # MediaMTX + heartbeat monitor image
 │   ├── compose.local.yml           # local stack: mongo, ingest, cluster, app
 │   ├── compose.cluster.yml         # override: scale mediamtx-cluster to 3
 │   └── compose.ingest.yml          # VM ingest cluster: N ingest nodes, distinct ports
 ├── k8s/
 │   ├── mediamtx-configmap.yaml     # ConfigMap embedding mediamtx.yml (auth + catch-all path)
-│   └── mediamtx-cluster-statefulset.yaml  # headless Service + StatefulSet (stable per-pod DNS)
+│   └── mediamtx-cluster-statefulset.yaml  # headless Service + StatefulSet (stable per-node DNS)
 ├── mediamtx/
 │   ├── mediamtx-ingest.yml         # MediaMTX runtime config (mounted by compose)
 │   └── mediamtx-cluster.yml        # MediaMTX runtime config (mounted by compose)
 └── scripts/
-    ├── pod-heartbeat-monitor.sh    # image CMD: registers pod, heartbeats, watches MediaMTX
-    └── pod-heartbeat.sh            # simpler legacy variant (not baked into any image)
+    ├── node-heartbeat-monitor.sh    # image CMD: registers node, heartbeats, watches MediaMTX
+    └── node-heartbeat.sh            # simpler legacy variant (not baked into any image)
 ```
 
 ## Docker Compose (run from `backend/`)
@@ -35,13 +35,13 @@ context is `backend/` so the Dockerfiles can copy sources and scripts.
 
 ## Kubernetes / OpenShift
 
-The cluster nodes run as a **StatefulSet** (not a Deployment) so each pod has a
+The cluster nodes run as a **StatefulSet** (not a Deployment) so each node has a
 stable identity: a fixed ordinal name (`mediamtx-cluster-0`, `-1`, …) and a
 stable DNS name from the headless Service
-(`mediamtx-cluster-0.mediamtx-cluster.<namespace>.svc.cluster.local`). Each pod
-self-registers that `(podId, host)` pair with the sync service and heartbeats;
-because both survive reschedule, the pod registry keeps addressing the same node
-across restarts instead of chasing an ephemeral pod IP.
+(`mediamtx-cluster-0.mediamtx-cluster.<namespace>.svc.cluster.local`). Each node
+self-registers that `(nodeId, host)` pair with the sync service and heartbeats;
+because both survive reschedule, the node registry keeps addressing the same node
+across restarts instead of chasing an ephemeral node IP.
 
 ```bash
 kubectl apply -f deploy/k8s/mediamtx-configmap.yaml
@@ -49,8 +49,8 @@ kubectl apply -f deploy/k8s/mediamtx-cluster-statefulset.yaml   # headless Servi
 kubectl scale statefulset mediamtx-cluster --replicas=3
 ```
 
-The StatefulSet expects the `mediamtx-pod` image (built from
-`docker/mediamtx-pod.Dockerfile`) pushed to your registry — update the `image:`
+The StatefulSet expects the `mediamtx-node` image (built from
+`docker/mediamtx-node.Dockerfile`) pushed to your registry — update the `image:`
 field accordingly. It also assumes the sync service is reachable at
 `http://media-sync:3000` (the `MEDIA_SYNC_API` env) — adjust to your Service name.
 
@@ -71,7 +71,7 @@ VM_HOST=<vm-ip> MEDIA_SYNC_API=http://<sync-host>:3000 \
 ```
 
 Scale by copying a node block in `compose.ingest.yml` and bumping its ports +
-`POD_ID` + the `API_PORT`/`RTSP_PORT`/`METRICS_PORT` it reports (these must match
+`NODE_ID` + the `API_PORT`/`RTSP_PORT`/`METRICS_PORT` it reports (these must match
 the host-published ports the sync service dials).
 
 ## Notes

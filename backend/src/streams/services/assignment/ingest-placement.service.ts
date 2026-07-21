@@ -1,6 +1,6 @@
 import { Injectable, ServiceUnavailableException } from "@nestjs/common";
 
-import { PodRole, selectLeastLoaded } from "@/common";
+import { NodeRole, selectLeastLoaded } from "@/common";
 import { MediaMtxMetricsService } from "@/media-nodes";
 
 import { StreamQueryService } from "../query";
@@ -21,16 +21,16 @@ export class IngestPlacementService {
 
     async selectNode(): Promise<string> {
         const [loads, reservations] = await Promise.all([
-            this.metrics.getNodeLoads(PodRole.INGEST),
-            this.streamQuery.countReservationsByIngestPod(),
+            this.metrics.getNodeLoads(NodeRole.INGEST),
+            this.streamQuery.countReservationsByIngestNode(),
         ]);
         if (!loads.length) {
             throw new ServiceUnavailableException("No active ingest nodes available");
         }
 
-        const candidates = loads.map(({ podId, load }) => ({
-            id: podId,
-            load: load + (reservations[podId] ?? 0),
+        const candidates = loads.map(({ nodeId, load }) => ({
+            id: nodeId,
+            load: load + (reservations[nodeId] ?? 0),
         }));
         return selectLeastLoaded(candidates);
     }

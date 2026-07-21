@@ -23,11 +23,11 @@
 
 The system solves the problem of coordinating media stream ingestion and distribution across a cluster:
 
-1. **Dynamic Discovery**: Automatically discovers streams from the ingest MediaMTX node (with fallback to registered ingest pods)
+1. **Dynamic Discovery**: Automatically discovers streams from the ingest MediaMTX node (with fallback to registered ingest nodes)
 2. **Distribution**: Creates pull pipelines for discovered streams on cluster nodes
-3. **Load Balancing**: Uses a deterministic hash policy to assign streams across active cluster pods
+3. **Load Balancing**: Uses a deterministic hash policy to assign streams across active cluster nodes
 4. **Monitoring**: Continuously collects metrics and raises threshold-based alerts
-5. **Failover**: Reassigns degraded cluster streams to a different active pod
+5. **Failover**: Reassigns degraded cluster streams to a different active node
 6. **Analysis**: Inspects media tracks at regular intervals for missing or unexpected content
 7. **Real-time Awareness**: Broadcasts state changes to connected clients via WebSocket
 
@@ -43,7 +43,7 @@ The system solves the problem of coordinating media stream ingestion and distrib
 ### Deployment Models
 
 - **Docker Compose** (`deploy/docker/compose.local.yml`): Local development and single-machine deployments
-- **Docker Compose Scale** (+ `deploy/docker/compose.cluster.yml` override): Multi-instance cluster with automatic pod registration
+- **Docker Compose Scale** (+ `deploy/docker/compose.cluster.yml` override): Multi-instance cluster with automatic node registration
 - **Kubernetes**: Production deployments with health probes and automatic restarts
 
 ---
@@ -59,7 +59,7 @@ flowchart TB
     subgraph app["NestJS Application (Stream Sync Service)"]
         subgraph controllers["HTTP Controllers"]
             StreamsC[Streams]
-            PodsC[Pods]
+            NodesC[Nodes]
             AlertsC[Alerts]
             MetricsC[Metrics]
             InspectionC[Inspection]
@@ -98,7 +98,7 @@ src/
 ├── common/                       # Shared domain + cross-cutting services
 │   ├── domain/
 │   │   ├── consts/               # system-event-names.const.ts
-│   │   ├── enums/                # AlertSeverity, AlertType, PodRole, PodStatus,
+│   │   ├── enums/                # AlertSeverity, AlertType, NodeRole, NodeStatus,
 │   │   │                         #   StreamStatus, TrackType
 │   │   └── types/                # event payloads, alert rule shapes, StreamTrack
 │   ├── rules/                    # metric-threshold predicate utils
@@ -106,7 +106,7 @@ src/
 ├── infrastructure/
 │   ├── database/
 │   │   ├── repositories/         # mongo-*.repository.ts (concrete implementations)
-│   │   └── schemas/              # Mongoose schemas (pod, stream, alert, metric,
+│   │   └── schemas/              # Mongoose schemas (node, stream, alert, metric,
 │   │                             #   stream-inspection)
 │   └── media-mtx/
 │       ├── clients/              # MediaMtxClient (axios wrapper, v3 paths API)
@@ -117,19 +117,19 @@ src/
 │       │   ├── pipeline/         # MediaMtxPipelineService (create/delete paths)
 │       │   └── stats/            # MediaMtxStreamStatsService
 │       └── types/                # V3PathItem, StreamStats, etc.
-├── pods/
+├── nodes/
 │   ├── controllers/              # POST register/heartbeat, GET /, GET /active
 │   ├── domain/types/
-│   ├── dto/                      # RegisterPodDto, HeartbeatDto
-│   ├── repositories/             # PodRepository (abstract contract)
-│   └── services/                 # query/ (PodQueryService), lifecycle/ (PodLifecycleService)
+│   ├── dto/                      # RegisterNodeDto, HeartbeatDto
+│   ├── repositories/             # NodeRepository (abstract contract)
+│   └── services/                 # query/ (NodeQueryService), lifecycle/ (NodeLifecycleService)
 ├── streams/
 │   ├── controllers/
 │   ├── domain/types/
 │   ├── dto/                      # CreateStreamDto, UpdateStreamDto, AssignStreamDto
 │   ├── repositories/             # StreamRepository (abstract contract)
 │   └── services/
-│       ├── assignment/           # StreamAssignmentService (cluster assignment, persists assignedPod);
+│       ├── assignment/           # StreamAssignmentService (cluster assignment, persists assignedNode);
 │       │                         #   selection math is pure fns in @/common/selection
 │       ├── mutation/             # StreamCrudService, StreamStatusService
 │       ├── orchestration/        # StreamSetupService (onboard), StreamReservationService (reserve), StreamPipelineService
@@ -174,29 +174,29 @@ Every folder has a barrelsby-generated `index.ts`; imports between features go t
 
 ## Module Design
 
-### Pods Module
+### Nodes Module
 
-**Responsibility**: Pod registration, heartbeats, and active-pod queries.
+**Responsibility**: Node registration, heartbeats, and active-node queries.
 
 **Services**:
 
-- `PodLifecycleService.registerPod(data)`: Upsert by `podId`, set status `active`, refresh `lastHeartbeatAt`, write `host` + `type` (both required), emit `pod.registered`
-- `PodLifecycleService.heartbeat(podId)`: Refresh heartbeat only (no `pod.registered`)
-- Both register/heartbeat accept optional `resources` (CPU/memory/disk %); when present, emit `node.sampled` for the alerts `NodeResourceRuler` (the pods feature is a node-alert producer)
-- `PodQueryService.getActivePods(role?)`: Pods with a heartbeat within `POD_HEALTH_TOLERANCE_SECONDS`
-- `PodQueryService.listActivePodRefs(role?)` / `listActivePodIds(role?)`: Lightweight projections used by sync/metrics/infrastructure
+- `NodeLifecycleService.registerNode(data)`: Upsert by `nodeId`, set status `active`, refresh `lastHeartbeatAt`, write `host` + `type` (both required), emit `node.registered`
+- `NodeLifecycleService.heartbeat(nodeId)`: Refresh heartbeat only (no `node.registered`)
+- Both register/heartbeat accept optional `resources` (CPU/memory/disk %); when present, emit `node.sampled` for the alerts `NodeResourceRuler` (the nodes feature is a node-alert producer)
+- `NodeQueryService.getActiveNodes(role?)`: Nodes with a heartbeat within `NODE_HEALTH_TOLERANCE_SECONDS`
+- `NodeQueryService.listActiveNodeRefs(role?)` / `listActiveNodeIds(role?)`: Lightweight projections used by sync/metrics/infrastructure
 
 **Used By**:
 
-- `IngestStreamListingStrategy`: To discover ingest pods when the primary ingest endpoint fails
-- `SyncContextBuilderService`: To select active cluster pod IDs for assignment
+- `IngestStreamListingStrategy`: To discover ingest nodes when the primary ingest endpoint fails
+- `SyncContextBuilderService`: To select active cluster node IDs for assignment
 - `StreamFailoverService` / `StreamSetupService`: To pick failover/assignment candidates
 
 ---
 
 ### Streams Module
 
-**Responsibility**: Stream metadata, status transitions, pod assignment, and pipeline provisioning.
+**Responsibility**: Stream metadata, status transitions, node assignment, and pipeline provisioning.
 
 Internally split by service role; `StreamsFacadeService` is the single entry point other modules (sync, metrics) use.
 
@@ -205,14 +205,14 @@ Internally split by service role; `StreamsFacadeService` is the single entry poi
 - `StreamQueryService` (read): `findAll`, `findByName`, `findRequiredByName`, `findAssignedByName`, `getAssignmentInfo`
 - `StreamCrudService` (mutation): `create`, `update`, `patch`, `remove`
 - `StreamStatusService` (mutation): `upsertFromDiscovery`, `markStale`
-- `StreamAssignmentService` (mutation): `assignToPod` (emits `stream.assigned`), `clearAssignment` (emits `stream.unassigned`), `ensureAssigned`, `reassign`
-- `StreamSetupService` (orchestration): `create` → assign → provision; marks `pending_assignment` if no active cluster pods
+- `StreamAssignmentService` (mutation): `assignToNode` (emits `stream.assigned`), `clearAssignment` (emits `stream.unassigned`), `ensureAssigned`, `reassign`
+- `StreamSetupService` (orchestration): `create` → assign → provision; marks `pending_assignment` if no active cluster nodes
 - `StreamPipelineService` (orchestration): creates the cluster pull pipeline, sets `synced`/`sync_error`, emits `stream.synced`
 - `StreamsFacadeService`: thin facade re-exposing the above for cross-module callers
 
 **Assignment algorithms** (`@/common/selection`, context-free pure functions):
 
-- `selectByHash(name, candidatePods)` — cluster placement: djb2-style hash of the stream name modulo the candidate pod count; deterministic as long as pod list order is stable
+- `selectByHash(name, candidateNodes)` — cluster placement: djb2-style hash of the stream name modulo the candidate node count; deterministic as long as node list order is stable
 - `selectLeastLoaded(candidates)` — ingest placement: fewest live publishers + pending reservations, ties broken by id
 - `StreamAssignmentService` gathers the domain inputs and persists the outcome; neither algorithm is a swappable policy (single algorithm each)
 
@@ -226,9 +226,9 @@ Internally split by service role; `StreamsFacadeService` is the single entry poi
 
 - `MetricAlertRuler` (`@OnEvent metrics.collected`): runs `METRIC_ALERT_RULES` over every path sample → per-stream signals → `reconcileSource(metrics, …)`
 - `TrackAlertRuler` (`@OnEvent stream.inspected`): runs `STREAM_TRACK_ALERT_RULES` over the inspected tracks (with the stream's expectations as context) → `reconcileSubject(inspection, stream, …)`
-- `NodeResourceRuler` (`@OnEvent node.sampled`): runs `NODE_RESOURCE_RULES` over a pod's reported CPU/memory/disk (thresholds from config) → `reconcileSubject(node, podId, …)`
+- `NodeResourceRuler` (`@OnEvent node.sampled`): runs `NODE_RESOURCE_RULES` over a node's reported CPU/memory/disk (thresholds from config) → `reconcileSubject(node, nodeId, …)`
 
-An alert's **subject** is whatever the source alerts on — a stream name (metrics/inspection) or a pod id (node). Reconcile is scoped by `(source, subject, type)`.
+An alert's **subject** is whatever the source alerts on — a stream name (metrics/inspection) or a node id (node). Reconcile is scoped by `(source, subject, type)`.
 
 **Reconcile** (`AlertReconcileService`, scoped by `AlertSource`): diffs current signals against open alerts of that source — add (`alert.created`), refresh (`lastSeenAt`), update (`alert.updated`), resolve (`alert.resolved`). `reconcileSource` auto-resolves subjects absent from a cycle; duplicate-type signals (same stream on multiple nodes) collapse to one. Add is an **atomic, idempotent upsert** on the `(source, subject, type)` dedup key, backed by a partial unique index (open alerts only), so concurrent reconciles for the same subject can't create duplicates and only the inserting one emits `alert.created`.
 
@@ -247,11 +247,11 @@ An alert's **subject** is whatever the source alerts on — a stream name (metri
 
 **Flow** (`MetricCollectionService.collectMetrics`, `@ScheduledTask` every 10 seconds):
 
-1. `MediaMtxMetricsService.collect()` scrapes every ingest + cluster node's Prometheus `/metrics` (nodes resolved from the live pod registry, fallback to configured URLs; per-node failures isolated) → `MediaMtxMetricsSnapshot[]` (a `NodeMetric` + `PathMetric[]` per node)
+1. `MediaMtxMetricsService.collect()` scrapes every ingest + cluster node's Prometheus `/metrics` (nodes resolved from the live node registry, fallback to configured URLs; per-node failures isolated) → `MediaMtxMetricsSnapshot[]` (a `NodeMetric` + `PathMetric[]` per node)
 2. Persist all node + path samples (`MetricPersistenceService` → `nodemetrics` / `pathmetrics`)
 3. Emit `metrics.collected` `{ nodes, paths, collectedAt }` — the alerts `MetricAlertRuler` consumes it
 
-**Failover**: removed from this feature. Pod-death reassignment in the sync loop (`ensureAssigned` dropping a vanished pod) is the failover mechanism that has real data.
+**Failover**: removed from this feature. Node-death reassignment in the sync loop (`ensureAssigned` dropping a vanished node) is the failover mechanism that has real data.
 
 ---
 
@@ -261,15 +261,15 @@ An alert's **subject** is whatever the source alerts on — a stream name (metri
 
 **Flow** (`SyncSchedulerService.periodicSync`, `@ScheduledTask` every 10 seconds):
 
-1. `SyncContextBuilderService.buildContext()` gathers in parallel: ingest stream list, cluster stream list, active cluster pod IDs, all DB streams → `SyncContext`
+1. `SyncContextBuilderService.buildContext()` gathers in parallel: ingest stream list, cluster stream list, active cluster node IDs, all DB streams → `SyncContext`
 2. `SyncOrchestratorService.execute(context)`:
-   - Skips entirely (with a warning) if no active cluster pods are registered
+   - Skips entirely (with a warning) if no active cluster nodes are registered
    - Runs each step service in a fixed order, isolating failures per step behind a private `runStep` guard (a failing step is logged by name and collected, without aborting the others)
    - Emits `sync.tick` with `{ ingest, cluster, failures }`
 
 **Steps** (injected directly by the orchestrator and run in this order):
 
-- `IngestStreamSynchronizerService`: For each discovered ingest stream — upsert into DB (`IngestStreamDiscoveryService`), ensure pod assignment, and deploy a cluster pipeline if the stream is missing from the cluster
+- `IngestStreamSynchronizerService`: For each discovered ingest stream — upsert into DB (`IngestStreamDiscoveryService`), ensure node assignment, and deploy a cluster pipeline if the stream is missing from the cluster
 - `StreamReconcileService`: For enabled manual streams (`isManual`) — ensure assignment and recreate missing cluster pipelines
 - `StreamStalenessService`: For non-manual DB streams no longer present on ingest — mark `stale` and, when present in the cluster, tear down the pipeline via `StreamsFacadeService.teardownClusterPipeline` (streams owns the `deleteClusterPipeline` call and the `stream.removed` event)
 
@@ -303,12 +303,12 @@ An alert's **subject** is whatever the source alerts on — a stream name (metri
   `addPath(name, source)` → `POST /v3/config/paths/add/{name}`, `removePath(name)` → `DELETE /v3/config/paths/delete/{name}`.
   Raw `V3PathItem`s are mapped to domain shapes (`mapV3PathToStream`) before leaving the client. No error handling — errors propagate.
 - `MediaMtxClientFactory` (registry): creates and **caches** one client per base URL
-- `MediaMtxClientRegistry` (registry): owns the ingest client and the *static* cluster pool (fallback); builds per-pod clients at `http://{host||podId}:{INGEST_POD_MEDIAMTX_PORT | CLUSTER_POD_MEDIAMTX_PORT}`
-- `ClusterNodeResolverService` (registry): resolves the **live** cluster client set from the pod registry — all active cluster pods for fan-out, or the client for a specific assigned pod — falling back to the static pool / round-robin pick when none are registered (see ADR-0009)
-- `MediaMtxStreamListingService` (service): ingest listing (primary endpoint with fallback to registered ingest pods) and cluster listing (fan-out over all registered cluster nodes with per-node error isolation via `StreamCollectionService`)
-- `MediaMtxPipelineService` (service): create a cluster pull pipeline **on the pod the stream is assigned to**, pulling from `${INGEST_RTSP_URL}/{name}` (or the stream's stored source when it is already a pullable protocol URL; treats HTTP 409 as already-exists); delete fans out across all active cluster nodes
-- `MediaMtxStreamStatsService` (service): `getStreamDetails(name, source)` — returns a domain `StreamDetails`, node selected by pod role (used by inspection)
-- `MediaMtxMetricsService` (service): scrapes each node's Prometheus `/metrics` (`MediaMtxMetricsClient` → `parsePrometheusText` → `mapMetricsToSnapshot`), resolving nodes from the pod registry; returns `MediaMtxMetricsSnapshot[]`
+- `MediaMtxClientRegistry` (registry): owns the ingest client and the *static* cluster pool (fallback); builds per-node clients at `http://{host||nodeId}:{INGEST_NODE_MEDIAMTX_PORT | CLUSTER_NODE_MEDIAMTX_PORT}`
+- `ClusterNodeResolverService` (registry): resolves the **live** cluster client set from the node registry — all active cluster nodes for fan-out, or the client for a specific assigned node — falling back to the static pool / round-robin pick when none are registered (see ADR-0009)
+- `MediaMtxStreamListingService` (service): ingest listing (primary endpoint with fallback to registered ingest nodes) and cluster listing (fan-out over all registered cluster nodes with per-node error isolation via `StreamCollectionService`)
+- `MediaMtxPipelineService` (service): create a cluster pull pipeline **on the node the stream is assigned to**, pulling from `${INGEST_RTSP_URL}/{name}` (or the stream's stored source when it is already a pullable protocol URL; treats HTTP 409 as already-exists); delete fans out across all active cluster nodes
+- `MediaMtxStreamStatsService` (service): `getStreamDetails(name, source)` — returns a domain `StreamDetails`, node selected by node role (used by inspection)
+- `MediaMtxMetricsService` (service): scrapes each node's Prometheus `/metrics` (`MediaMtxMetricsClient` → `parsePrometheusText` → `mapMetricsToSnapshot`), resolving nodes from the node registry; returns `MediaMtxMetricsSnapshot[]`
 
 ---
 
@@ -324,7 +324,7 @@ Each feature defines an **abstract repository contract** in its own `repositorie
 
 **Broadcast events** (subscribed at module init):
 
-`stream.synced`, `stream.removed`, `stream.assigned`, `stream.unassigned`, `alert.created`, `alert.resolved`, `stream.inspected`, `pod.registered`
+`stream.synced`, `stream.removed`, `stream.assigned`, `stream.unassigned`, `alert.created`, `alert.resolved`, `stream.inspected`, `node.registered`
 
 **Not forwarded**: `sync.tick` (internal diagnostics only).
 
@@ -335,10 +335,10 @@ Each feature defines an **abstract repository contract** in its own `repositorie
 ### Typical Stream Lifecycle
 
 ```
-1. POD REGISTRATION
-   MediaMTX pod ──POST /api/pods/register──▶ PodLifecycleService
-        └─▶ upsert Pod in MongoDB ──▶ emit pod.registered ──▶ Gateway ──▶ clients
-   (subsequent POST /api/pods/heartbeat refreshes lastHeartbeatAt, no event)
+1. NODE REGISTRATION
+   MediaMTX node ──POST /api/nodes/register──▶ NodeLifecycleService
+        └─▶ upsert Node in MongoDB ──▶ emit node.registered ──▶ Gateway ──▶ clients
+   (subsequent POST /api/nodes/heartbeat refreshes lastHeartbeatAt, no event)
 ```
 
 2\. STREAM SYNC (every 10 seconds):
@@ -348,19 +348,19 @@ sequenceDiagram
     participant Cron as SyncSchedulerService (@ScheduledTask 10s)
     participant Agg as SyncContextBuilder
     participant MTX as MediaMTX Integration
-    participant Pods as PodQueryService
+    participant Nodes as NodeQueryService
     participant Str as StreamsFacade
     participant Orch as SyncOrchestrator
     participant Bus as Event Bus → Gateway
 
     Cron->>Agg: buildContext()
-    Agg->>MTX: listIngestStreams() (fallback: ingest pods)
+    Agg->>MTX: listIngestStreams() (fallback: ingest nodes)
     Agg->>MTX: listClusterStreams() (fan-out, error-isolated)
-    Agg->>Pods: listActivePodIds(CLUSTER)
+    Agg->>Nodes: listActiveNodeIds(CLUSTER)
     Agg->>Str: findAll()
     Agg-->>Cron: SyncContext
     Cron->>Orch: execute(context)
-    Note over Orch: skipped entirely if no active cluster pods
+    Note over Orch: skipped entirely if no active cluster nodes
     loop Sync steps — IngestSync, Reconcile, Staleness (failures isolated per step)
         Orch->>Str: upsertFromDiscovery / ensureAssigned / markStale
         Str->>MTX: POST /v3/config/paths/add|remove/{name}
@@ -373,7 +373,7 @@ sequenceDiagram
 3. METRICS COLLECTION (every 10 seconds)
    MetricCollectionService
      └─▶ MediaMtxMetricsService.collect()
-           └─ per node (ingest + cluster, resolved from pod registry):
+           └─ per node (ingest + cluster, resolved from node registry):
                 GET /metrics → parse → NodeMetric + PathMetric[]
      └─▶ persist node + path metrics (nodemetrics / pathmetrics)
      └─▶ emit metrics.collected {nodes, paths}
@@ -414,7 +414,7 @@ flowchart LR
     App -- "v3 API" --> Ingest
     App -- "v3 API" --> Cluster
     Cluster -- "RTSP pull" --> Ingest
-    Ingest -. "register + heartbeat<br/>(pod-heartbeat-monitor.sh)" .-> App
+    Ingest -. "register + heartbeat<br/>(node-heartbeat-monitor.sh)" .-> App
     Cluster -. "register + heartbeat" .-> App
 ```
 
@@ -427,7 +427,7 @@ npm run stack:up:scaled
 # = docker-compose -f deploy/docker/compose.local.yml -f deploy/docker/compose.cluster.yml up --build
 ```
 
-The override sets `scale: 3` on `mediamtx-cluster`; instances self-register via `POST /api/pods/register` with `type: cluster`.
+The override sets `scale: 3` on `mediamtx-cluster`; instances self-register via `POST /api/nodes/register` with `type: cluster`.
 
 ### Kubernetes/OpenShift Production
 
@@ -436,9 +436,9 @@ flowchart TB
     subgraph k8s["Kubernetes Cluster"]
         Sync["Deployment: sync-service<br/>:3000"]
         subgraph mtx["Deployment: mediamtx-cluster (replicas ×N)"]
-            P1["pod 1<br/>API :9000"]
-            P2["pod 2"]
-            PN["pod N"]
+            P1["node 1<br/>API :9000"]
+            P2["node 2"]
+            PN["node N"]
         end
         MongoDB[("StatefulSet: mongodb<br/>:27017")]
         CM["ConfigMap: mediamtx-config"]
@@ -451,7 +451,7 @@ flowchart TB
     Sync -- "v3 config API (pipelines)" --> mtx
 ```
 
-Scaling: `kubectl scale deployment mediamtx-cluster --replicas=5` — new pods auto-register via the heartbeat script.
+Scaling: `kubectl scale deployment mediamtx-cluster --replicas=5` — new nodes auto-register via the heartbeat script.
 
 Manifests: `deploy/k8s/mediamtx-configmap.yaml`, `deploy/k8s/mediamtx-cluster-deployment.yaml`. (The MediaMTX runtime configs mounted by compose live in `deploy/mediamtx/` — they are not k8s manifests.)
 
@@ -463,12 +463,12 @@ Manifests: `deploy/k8s/mediamtx-configmap.yaml`, `deploy/k8s/mediamtx-cluster-de
 
 All schemas use `{ timestamps: true }` (automatic `createdAt`/`updatedAt`).
 
-#### pods
+#### nodes
 
 ```javascript
 {
   "_id": ObjectId,
-  "podId": String (unique),
+  "nodeId": String (unique),
   "host": String (required),
   "type": String ("ingest" | "cluster", required),
   "status": String ("active" | "inactive" | "draining", default "active"),
@@ -492,7 +492,7 @@ All schemas use `{ timestamps: true }` (automatic `createdAt`/`updatedAt`).
   "lastError": String | null,
   "activeConsumers": Number (default 0),
   "isManual": Boolean (default false),
-  "assignedPod": String | null,
+  "assignedNode": String | null,
   "assignedAt": Date | null
 }
 ```
@@ -551,7 +551,7 @@ All schemas use `{ timestamps: true }` (automatic `createdAt`/`updatedAt`).
 flowchart LR
     subgraph http["HTTP Controllers"]
         StreamsC[StreamsController]
-        PodsC[PodsController]
+        NodesC[NodesController]
         AlertsC[AlertsController]
         MetricsC[MetricsController]
         InspC[StreamInspectionController]
@@ -564,7 +564,7 @@ flowchart LR
     end
 
     StreamsC --> StrSvc["StreamQuery / Crud /<br/>Lifecycle / Assignment"]
-    PodsC --> PodSvc["PodRegistration / PodQuery"]
+    NodesC --> NodeSvc["NodeRegistration / NodeQuery"]
     AlertsC --> AlertLife[AlertAccessService]
     MetricsC --> MetricPersist[MetricPersistenceService]
     InspC --> InspQuery[StreamInspectionQueryService]
@@ -572,7 +572,7 @@ flowchart LR
     SyncS --> Agg[SyncContextBuilder]
     SyncS --> Orch["SyncOrchestrator<br/>→ guarded steps (runStep)"]
     Agg --> Listing[MediaMtxStreamListingService]
-    Agg --> PodSvc
+    Agg --> NodeSvc
     Agg --> Facade[StreamsFacadeService]
     Orch --> Facade
     Orch --> Pipeline[MediaMtxPipelineService]
@@ -597,10 +597,10 @@ flowchart LR
 
 ### ConfigService Consumers
 
-- **MediaMtxClientRegistry**: `ingestBaseUrl`, `clusterBaseUrl(s)`, `ingestPodMediaMtxPort`, `clusterPodMediaMtxPort`
+- **MediaMtxClientRegistry**: `ingestBaseUrl`, `clusterBaseUrl(s)`, `ingestNodeMediaMtxPort`, `clusterNodeMediaMtxPort`
 - **MediaMtxMetricsService**: `ingest/clusterBaseUrl(s)`, `mediaMtxMetricsPort`
 - **MediaMtxPipelineService**: `ingestRtspBaseUrl` (cluster pull source)
-- **PodQueryService**: `podHeartbeatToleranceSeconds`
+- **NodeQueryService**: `nodeHeartbeatToleranceSeconds`
 - **NodeResourceRuler**: `nodeCpuHighThreshold`, `nodeMemoryHighThreshold`, `nodeDiskHighThreshold`
 
 Getters for `syncPollInterval`, `metricsPollInterval`, `inspectionInterval` drive the `@ScheduledTask` cadences via `JobScheduler`. `bitrateDropPercent` and `staleSeconds` exist but are **not consumed** (operational alert rules use boolean checks, no thresholds).
@@ -615,56 +615,56 @@ Getters for `syncPollInterval`, `metricsPollInterval`, `inspectionInterval` driv
 stateDiagram-v2
     [*] --> created: POST /api/streams (manual)
     [*] --> discovered: ingest discovery
-    created --> pending_assignment: no active cluster pods
-    pending_assignment --> assigned: pods available (next cycle)
-    created --> assigned: pod selected (hash policy)
-    discovered --> assigned: pod selected (hash policy)
+    created --> pending_assignment: no active cluster nodes
+    pending_assignment --> assigned: nodes available (next cycle)
+    created --> assigned: node selected (hash policy)
+    discovered --> assigned: node selected (hash policy)
     assigned --> synced: cluster pipeline created
     assigned --> sync_error: pipeline create failed
     sync_error --> synced: retried on next sync cycle
-    synced --> synced: failover reassigns pod (stays synced)
+    synced --> synced: failover reassigns node (stays synced)
     synced --> stale: removed from ingest (pipeline deleted)
     discovered --> stale: removed from ingest
 ```
 
 Statuses are the `StreamStatus` enum: `created`, `discovered`, `pending_assignment`, `assigned`, `synced`, `sync_error`, `stale`.
 
-### Pod Health Pattern
+### Node Health Pattern
 
 ```
-POD ALIVE:
-  POST /api/pods/heartbeat → lastHeartbeatAt = now, status = active
+NODE ALIVE:
+  POST /api/nodes/heartbeat → lastHeartbeatAt = now, status = active
 
-POD DEAD:
-  heartbeats stop → after POD_HEALTH_TOLERANCE_SECONDS (default 120s)
-    → filtered out of all active-pod queries
+NODE DEAD:
+  heartbeats stop → after NODE_HEALTH_TOLERANCE_SECONDS (default 120s)
+    → filtered out of all active-node queries
       → sync skips it for new assignments; ensureAssigned reassigns streams
-        whose pod is no longer in the candidate list
+        whose node is no longer in the candidate list
       → failover won't select it
 ```
 
-There is no `pod.removed` event; pods silently age out of the active window. Their DB records remain.
+There is no `node.removed` event; nodes silently age out of the active window. Their DB records remain.
 
 ### High-Availability Considerations
 
-**Single Cluster Pod Failure**:
+**Single Cluster Node Failure**:
 
-- Streams assigned to the dead pod are reassigned on the next sync cycle (`ensureAssigned` detects the pod is no longer an active candidate)
-- Metrics-driven failover also moves degraded streams to healthy pods
+- Streams assigned to the dead node are reassigned on the next sync cycle (`ensureAssigned` detects the node is no longer an active candidate)
+- Metrics-driven failover also moves degraded streams to healthy nodes
 
 **Ingest Failure**:
 
-- Primary ingest endpoint failure falls back to querying registered ingest pods
+- Primary ingest endpoint failure falls back to querying registered ingest nodes
 - Streams that disappear from ingest are marked `stale` and their cluster pipelines deleted
 
-**No Active Cluster Pods**:
+**No Active Cluster Nodes**:
 
 - The whole sync orchestration cycle is skipped (logged warning)
 - Manually created streams are stored as `pending_assignment`
 
 **Database Failure**:
 
-- Pods re-register on recovery (register is an upsert)
+- Nodes re-register on recovery (register is an upsert)
 - Stream state is recovered from MediaMTX discovery on the next sync cycles
 
 ---
@@ -679,8 +679,8 @@ There is no `pod.removed` event; pods silently age out of the active window. The
     - The MediaMTX `/metrics` endpoint exposes node + path operational data (bytes, readers, conns/sessions, `framesInError`, ready state) — not per-stream bitrate/fps; per-session loss/jitter/RTT exist but are deferred to the inspection feature (ADR-0009/0010)
     - So the only metric alerts are operational (`stream_not_ready`, `frames_in_error`); there is no metric-driven failover
 
-3. **No pod removal signal**:
-    - Inactive pods age out of the active window but are never deleted, and no `pod.removed` event is emitted
+3. **No node removal signal**:
+    - Inactive nodes age out of the active window but are never deleted, and no `node.removed` event is emitted
 
 4. **Sequential scheduled processing**:
     - Inspection processes streams one at a time in an inline loop; with many streams a cycle can exceed its 30s interval, but `JobScheduler`'s overlap guard skips the next tick rather than running cycles concurrently
@@ -709,7 +709,7 @@ Previously documented limitations that are now fixed: route shadowing of `GET /a
     INGEST_MEDIAMTX_BASE_URL=http://localhost:9000
     CLUSTER_MEDIAMTX_BASE_URL=http://localhost:9001
     PORT=3000
-    POD_HEALTH_TOLERANCE_SECONDS=120
+    NODE_HEALTH_TOLERANCE_SECONDS=120
     ```
 
 3. **Run Supporting Services**:

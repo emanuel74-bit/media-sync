@@ -1,6 +1,6 @@
 /**
  * Context-free node-selection algorithms. Given plain candidates, return the chosen id — no
- * knowledge of MediaMTX, pods, streams, or persistence. The domain services gather the inputs
+ * knowledge of MediaMTX, nodes, streams, or persistence. The domain services gather the inputs
  * and act on the result; these just decide.
  */
 

@@ -1,5 +1,5 @@
 /**
- * URL helpers for the MediaMTX transport layer. Registered pods report only host/IP,
+ * URL helpers for the MediaMTX transport layer. Registered nodes report only host/IP,
  * so a node's HTTP base URL is assembled from a host plus per-deployment transport
  * config (credentials + port).
  */

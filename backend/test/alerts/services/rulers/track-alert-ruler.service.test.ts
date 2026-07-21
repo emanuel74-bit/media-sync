@@ -1,12 +1,12 @@
 import { RuleEvaluator } from "@/alerts/services";
 import type { StreamQueryService } from "@/streams";
 import { TrackAlertRuler } from "@/alerts/services/rulers/track-alert-ruler.service";
-import { PodRole, TrackType, AlertType, AlertSource, StreamInspectedPayload } from "@/common";
+import { NodeRole, TrackType, AlertType, AlertSource, StreamInspectedPayload } from "@/common";
 import type { AlertReconcileService } from "@/alerts/services/reconciliation/alert-reconcile.service";
 
 const inspected = (overrides: Partial<StreamInspectedPayload> = {}): StreamInspectedPayload => ({
     streamName: "live",
-    source: PodRole.INGEST,
+    source: NodeRole.INGEST,
     tracks: [{ type: TrackType.VIDEO }],
     metadata: {},
     inspectedAt: new Date(),

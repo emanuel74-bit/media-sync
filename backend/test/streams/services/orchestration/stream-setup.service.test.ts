@@ -1,8 +1,8 @@
 import { Test, TestingModule } from "@nestjs/testing";
 
-import { PodQueryService } from "@/pods";
 import { Stream } from "@/streams/domain";
-import { PodRole, StreamStatus } from "@/common";
+import { NodeQueryService } from "@/nodes";
+import { NodeRole, StreamStatus } from "@/common";
 import {
     StreamAssignmentService,
     StreamCrudService,
@@ -27,7 +27,7 @@ describe("StreamSetupService", () => {
     let streamCrud: jest.Mocked<StreamCrudService>;
     let streamStatus: jest.Mocked<StreamStatusService>;
     let streamAssignment: jest.Mocked<StreamAssignmentService>;
-    let podsService: jest.Mocked<PodQueryService>;
+    let nodesService: jest.Mocked<NodeQueryService>;
     let streamPipeline: jest.Mocked<StreamPipelineService>;
 
     beforeEach(async () => {
@@ -38,9 +38,9 @@ describe("StreamSetupService", () => {
         streamAssignment = {
             ensureAssigned: jest.fn(),
         } as unknown as jest.Mocked<StreamAssignmentService>;
-        podsService = {
-            listActivePodIds: jest.fn(),
-        } as unknown as jest.Mocked<PodQueryService>;
+        nodesService = {
+            listActiveNodeIds: jest.fn(),
+        } as unknown as jest.Mocked<NodeQueryService>;
         streamPipeline = { deploy: jest.fn() } as unknown as jest.Mocked<StreamPipelineService>;
 
         const module: TestingModule = await Test.createTestingModule({
@@ -49,7 +49,7 @@ describe("StreamSetupService", () => {
                 { provide: StreamCrudService, useValue: streamCrud },
                 { provide: StreamStatusService, useValue: streamStatus },
                 { provide: StreamAssignmentService, useValue: streamAssignment },
-                { provide: PodQueryService, useValue: podsService },
+                { provide: NodeQueryService, useValue: nodesService },
                 { provide: StreamPipelineService, useValue: streamPipeline },
             ],
         }).compile();
@@ -57,35 +57,35 @@ describe("StreamSetupService", () => {
         service = module.get<StreamSetupService>(StreamSetupService);
     });
 
-    it("creates, assigns to a cluster pod, and deploys when pods are available", async () => {
+    it("creates, assigns to a cluster node, and deploys when nodes are available", async () => {
         const created = makeStream();
-        const assigned = makeStream({ assignedPod: "pod-1", status: StreamStatus.ASSIGNED });
-        const deployed = makeStream({ assignedPod: "pod-1", status: StreamStatus.SYNCED });
+        const assigned = makeStream({ assignedNode: "node-1", status: StreamStatus.ASSIGNED });
+        const deployed = makeStream({ assignedNode: "node-1", status: StreamStatus.SYNCED });
         streamCrud.create.mockResolvedValue(created);
-        podsService.listActivePodIds.mockResolvedValue(["pod-1"]);
+        nodesService.listActiveNodeIds.mockResolvedValue(["node-1"]);
         streamAssignment.ensureAssigned.mockResolvedValue(assigned);
         streamPipeline.deploy.mockResolvedValue(deployed);
 
         const result = await service.onboard({ name: "s1", source: "rtsp://x" });
 
-        expect(podsService.listActivePodIds).toHaveBeenCalledWith(PodRole.CLUSTER);
-        expect(streamAssignment.ensureAssigned).toHaveBeenCalledWith("s1", ["pod-1"]);
+        expect(nodesService.listActiveNodeIds).toHaveBeenCalledWith(NodeRole.CLUSTER);
+        expect(streamAssignment.ensureAssigned).toHaveBeenCalledWith("s1", ["node-1"]);
         expect(streamPipeline.deploy).toHaveBeenCalledWith(assigned);
         expect(result).toBe(deployed);
     });
 
-    it("parks the stream as PENDING_ASSIGNMENT when no cluster pods are available", async () => {
+    it("parks the stream as PENDING_ASSIGNMENT when no cluster nodes are available", async () => {
         const created = makeStream();
         const pending = makeStream({ status: StreamStatus.PENDING_ASSIGNMENT });
         streamCrud.create.mockResolvedValue(created);
-        podsService.listActivePodIds.mockResolvedValue([]);
+        nodesService.listActiveNodeIds.mockResolvedValue([]);
         streamStatus.markPendingAssignment.mockResolvedValue(pending);
 
         const result = await service.onboard({ name: "s1", source: "rtsp://x" });
 
         expect(streamStatus.markPendingAssignment).toHaveBeenCalledWith(
             "s1",
-            "No active cluster pods available",
+            "No active cluster nodes available",
         );
         expect(streamAssignment.ensureAssigned).not.toHaveBeenCalled();
         expect(streamPipeline.deploy).not.toHaveBeenCalled();

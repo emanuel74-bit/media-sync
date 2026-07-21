@@ -18,7 +18,7 @@ const makeStream = (overrides: Partial<Stream> = {}): Stream => ({
     isEnabled: true,
     isManual: false,
     activeConsumers: 0,
-    assignedPod: null,
+    assignedNode: null,
     assignedAt: null,
     lastSeenAt: new Date(),
     lastSyncedAt: null,
@@ -29,7 +29,7 @@ const makeStream = (overrides: Partial<Stream> = {}): Stream => ({
 const makeAssignment = (overrides: Partial<StreamAssignmentInfo> = {}): StreamAssignmentInfo => ({
     name: "stream-1",
     status: StreamStatus.ASSIGNED,
-    assignedPod: "pod-1",
+    assignedNode: "node-1",
     assignedAt: new Date(),
     ...overrides,
 });
@@ -58,7 +58,7 @@ describe("StreamsController", () => {
         } as unknown as jest.Mocked<StreamSetupService>;
 
         streamAssignment = {
-            assignToPod: jest.fn(),
+            assignToNode: jest.fn(),
             clearAssignment: jest.fn(),
         } as unknown as jest.Mocked<StreamAssignmentService>;
 
@@ -149,18 +149,18 @@ describe("StreamsController", () => {
         expect(streamCrud.remove).toHaveBeenCalledWith("stream-1");
     });
 
-    it("delegates assign to StreamAssignmentService.assignToPod", async () => {
-        const assigned = makeStream({ assignedPod: "pod-1", assignedAt: new Date() });
-        streamAssignment.assignToPod.mockResolvedValue(assigned);
+    it("delegates assign to StreamAssignmentService.assignToNode", async () => {
+        const assigned = makeStream({ assignedNode: "node-1", assignedAt: new Date() });
+        streamAssignment.assignToNode.mockResolvedValue(assigned);
 
-        const result = await controller.assign("stream-1", { podId: "pod-1" });
+        const result = await controller.assign("stream-1", { nodeId: "node-1" });
 
         expect(result).toBe(assigned);
-        expect(streamAssignment.assignToPod).toHaveBeenCalledWith("stream-1", "pod-1");
+        expect(streamAssignment.assignToNode).toHaveBeenCalledWith("stream-1", "node-1");
     });
 
     it("delegates unassign to StreamAssignmentService.clearAssignment", async () => {
-        const unassigned = makeStream({ assignedPod: null, assignedAt: null });
+        const unassigned = makeStream({ assignedNode: null, assignedAt: null });
         streamAssignment.clearAssignment.mockResolvedValue(unassigned);
 
         const result = await controller.unassign("stream-1");

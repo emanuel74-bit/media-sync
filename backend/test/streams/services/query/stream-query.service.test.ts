@@ -25,7 +25,7 @@ describe("StreamQueryService", () => {
             findAll: jest.fn(),
             findByName: jest.fn(),
             findUnassigned: jest.fn(),
-            findByAssignedPod: jest.fn(),
+            findByAssignedNode: jest.fn(),
             findAssignmentInfo: jest.fn(),
         } as unknown as jest.Mocked<StreamRepository>;
 
@@ -51,17 +51,17 @@ describe("StreamQueryService", () => {
         expect(repo.findByName).toHaveBeenCalledWith("s1");
     });
 
-    it("findUnassigned / findByAssignedPod / getAssignmentInfo delegate to the repository", async () => {
+    it("findUnassigned / findByAssignedNode / getAssignmentInfo delegate to the repository", async () => {
         repo.findUnassigned.mockResolvedValue([]);
-        repo.findByAssignedPod.mockResolvedValue([]);
+        repo.findByAssignedNode.mockResolvedValue([]);
         repo.findAssignmentInfo.mockResolvedValue([]);
 
         await service.findUnassigned();
-        await service.findByAssignedPod("pod-1");
+        await service.findByAssignedNode("node-1");
         await service.getAssignmentInfo();
 
         expect(repo.findUnassigned).toHaveBeenCalledTimes(1);
-        expect(repo.findByAssignedPod).toHaveBeenCalledWith("pod-1");
+        expect(repo.findByAssignedNode).toHaveBeenCalledWith("node-1");
         expect(repo.findAssignmentInfo).toHaveBeenCalledTimes(1);
     });
 });

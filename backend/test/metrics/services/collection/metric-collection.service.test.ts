@@ -1,12 +1,16 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { PodRole, SystemEventNames } from "@/common";
+import { NodeRole, SystemEventNames } from "@/common";
 import { MediaMtxMetricsService } from "@/media-nodes";
 import { MediaMtxMetricsSnapshot } from "@/infrastructure";
 import { MetricCollectionService, MetricPersistenceService } from "@/metrics/services";
 
-const snapshot = (node: string, context: PodRole, streamName: string): MediaMtxMetricsSnapshot => ({
+const snapshot = (
+    node: string,
+    context: NodeRole,
+    streamName: string,
+): MediaMtxMetricsSnapshot => ({
     node: {
         context,
         node,
@@ -63,8 +67,8 @@ describe("MetricCollectionService", () => {
 
     it("persists node + path metrics from every node and emits metrics.collected", async () => {
         mediaMtxMetrics.collect.mockResolvedValue([
-            snapshot("ingest-1", PodRole.INGEST, "live"),
-            snapshot("cluster-1", PodRole.CLUSTER, "live"),
+            snapshot("ingest-1", NodeRole.INGEST, "live"),
+            snapshot("cluster-1", NodeRole.CLUSTER, "live"),
         ]);
 
         await service.collectMetrics();

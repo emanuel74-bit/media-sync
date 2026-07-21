@@ -14,7 +14,7 @@ const makeStream = (overrides: Partial<Stream> = {}): Stream => ({
     isEnabled: true,
     isManual: false,
     activeConsumers: 0,
-    assignedPod: "pod-1",
+    assignedNode: "node-1",
     assignedAt: new Date(),
     ...overrides,
 });
@@ -53,8 +53,8 @@ describe("StreamPipelineService", () => {
         service = module.get<StreamPipelineService>(StreamPipelineService);
     });
 
-    it("build pulls an ingest stream from its ingest node, deploying to the assigned pod", async () => {
-        const stream = makeStream({ assignedPod: "pod-2", ingestPod: "ingest-9" });
+    it("build pulls an ingest stream from its ingest node, deploying to the assigned node", async () => {
+        const stream = makeStream({ assignedNode: "node-2", ingestNode: "ingest-9" });
         nodes.getIngestRtspUrl.mockResolvedValue("rtsp://ingest:8554/s1");
         mediaMtx.buildClusterPullPipeline.mockResolvedValue({} as never);
 
@@ -63,7 +63,7 @@ describe("StreamPipelineService", () => {
         expect(nodes.getIngestRtspUrl).toHaveBeenCalledWith("ingest-9", stream.name);
         expect(mediaMtx.buildClusterPullPipeline).toHaveBeenCalledWith(
             stream.name,
-            "pod-2",
+            "node-2",
             "rtsp://ingest:8554/s1",
         );
         expect(streamStatus.markSynced).not.toHaveBeenCalled();
@@ -71,8 +71,8 @@ describe("StreamPipelineService", () => {
 
     it("build uses the stored source directly for a manual stream (no ingest node)", async () => {
         const stream = makeStream({
-            assignedPod: "pod-2",
-            ingestPod: null,
+            assignedNode: "node-2",
+            ingestNode: null,
             source: "rtsp://cam/feed",
         });
         mediaMtx.buildClusterPullPipeline.mockResolvedValue({} as never);
@@ -82,13 +82,13 @@ describe("StreamPipelineService", () => {
         expect(nodes.getIngestRtspUrl).not.toHaveBeenCalled();
         expect(mediaMtx.buildClusterPullPipeline).toHaveBeenCalledWith(
             stream.name,
-            "pod-2",
+            "node-2",
             "rtsp://cam/feed",
         );
     });
 
     it("build throws for an unassigned stream (no pipeline call)", async () => {
-        const stream = makeStream({ assignedPod: null });
+        const stream = makeStream({ assignedNode: null });
 
         await expect(service.build(stream)).rejects.toThrow(
             `Cannot build cluster pipeline for unassigned stream ${stream.name}`,

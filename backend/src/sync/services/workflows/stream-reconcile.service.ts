@@ -15,16 +15,16 @@ export class StreamReconcileService {
             (stream) => stream.isManual && stream.isEnabled,
         );
         for (const stream of manualStreams) {
-            await this.reconcileStream(stream, context.clusterNames, context.podIds);
+            await this.reconcileStream(stream, context.clusterNames, context.nodeIds);
         }
     }
 
     private async reconcileStream(
         stream: Stream,
         clusterNames: Set<string>,
-        podIds: string[],
+        nodeIds: string[],
     ): Promise<void> {
-        const assigned = await this.streams.ensureAssigned(stream.name, podIds);
+        const assigned = await this.streams.ensureAssigned(stream.name, nodeIds);
 
         if (!clusterNames.has(assigned.name)) {
             try {

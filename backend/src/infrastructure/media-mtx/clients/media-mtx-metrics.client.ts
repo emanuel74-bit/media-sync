@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from "axios";
 
-import { PodRole } from "@/common";
+import { NodeRole } from "@/common";
 
 import { MediaMtxMetricsSnapshot } from "../types";
 import { parsePrometheusText, mapMetricsToSnapshot } from "../mappers";
@@ -17,7 +17,7 @@ export class MediaMtxMetricsClient {
         this.http = axios.create({ baseURL: baseUrl, timeout: 8000 });
     }
 
-    async fetchSnapshot(context: PodRole, nodeId: string): Promise<MediaMtxMetricsSnapshot> {
+    async fetchSnapshot(context: NodeRole, nodeId: string): Promise<MediaMtxMetricsSnapshot> {
         const res = await this.http.get("/metrics", { responseType: "text" });
         const text = typeof res.data === "string" ? res.data : String(res.data);
         return mapMetricsToSnapshot(parsePrometheusText(text), context, nodeId);

@@ -10,8 +10,8 @@ import {
     IngestStreamSynchronizerService,
 } from "@/sync/services";
 
-const makeContext = (podIds: string[] = ["pod-1"]): SyncContext => ({
-    podIds,
+const makeContext = (nodeIds: string[] = ["node-1"]): SyncContext => ({
+    nodeIds,
     ingestList: [{ name: "s1", source: "rtsp://a", status: "ready" }],
     clusterList: [{ name: "s1", source: "rtsp://b", status: "ready" }],
     ingestNames: new Set(["s1"]),
@@ -45,7 +45,7 @@ describe("SyncOrchestratorService", () => {
         service = module.get<SyncOrchestratorService>(SyncOrchestratorService);
     });
 
-    describe("execute — with active pods", () => {
+    describe("execute — with active nodes", () => {
         it("runs the workflow steps in order", async () => {
             const executionOrder: string[] = [];
             ingestSync.execute.mockImplementation(async () => {
@@ -96,8 +96,8 @@ describe("SyncOrchestratorService", () => {
         });
     });
 
-    describe("execute — no active pods", () => {
-        it("skips all steps when podIds is empty", async () => {
+    describe("execute — no active nodes", () => {
+        it("skips all steps when nodeIds is empty", async () => {
             await service.execute(makeContext([]));
 
             expect(ingestSync.execute).not.toHaveBeenCalled();
@@ -105,7 +105,7 @@ describe("SyncOrchestratorService", () => {
             expect(staleness.execute).not.toHaveBeenCalled();
         });
 
-        it("does not emit SYNC_TICK when podIds is empty", async () => {
+        it("does not emit SYNC_TICK when nodeIds is empty", async () => {
             await service.execute(makeContext([]));
             expect(events.emit).not.toHaveBeenCalled();
         });

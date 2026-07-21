@@ -1,4 +1,4 @@
-import { PodRole, NodeMetricSample, PathMetricSample } from "@/common";
+import { NodeRole, NodeMetricSample, PathMetricSample } from "@/common";
 
 import { PrometheusSample, MediaMtxMetricsSnapshot } from "../types";
 
@@ -17,7 +17,7 @@ function countByName(samples: PrometheusSample[], name: string): number {
 
 function mapNodeMetrics(
     samples: PrometheusSample[],
-    context: PodRole,
+    context: NodeRole,
     node: string,
 ): NodeMetricSample {
     return {
@@ -33,7 +33,7 @@ function mapNodeMetrics(
     };
 }
 
-function emptyPathMetrics(streamName: string, context: PodRole, node: string): PathMetricSample {
+function emptyPathMetrics(streamName: string, context: NodeRole, node: string): PathMetricSample {
     return {
         streamName,
         context,
@@ -49,7 +49,7 @@ function emptyPathMetrics(streamName: string, context: PodRole, node: string): P
 
 function mapPathMetrics(
     samples: PrometheusSample[],
-    context: PodRole,
+    context: NodeRole,
     node: string,
 ): PathMetricSample[] {
     const byPath = new Map<string, PathMetricSample>();
@@ -91,7 +91,7 @@ function mapPathMetrics(
 /** Map one node's parsed /metrics samples into a node + per-path snapshot. */
 export function mapMetricsToSnapshot(
     samples: PrometheusSample[],
-    context: PodRole,
+    context: NodeRole,
     node: string,
 ): MediaMtxMetricsSnapshot {
     return {

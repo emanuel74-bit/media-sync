@@ -7,7 +7,7 @@ import { Stream } from "../../domain";
 import { StreamRepository } from "../../repositories";
 
 /**
- * Assigns a stream to the cluster pod that serves it. The pod is chosen by the context-free
+ * Assigns a stream to the cluster node that serves it. The node is chosen by the context-free
  * `selectByHash` (deterministic by name — a stream sticks to its node across ticks); this
  * service gathers the candidates and persists/announces the outcome. Ingest placement is not
  * here: it is a birth-time selection folded into the reservation insert (`StreamSetupService`),
@@ -20,14 +20,14 @@ export class StreamAssignmentService {
         private readonly events: EventEmitter2,
     ) {}
 
-    async assignToPod(name: string, podId: string): Promise<Stream> {
-        const stream = await this.streamRepository.assignToPod(name, podId, new Date());
+    async assignToNode(name: string, nodeId: string): Promise<Stream> {
+        const stream = await this.streamRepository.assignToNode(name, nodeId, new Date());
         if (!stream) {
             throw new NotFoundException(`Stream ${name} not found`);
         }
         this.events.emit(SystemEventNames.STREAM_ASSIGNED, {
             streamName: name,
-            podId,
+            nodeId,
             assignedAt: stream.assignedAt,
         });
         return stream;
@@ -42,17 +42,17 @@ export class StreamAssignmentService {
         return stream;
     }
 
-    /** Pin a stream to a cluster pod (idempotent if already on a live candidate). */
-    async ensureAssigned(name: string, candidatePods: string[]): Promise<Stream> {
+    /** Pin a stream to a cluster node (idempotent if already on a live candidate). */
+    async ensureAssigned(name: string, candidateNodes: string[]): Promise<Stream> {
         const stream = await this.streamRepository.findByName(name);
         if (!stream) {
             throw new NotFoundException(`Stream ${name} not found`);
         }
-        if (stream.assignedPod && candidatePods.includes(stream.assignedPod)) {
+        if (stream.assignedNode && candidateNodes.includes(stream.assignedNode)) {
             return stream;
         }
 
-        const selectedPod = selectByHash(name, candidatePods);
-        return this.assignToPod(name, selectedPod);
+        const selectedNode = selectByHash(name, candidateNodes);
+        return this.assignToNode(name, selectedNode);
     }
 }

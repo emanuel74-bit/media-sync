@@ -42,7 +42,7 @@ export class Stream {
     isManual!: boolean;
 
     @Prop({ type: String, required: false, default: null })
-    ingestPod?: string | null;
+    ingestNode?: string | null;
 
     @Prop({ type: Date, required: false, default: null })
     reservedUntil?: Date | null;
@@ -51,7 +51,7 @@ export class Stream {
     publishToken?: string | null;
 
     @Prop({ type: String, required: false, default: null })
-    assignedPod?: string | null;
+    assignedNode?: string | null;
 
     @Prop({ type: Date, required: false, default: null })
     assignedAt?: Date | null;

@@ -3,7 +3,7 @@
 #
 # Several ingest nodes run per VM, each with its own published api/rtsp/metrics
 # ports (see deploy/docker/compose.ingest.yml); each self-registers those ports
-# with the sync service (pod registry), so a published stream is addressable on
+# with the sync service (node registry), so a published stream is addressable on
 # the specific node it landed on. A client first reserves a slot
 # (POST /api/ingest/streams) and receives a publish URL whose RTSP credentials
 # embed a per-reservation secret; the sync service authorizes the publish below.
@@ -48,12 +48,12 @@ record: false
 
 # Low-latency activation: the instant a path starts publishing, notify the sync
 # service so it relays the stream to a cluster node without waiting for the next
-# poll. $MTX_PATH is set by MediaMTX; $MEDIA_SYNC_API and $POD_ID come from the
+# poll. $MTX_PATH is set by MediaMTX; $MEDIA_SYNC_API and $NODE_ID come from the
 # container environment (see the compose file / heartbeat script).
 pathDefaults:
     runOnReady: >
         curl -fsS -X POST
-        "$MEDIA_SYNC_API/api/pods/$POD_ID/stream-ready"
+        "$MEDIA_SYNC_API/api/nodes/$NODE_ID/stream-ready"
         -H "Content-Type: application/json"
         -d "{\"name\":\"$MTX_PATH\"}"
     runOnReadyRestart: no

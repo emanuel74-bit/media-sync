@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
 
-import { PodsModule } from "@/pods";
+import { NodesModule } from "@/nodes";
 import { ConfigModule } from "@/config";
 import { MediaNodesModule } from "@/media-nodes";
 import { DatabaseModule } from "@/infrastructure/database";
@@ -20,7 +20,7 @@ import {
 } from "./services";
 
 @Module({
-    imports: [DatabaseModule, MediaNodesModule, PodsModule, ConfigModule],
+    imports: [DatabaseModule, MediaNodesModule, NodesModule, ConfigModule],
     providers: [
         StreamQueryService,
         StreamsFacadeService,

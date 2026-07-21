@@ -85,11 +85,11 @@ describe("StreamStatusService", () => {
     it("markPendingAssignment sets PENDING_ASSIGNMENT with the reason", async () => {
         repo.update.mockResolvedValue(makeStream({ status: StreamStatus.PENDING_ASSIGNMENT }));
 
-        await service.markPendingAssignment("s1", "no pods");
+        await service.markPendingAssignment("s1", "no nodes");
 
         expect(repo.update).toHaveBeenCalledWith("s1", {
             status: StreamStatus.PENDING_ASSIGNMENT,
-            lastError: "no pods",
+            lastError: "no nodes",
         });
     });
 

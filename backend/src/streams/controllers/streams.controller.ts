@@ -60,7 +60,7 @@ export class StreamsController {
 
     @Patch(":name/assign")
     assign(@Param("name") name: string, @Body() assignStreamDto: AssignStreamDto): Promise<Stream> {
-        return this.streamAssignment.assignToPod(name, assignStreamDto.podId);
+        return this.streamAssignment.assignToNode(name, assignStreamDto.nodeId);
     }
 
     @Patch(":name/unassign")

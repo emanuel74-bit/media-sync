@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { ServiceUnavailableException } from "@nestjs/common";
 
-import { PodRole } from "@/common";
+import { NodeRole } from "@/common";
 import { MediaMtxMetricsService } from "@/media-nodes";
 import { IngestPlacementService, StreamQueryService } from "@/streams/services";
 
@@ -15,7 +15,7 @@ describe("IngestPlacementService", () => {
             getNodeLoads: jest.fn().mockResolvedValue([]),
         } as unknown as jest.Mocked<MediaMtxMetricsService>;
         streamQuery = {
-            countReservationsByIngestPod: jest.fn().mockResolvedValue({}),
+            countReservationsByIngestNode: jest.fn().mockResolvedValue({}),
         } as unknown as jest.Mocked<StreamQueryService>;
 
         const module: TestingModule = await Test.createTestingModule({
@@ -37,20 +37,20 @@ describe("IngestPlacementService", () => {
 
     it("picks the least-loaded node, folding live load and pending reservations", async () => {
         metrics.getNodeLoads.mockResolvedValue([
-            { podId: "ingest-a", load: 1 },
-            { podId: "ingest-b", load: 1 },
+            { nodeId: "ingest-a", load: 1 },
+            { nodeId: "ingest-b", load: 1 },
         ]);
-        streamQuery.countReservationsByIngestPod.mockResolvedValue({ "ingest-a": 2 });
+        streamQuery.countReservationsByIngestNode.mockResolvedValue({ "ingest-a": 2 });
 
         // a: 1 live + 2 reserved = 3; b: 1 live + 0 = 1 → b wins
         expect(await service.selectNode()).toBe("ingest-b");
-        expect(metrics.getNodeLoads).toHaveBeenCalledWith(PodRole.INGEST);
+        expect(metrics.getNodeLoads).toHaveBeenCalledWith(NodeRole.INGEST);
     });
 
-    it("breaks ties on load by pod id for determinism", async () => {
+    it("breaks ties on load by node id for determinism", async () => {
         metrics.getNodeLoads.mockResolvedValue([
-            { podId: "ingest-b", load: 0 },
-            { podId: "ingest-a", load: 0 },
+            { nodeId: "ingest-b", load: 0 },
+            { nodeId: "ingest-a", load: 0 },
         ]);
 
         expect(await service.selectNode()).toBe("ingest-a");

@@ -2,8 +2,8 @@ import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 
-import { PodsModule } from "./pods";
 import { SyncModule } from "./sync";
+import { NodesModule } from "./nodes";
 import { AlertsModule } from "./alerts";
 import { ConfigModule } from "./config";
 import { GatewayModule } from "./gateway";
@@ -26,7 +26,7 @@ import { StreamInspectionModule } from "./stream-inspection";
         AlertsModule,
         GatewayModule,
         StreamInspectionModule,
-        PodsModule,
+        NodesModule,
     ],
     controllers: [],
     providers: [],

@@ -15,7 +15,7 @@ const makeStream = (overrides: Partial<Stream> = {}): Stream => ({
     isEnabled: true,
     isManual: false,
     activeConsumers: 0,
-    assignedPod: null,
+    assignedNode: null,
     assignedAt: null,
     ...overrides,
 });
@@ -27,7 +27,7 @@ describe("StreamAssignmentService", () => {
 
     beforeEach(async () => {
         repo = {
-            assignToPod: jest.fn(),
+            assignToNode: jest.fn(),
             clearAssignment: jest.fn(),
             findByName: jest.fn(),
         } as unknown as jest.Mocked<StreamRepository>;
@@ -44,27 +44,27 @@ describe("StreamAssignmentService", () => {
         service = module.get<StreamAssignmentService>(StreamAssignmentService);
     });
 
-    describe("assignToPod", () => {
+    describe("assignToNode", () => {
         it("assigns and emits stream.assigned", async () => {
             const assignedAt = new Date();
-            const stream = makeStream({ assignedPod: "pod-1", assignedAt });
-            repo.assignToPod.mockResolvedValue(stream);
+            const stream = makeStream({ assignedNode: "node-1", assignedAt });
+            repo.assignToNode.mockResolvedValue(stream);
 
-            const result = await service.assignToPod("s1", "pod-1");
+            const result = await service.assignToNode("s1", "node-1");
 
             expect(result).toBe(stream);
-            expect(repo.assignToPod).toHaveBeenCalledWith("s1", "pod-1", expect.any(Date));
+            expect(repo.assignToNode).toHaveBeenCalledWith("s1", "node-1", expect.any(Date));
             expect(events.emit).toHaveBeenCalledWith(SystemEventNames.STREAM_ASSIGNED, {
                 streamName: "s1",
-                podId: "pod-1",
+                nodeId: "node-1",
                 assignedAt,
             });
         });
 
         it("throws NotFound when the stream does not exist", async () => {
-            repo.assignToPod.mockResolvedValue(null);
+            repo.assignToNode.mockResolvedValue(null);
 
-            await expect(service.assignToPod("missing", "pod-1")).rejects.toBeInstanceOf(
+            await expect(service.assignToNode("missing", "node-1")).rejects.toBeInstanceOf(
                 NotFoundException,
             );
             expect(events.emit).not.toHaveBeenCalled();
@@ -92,37 +92,37 @@ describe("StreamAssignmentService", () => {
     });
 
     describe("ensureAssigned", () => {
-        it("keeps the current assignment when the pod is still a candidate", async () => {
-            const stream = makeStream({ assignedPod: "pod-1" });
+        it("keeps the current assignment when the node is still a candidate", async () => {
+            const stream = makeStream({ assignedNode: "node-1" });
             repo.findByName.mockResolvedValue(stream);
 
-            const result = await service.ensureAssigned("s1", ["pod-1", "pod-2"]);
+            const result = await service.ensureAssigned("s1", ["node-1", "node-2"]);
 
             expect(result).toBe(stream);
-            expect(repo.assignToPod).not.toHaveBeenCalled();
+            expect(repo.assignToNode).not.toHaveBeenCalled();
         });
 
-        it("hashes the name to a candidate pod and assigns when unassigned", async () => {
-            const unassigned = makeStream({ assignedPod: null });
-            const reassigned = makeStream({ assignedPod: "pod-1", assignedAt: new Date() });
+        it("hashes the name to a candidate node and assigns when unassigned", async () => {
+            const unassigned = makeStream({ assignedNode: null });
+            const reassigned = makeStream({ assignedNode: "node-1", assignedAt: new Date() });
             repo.findByName.mockResolvedValue(unassigned);
-            repo.assignToPod.mockResolvedValue(reassigned);
+            repo.assignToNode.mockResolvedValue(reassigned);
 
-            const result = await service.ensureAssigned("s1", ["pod-1", "pod-2"]);
+            const result = await service.ensureAssigned("s1", ["node-1", "node-2"]);
 
-            const [name, chosenPod] = repo.assignToPod.mock.calls[0];
+            const [name, chosenNode] = repo.assignToNode.mock.calls[0];
             expect(name).toBe("s1");
-            expect(["pod-1", "pod-2"]).toContain(chosenPod);
+            expect(["node-1", "node-2"]).toContain(chosenNode);
             expect(result).toBe(reassigned);
         });
 
         it("throws NotFound when the stream does not exist", async () => {
             repo.findByName.mockResolvedValue(null);
 
-            await expect(service.ensureAssigned("missing", ["pod-1"])).rejects.toBeInstanceOf(
+            await expect(service.ensureAssigned("missing", ["node-1"])).rejects.toBeInstanceOf(
                 NotFoundException,
             );
-            expect(repo.assignToPod).not.toHaveBeenCalled();
+            expect(repo.assignToNode).not.toHaveBeenCalled();
         });
     });
 });

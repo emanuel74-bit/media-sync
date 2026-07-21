@@ -35,26 +35,26 @@ export class StreamReservationService {
             throw new ConflictException(`Stream ${name} already exists`);
         }
 
-        const ingestPod = await this.ingestPlacement.selectNode();
+        const ingestNode = await this.ingestPlacement.selectNode();
         const expiresAt = new Date(Date.now() + this.config.ingestReservationTtlMs);
         const publishToken = randomBytes(24).toString("base64url");
-        const source = await this.nodes.getIngestRtspUrl(ingestPod, name);
+        const source = await this.nodes.getIngestRtspUrl(ingestNode, name);
 
         await this.streamCrud.createReservation({
             name,
             source,
-            ingestPod,
+            ingestNode,
             reservedUntil: expiresAt,
             publishToken,
         });
         this.events.emit(SystemEventNames.STREAM_RESERVED, {
             streamName: name,
-            ingestPod,
+            ingestNode,
             expiresAt,
         });
 
         const publishUrl = this.withCredentials(source, publishToken);
-        return { name, ingestPod, publishUrl, publishToken, expiresAt };
+        return { name, ingestNode, publishUrl, publishToken, expiresAt };
     }
 
     /** Embed the publish user + secret as RTSP userinfo so the client URL is ready to use. */

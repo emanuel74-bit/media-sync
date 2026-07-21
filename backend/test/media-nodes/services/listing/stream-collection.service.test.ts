@@ -1,6 +1,6 @@
 import { Logger } from "@nestjs/common";
 
-import { PodRole } from "@/common";
+import { NodeRole } from "@/common";
 import { StreamCollectionService } from "@/media-nodes/services";
 import { MediaMtxClient, MediaMtxStreamInfo } from "@/infrastructure";
 
@@ -190,42 +190,42 @@ describe("StreamCollectionService", () => {
     });
 
     describe("collectFromNodes — origin tagging", () => {
-        it("tags each stream with the role and pod it came from", async () => {
-            const nodeA = { podId: "ingest-a", client: makeClient([makeStream("s1")]) };
-            const nodeB = { podId: "ingest-b", client: makeClient([makeStream("s2")]) };
+        it("tags each stream with the role and node it came from", async () => {
+            const nodeA = { nodeId: "ingest-a", client: makeClient([makeStream("s1")]) };
+            const nodeB = { nodeId: "ingest-b", client: makeClient([makeStream("s2")]) };
 
             const result = await service.collectFromNodes(
                 [nodeA as never, nodeB as never],
-                PodRole.INGEST,
+                NodeRole.INGEST,
             );
 
             expect(result).toEqual([
                 {
                     stream: expect.objectContaining({ name: "s1" }),
-                    context: PodRole.INGEST,
+                    context: NodeRole.INGEST,
                     nodeId: "ingest-a",
                 },
                 {
                     stream: expect.objectContaining({ name: "s2" }),
-                    context: PodRole.INGEST,
+                    context: NodeRole.INGEST,
                     nodeId: "ingest-b",
                 },
             ]);
         });
 
         it("isolates a failing node and still tags the healthy one", async () => {
-            const broken = { podId: "ingest-a", client: makeClient(new Error("down")) };
-            const healthy = { podId: "ingest-b", client: makeClient([makeStream("ok")]) };
+            const broken = { nodeId: "ingest-a", client: makeClient(new Error("down")) };
+            const healthy = { nodeId: "ingest-b", client: makeClient([makeStream("ok")]) };
 
             const result = await service.collectFromNodes(
                 [broken as never, healthy as never],
-                PodRole.INGEST,
+                NodeRole.INGEST,
             );
 
             expect(result).toEqual([
                 {
                     stream: expect.objectContaining({ name: "ok" }),
-                    context: PodRole.INGEST,
+                    context: NodeRole.INGEST,
                     nodeId: "ingest-b",
                 },
             ]);
