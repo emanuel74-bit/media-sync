@@ -54,8 +54,16 @@ describe("SyncContextBuilderService", () => {
         beforeEach(() => {
             mediaMtxQuery.listStreams.mockImplementation(async (role) =>
                 role === NodeRole.INGEST
-                    ? [makeContextual("ingest-1", NodeRole.INGEST, "ingest-a")]
-                    : [makeContextual("cluster-1", NodeRole.CLUSTER, null)],
+                    ? {
+                          streams: [makeContextual("ingest-1", NodeRole.INGEST, "ingest-a")],
+                          nodeIds: ["ingest-a"],
+                          observedNodeIds: ["ingest-a"],
+                      }
+                    : {
+                          streams: [makeContextual("cluster-1", NodeRole.CLUSTER, null)],
+                          nodeIds: ["cluster-a"],
+                          observedNodeIds: ["cluster-a"],
+                      },
             );
             nodesService.listActiveNodeIds.mockResolvedValue(["node-a", "node-b"]);
             streams.findAll.mockResolvedValue([] as Stream[]);
@@ -101,6 +109,23 @@ describe("SyncContextBuilderService", () => {
             expect(ctx.nodeIds).toEqual(["node-a", "node-b"]);
         });
 
+        it("carries ingest observation coverage for safe staleness decisions", async () => {
+            mediaMtxQuery.listStreams.mockImplementation(async (role) =>
+                role === NodeRole.INGEST
+                    ? {
+                          streams: [],
+                          nodeIds: ["ingest-a", "ingest-b"],
+                          observedNodeIds: ["ingest-b"],
+                      }
+                    : { streams: [], nodeIds: [], observedNodeIds: [] },
+            );
+
+            const ctx = await service.buildContext();
+
+            expect(ctx.ingestNodeIds).toEqual(new Set(["ingest-a", "ingest-b"]));
+            expect(ctx.observedIngestNodeIds).toEqual(new Set(["ingest-b"]));
+        });
+
         it("includes allStreams from the stream query", async () => {
             const fakeStreams = [{ name: "db-stream-1" }] as Stream[];
             streams.findAll.mockResolvedValue(fakeStreams);
@@ -110,7 +135,11 @@ describe("SyncContextBuilderService", () => {
         });
 
         it("returns empty Sets and arrays when nothing is active", async () => {
-            mediaMtxQuery.listStreams.mockResolvedValue([]);
+            mediaMtxQuery.listStreams.mockResolvedValue({
+                streams: [],
+                nodeIds: [],
+                observedNodeIds: [],
+            });
             nodesService.listActiveNodeIds.mockResolvedValue([]);
             streams.findAll.mockResolvedValue([]);
 
@@ -118,6 +147,8 @@ describe("SyncContextBuilderService", () => {
 
             expect(ctx.ingestNames.size).toBe(0);
             expect(ctx.clusterNames.size).toBe(0);
+            expect(ctx.ingestNodeIds.size).toBe(0);
+            expect(ctx.observedIngestNodeIds.size).toBe(0);
             expect(ctx.nodeIds).toEqual([]);
             expect(ctx.allStreams).toEqual([]);
         });

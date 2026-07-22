@@ -22,3 +22,4 @@ number, then add a row here.
 | [0011](0011-node-resource-alerts-third-producer.md) | Node resource alerts — pods self-report CPU/memory/disk as a third producer | Accepted | SVC-06, DATA-05 |
 | [0012](0012-cluster-nodes-as-statefulset.md) | Run MediaMTX cluster nodes as a StatefulSet with stable per-pod identity | Accepted | ARCH-11, DIR-09 |
 | [0013](0013-reserve-publish-ingest-cluster.md) | Reserve→publish ingestion on a per-node ingest cluster | Accepted | ARCH-11, INT-06, SVC-02, DATA-05 |
+| [0014](0014-guard-stream-lifecycle-transitions.md) | Guard stream lifecycle transitions with one authority and atomic compare-and-set writes | Accepted | SVC-07, DATA-03, DATA-07 |

@@ -33,7 +33,7 @@ This Vite + React application is the control plane, dashboard, and metrics UI fo
 ## Code Layout
 
 - `src/services/api.ts` — typed fetch wrappers for all backend REST endpoints (streams, pods, alerts, metrics, stream-inspection)
-- `src/services/websocket.ts` — Socket.IO connection manager; subscribes to `stream.synced`, `stream.removed`, `alert.created`, `stream.inspected`
+- `src/services/websocket.ts` — Socket.IO connection manager for the backend's stream, alert, inspection, and node events, including `stream.reserved`
 - `src/hooks/use-streams.ts` — TanStack Query hooks (10s polling for streams/nodes/alerts, 30s for inspections) plus `useRealtimeSync()`, which invalidates query caches on WebSocket events
 - `src/types/index.ts` — API response types
 - `src/pages/` — route components, `src/components/` — app components, `src/components/ui/` — shadcn/ui primitives

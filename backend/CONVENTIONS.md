@@ -274,7 +274,7 @@ Decision history: [ADR-0005](../docs/adr/0005-no-pass-through-services.md).
 Enforced: review.
 
 **SVC-07** — Rule: A leaf service (query/crud/status/assignment) owns its persistence access directly through the repository. It MAY depend on a **sibling** service only when that service carries reused _logic_ — events, multi-step orchestration, defaulting — never to borrow a thin read/write it could perform on the repository it already holds. Holding **both** the repository and a sibling data-service for overlapping access is the tell of a redundant wrap: collapse it onto the repository. (Orchestrators compose services and don't touch the repository; SVC-05 covers pure service→service forwarders.)
-Example: `StreamAssignmentService` reads via `streamRepository.findByName` + inline `NotFoundException` — matching its `assignToNode`/`clearAssignment` siblings — rather than injecting `StreamQueryService` for one `findByName`+throw helper. Allowed shape: `AlertAccessService` holds `AlertRepository` for its reads but delegates `resolveAlert` to `AlertReconcileService`, because resolving emits `alert.resolved` (reused logic, not a thin call).
+Example: `StreamAssignmentService` reads via `streamRepository.findByName`, but delegates assignment mutations to `StreamStatusService` because that service owns the lifecycle transition table and compare-and-set retry logic. Allowed shape: `AlertAccessService` holds `AlertRepository` for its reads but delegates `resolveAlert` to `AlertReconcileService`, because resolving emits `alert.resolved` (reused logic, not a thin call).
 Enforced: review.
 
 **SVC-08** — Rule: A value an operation *cannot correctly run without* is a **required, non-nullable parameter**, validated once at the **top of the call stack** where the missing-value case is a real branch — not threaded downward as `?: T | null` and re-checked (or silently defaulted) deep in the leaf. A nullable-and-defaulted parameter conflates two distinct situations that deserve opposite handling: a **precondition violation** (the caller has no value it was required to supply) is a bug and must throw where the fact is first known; **runtime tolerance** (a value was supplied but the world moved — a resource is gone, a node left) is expected and may fall back. Do not let one `?: T | null` stand in for both — the precondition throws, the fallback tolerates, and they live in different places. A leaf that both accepts `null` *and* rounds it into a best-effort pick hides caller bugs as silent mis-targeting. If one input's presence depends on a discriminant (a role, a kind), do not pass `(discriminant, value?)` and re-branch the discriminant inside — split into per-case methods so each carries only the inputs it genuinely needs and the value it requires is non-null.
@@ -301,7 +301,7 @@ Enforced: review.
 
 **DATA-02** — Rule: Schemas use `@Schema({ timestamps: true })`; never hand-manage `createdAt`/`updatedAt`. Enum-typed props declare `enum: Object.values(TheEnum)`.
 
-**DATA-03** — Rule: Repository methods are named for the domain operation, not the Mongo verb: `findUnresolvedByStreamAndType`, `upsertByNodeId`, `assignToNode`, `resolveById`.
+**DATA-03** — Rule: Repository methods are named for the domain operation, not the Mongo verb: `findUnresolvedByStreamAndType`, `upsertByNodeId`, `transitionStatus`, `resolveById`.
 
 **DATA-04** — Rule: Repositories return domain-shaped documents and `null` for not-found; throwing `NotFoundException` is the service's decision, not the repository's.
 
@@ -313,6 +313,10 @@ Example: `StreamAssignmentService.assignToNode` throws when the repo returns nul
 **DATA-06** — Rule: Mapping is asymmetric and deliberate. The **read side** maps every persisted document to the domain shape through the base class's abstract `toDomain` hook (`MongoDomainRepository.toDomain`/`toDomainList`/`toOptionalDomain`/`fromDocument`); `toDomain` **enumerates fields explicitly** rather than spreading the lean doc, because that enumeration is what strips Mongo metadata (`_id`, `__v`, unwanted timestamps) from the boundary — a `{ ...raw }` shortcut leaks persistence internals into the domain. The **write side** passes domain-shaped partials straight into the model/`$set`; there is **no pass-through `toPersistence` seam** (a mapper that only shallow-copies is YAGNI misdirection — omit it). Introduce a write-side mapper only when a field genuinely differs between domain and storage representation.
 Example: `MongoNodeMetricRepository.toDomain` lists all 10 fields even though they match 1:1 — that is the boundary, not boilerplate. `MongoStreamRepository` write methods pass `data` directly to `$set` with no `toPersistence`.
 Enforced: review.
+
+**DATA-07** — Rule: Every mutation of a persisted stream lifecycle `status` goes through `StreamStatusService`, which validates the transition table and applies the change with repository-level compare-and-set semantics. Creation paths may set only their birth state. MediaMTX wire states such as `ready` and `inactive` are observations, not persisted lifecycle values.
+Decision history: [ADR-0014](../docs/adr/0014-guard-stream-lifecycle-transitions.md).
+Enforced: tests + review.
 
 ---
 

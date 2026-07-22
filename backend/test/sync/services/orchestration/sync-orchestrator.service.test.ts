@@ -16,6 +16,8 @@ const makeContext = (nodeIds: string[] = ["node-1"]): SyncContext => ({
     clusterList: [{ name: "s1", source: "rtsp://b", status: "ready" }],
     ingestNames: new Set(["s1"]),
     clusterNames: new Set(["s1"]),
+    ingestNodeIds: new Set(["ingest-1"]),
+    observedIngestNodeIds: new Set(["ingest-1"]),
     allStreams: [],
 });
 
@@ -97,17 +99,21 @@ describe("SyncOrchestratorService", () => {
     });
 
     describe("execute — no active nodes", () => {
-        it("skips all steps when nodeIds is empty", async () => {
+        it("skips assignment but still runs cleanup when nodeIds is empty", async () => {
             await service.execute(makeContext([]));
 
             expect(ingestSync.execute).not.toHaveBeenCalled();
             expect(reconcile.execute).not.toHaveBeenCalled();
-            expect(staleness.execute).not.toHaveBeenCalled();
+            expect(staleness.execute).toHaveBeenCalledTimes(1);
         });
 
-        it("does not emit SYNC_TICK when nodeIds is empty", async () => {
+        it("still emits SYNC_TICK when nodeIds is empty", async () => {
             await service.execute(makeContext([]));
-            expect(events.emit).not.toHaveBeenCalled();
+            expect(events.emit).toHaveBeenCalledWith(SystemEventNames.SYNC_TICK, {
+                ingest: 1,
+                cluster: 1,
+                failures: [],
+            });
         });
     });
 });

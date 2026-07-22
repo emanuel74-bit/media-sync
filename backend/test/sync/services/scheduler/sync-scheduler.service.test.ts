@@ -12,6 +12,8 @@ const makeContext = (overrides: Partial<SyncContext> = {}): SyncContext => ({
     clusterList: [{ name: "s1", source: "rtsp://cluster", status: "ready" }],
     ingestNames: new Set(["s1"]),
     clusterNames: new Set(["s1"]),
+    ingestNodeIds: new Set(["ingest-1"]),
+    observedIngestNodeIds: new Set(["ingest-1"]),
     nodeIds: ["node-1"],
     allStreams: [],
     ...overrides,

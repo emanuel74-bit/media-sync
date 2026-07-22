@@ -3,8 +3,8 @@ import { Injectable } from "@nestjs/common";
 import { NodeRole } from "@/common";
 
 import { NodeResolver } from "../topology";
-import { ContextualMediaMtxStream } from "../../domain";
 import { StreamCollectionService } from "./stream-collection.service";
+import { ContextualMediaMtxStream, MediaMtxStreamListingResult } from "../../domain";
 
 /**
  * Discovers which streams are active on the nodes of a role, each tagged with its role and
@@ -20,7 +20,7 @@ export class MediaMtxStreamListingService {
     ) {}
 
     /** Active streams on the nodes of a role, each tagged with its owning node. */
-    async listStreams(role: NodeRole): Promise<ContextualMediaMtxStream[]> {
+    async listStreams(role: NodeRole): Promise<MediaMtxStreamListingResult> {
         const nodes = await this.nodes.getActiveNodes(role);
         return this.streamCollection.collectFromNodes(nodes, role);
     }
@@ -31,6 +31,6 @@ export class MediaMtxStreamListingService {
             this.listStreams(NodeRole.INGEST),
             this.listStreams(NodeRole.CLUSTER),
         ]);
-        return [...ingestStreams, ...clusterStreams];
+        return [...ingestStreams.streams, ...clusterStreams.streams];
     }
 }

@@ -26,6 +26,8 @@ const makeContext = (overrides: Partial<SyncContext> = {}): SyncContext => ({
     clusterList: [],
     ingestNames: new Set(),
     clusterNames: new Set(),
+    ingestNodeIds: new Set(),
+    observedIngestNodeIds: new Set(),
     nodeIds: ["node-1"],
     allStreams: [],
     ...overrides,
@@ -102,6 +104,19 @@ describe("StreamReconcileService", () => {
             service.execute(makeContext({ allStreams: [stream], nodeIds: ["node-1"] })),
         ).resolves.toBeUndefined();
 
-        expect(errorSpy).toHaveBeenCalledWith("Failed manual sync create for stream-1: boom");
+        expect(errorSpy).toHaveBeenCalledWith("Failed manual sync for stream-1: boom");
+    });
+
+    it("continues reconciling later manual streams after assignment fails", async () => {
+        const first = makeStream({ name: "manual-1" });
+        const second = makeStream({ name: "manual-2" });
+        streams.ensureAssigned
+            .mockRejectedValueOnce(new Error("assignment failed"))
+            .mockResolvedValueOnce(second);
+
+        await service.execute(makeContext({ allStreams: [first, second] }));
+
+        expect(streams.ensureAssigned).toHaveBeenCalledTimes(2);
+        expect(streams.buildClusterPipeline).toHaveBeenCalledWith(second);
     });
 });

@@ -133,4 +133,13 @@ describe("StreamPipelineService", () => {
         expect(mediaMtx.teardownClusterPullPipeline).toHaveBeenCalledWith("s1");
         expect(events.emit).toHaveBeenCalledWith(SystemEventNames.STREAM_REMOVED, "s1");
     });
+
+    it("does not emit stream.removed when teardown is incomplete", async () => {
+        const stream = makeStream();
+        mediaMtx.teardownClusterPullPipeline.mockRejectedValue(new Error("node down"));
+
+        await expect(service.teardown(stream)).rejects.toThrow("node down");
+
+        expect(events.emit).not.toHaveBeenCalled();
+    });
 });

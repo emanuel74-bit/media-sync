@@ -33,19 +33,33 @@ describe("EventsGateway", () => {
     it("registers websocket broadcast listeners for the configured system events", () => {
         gateway.onModuleInit();
 
-        expect(events.on).toHaveBeenCalledTimes(9);
-        expect(handlers.has(SystemEventNames.ALERT_CREATED)).toBe(true);
-        expect(handlers.has(SystemEventNames.ALERT_UPDATED)).toBe(true);
-        expect(handlers.has(SystemEventNames.NODE_REGISTERED)).toBe(true);
+        expect([...handlers.keys()]).toEqual([
+            SystemEventNames.STREAM_SYNCED,
+            SystemEventNames.STREAM_REMOVED,
+            SystemEventNames.STREAM_RESERVED,
+            SystemEventNames.STREAM_ASSIGNED,
+            SystemEventNames.STREAM_UNASSIGNED,
+            SystemEventNames.ALERT_CREATED,
+            SystemEventNames.ALERT_UPDATED,
+            SystemEventNames.ALERT_RESOLVED,
+            SystemEventNames.STREAM_INSPECTED,
+            SystemEventNames.NODE_REGISTERED,
+        ]);
+        expect(handlers.has(SystemEventNames.METRICS_COLLECTED)).toBe(false);
+        expect(handlers.has(SystemEventNames.NODE_SAMPLED)).toBe(false);
         expect(handlers.has(SystemEventNames.SYNC_TICK)).toBe(false);
     });
 
     it("rebroadcasts configured events with the original payload", () => {
-        const payload = { streamName: "stream-1", severity: "warning" };
+        const payload = {
+            streamName: "stream-1",
+            ingestNode: "ingest-1",
+            expiresAt: new Date("2026-07-22T12:00:00.000Z"),
+        };
 
         gateway.onModuleInit();
-        handlers.get(SystemEventNames.ALERT_CREATED)?.(payload);
+        handlers.get(SystemEventNames.STREAM_RESERVED)?.(payload);
 
-        expect(server.emit).toHaveBeenCalledWith(SystemEventNames.ALERT_CREATED, payload);
+        expect(server.emit).toHaveBeenCalledWith(SystemEventNames.STREAM_RESERVED, payload);
     });
 });

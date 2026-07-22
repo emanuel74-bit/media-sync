@@ -15,7 +15,12 @@ export class StreamReconcileService {
             (stream) => stream.isManual && stream.isEnabled,
         );
         for (const stream of manualStreams) {
-            await this.reconcileStream(stream, context.clusterNames, context.nodeIds);
+            try {
+                await this.reconcileStream(stream, context.clusterNames, context.nodeIds);
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                this.logger.error(`Failed manual sync for ${stream.name}: ${message}`);
+            }
         }
     }
 
@@ -27,12 +32,7 @@ export class StreamReconcileService {
         const assigned = await this.streams.ensureAssigned(stream.name, nodeIds);
 
         if (!clusterNames.has(assigned.name)) {
-            try {
-                await this.streams.buildClusterPipeline(assigned);
-            } catch (err) {
-                const message = err instanceof Error ? err.message : String(err);
-                this.logger.error(`Failed manual sync create for ${stream.name}: ${message}`);
-            }
+            await this.streams.buildClusterPipeline(assigned);
         }
     }
 }

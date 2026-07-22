@@ -20,6 +20,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect, 
     private static readonly BROADCAST_EVENTS: readonly SystemEventName[] = [
         SystemEventNames.STREAM_SYNCED,
         SystemEventNames.STREAM_REMOVED,
+        SystemEventNames.STREAM_RESERVED,
         SystemEventNames.STREAM_ASSIGNED,
         SystemEventNames.STREAM_UNASSIGNED,
         SystemEventNames.ALERT_CREATED,

@@ -3,11 +3,15 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { StreamStatus } from "@/common";
 
 import { StreamRepository } from "../../repositories";
+import { StreamStatusService } from "./stream-status.service";
 import { CreateStreamData, Stream, UpdateStreamData } from "../../domain";
 
 @Injectable()
 export class StreamCrudService {
-    constructor(private readonly streamRepository: StreamRepository) {}
+    constructor(
+        private readonly streamRepository: StreamRepository,
+        private readonly streamStatus: StreamStatusService,
+    ) {}
 
     async create(data: CreateStreamData): Promise<Stream> {
         return this.streamRepository.create({
@@ -50,7 +54,11 @@ export class StreamCrudService {
     }
 
     async update(name: string, data: UpdateStreamData): Promise<Stream> {
-        const updated = await this.streamRepository.update(name, data);
+        const { status, ...fields } = data;
+        if (status) {
+            return this.streamStatus.transitionTo(name, status, fields);
+        }
+        const updated = await this.streamRepository.update(name, fields);
         if (!updated) {
             throw new NotFoundException(`Stream ${name} not found`);
         }
@@ -62,5 +70,9 @@ export class StreamCrudService {
         if (!deleted) {
             throw new NotFoundException(`Stream ${name} not found`);
         }
+    }
+
+    async expireReservation(name: string, expiredBefore: Date): Promise<boolean> {
+        return this.streamRepository.deleteExpiredReservation(name, expiredBefore);
     }
 }

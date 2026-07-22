@@ -324,7 +324,7 @@ Each feature defines an **abstract repository contract** in its own `repositorie
 
 **Broadcast events** (subscribed at module init):
 
-`stream.synced`, `stream.removed`, `stream.assigned`, `stream.unassigned`, `alert.created`, `alert.resolved`, `stream.inspected`, `node.registered`
+`stream.synced`, `stream.removed`, `stream.reserved`, `stream.assigned`, `stream.unassigned`, `alert.created`, `alert.updated`, `alert.resolved`, `stream.inspected`, `node.registered`
 
 **Not forwarded**: `sync.tick` (internal diagnostics only).
 

@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 
 import { NodeQueryService } from "@/nodes";
 import { NodeRole, StreamStatus } from "@/common";
@@ -24,6 +24,8 @@ import { SyncContext, SyncDiscoveredStream } from "../../domain";
  */
 @Injectable()
 export class IngestStreamSynchronizerService {
+    private readonly logger = new Logger(IngestStreamSynchronizerService.name);
+
     constructor(
         private readonly streams: StreamsFacadeService,
         private readonly nodes: NodeQueryService,
@@ -31,7 +33,16 @@ export class IngestStreamSynchronizerService {
 
     async execute(context: SyncContext): Promise<void> {
         for (const ingest of context.ingestList) {
-            await this.relayIngestStreamToCluster(ingest, context.clusterNames, context.nodeIds);
+            try {
+                await this.relayIngestStreamToCluster(
+                    ingest,
+                    context.clusterNames,
+                    context.nodeIds,
+                );
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                this.logger.error(`Failed to relay ingest stream ${ingest.name}: ${message}`);
+            }
         }
     }
 
@@ -81,7 +92,6 @@ export class IngestStreamSynchronizerService {
     private async upsertDiscoveredStream(ingest: SyncDiscoveredStream): Promise<Stream> {
         const data: Partial<Stream> & { name: string } = {
             name: ingest.name,
-            status: (ingest.status as StreamStatus) || StreamStatus.DISCOVERED,
             ingestNode: ingest.ingestNode,
             reservedUntil: null,
             lastSeenAt: new Date(),

@@ -195,6 +195,9 @@ export function useRealtimeSync() {
         queryClient.removeQueries({ queryKey: ["stream", streamName] });
         invalidateNodes();
       }),
+      wsManager.on("stream.reserved", ({ streamName }) => {
+        invalidateStream(streamName);
+      }),
       wsManager.on("stream.assigned", ({ streamName }) => {
         invalidateStream(streamName);
         invalidateNodes();

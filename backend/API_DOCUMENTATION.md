@@ -69,7 +69,7 @@ Retrieve a list of all streams.
     "_id": "string",
     "name": "string",
     "source": "string",
-    "status": "created|discovered|pending_assignment|assigned|synced|sync_error|stale",
+    "status": "created|reserved|discovered|pending_assignment|assigned|synced|sync_error|stale",
     "metadata": {},
     "isEnabled": boolean,
     "lastSeenAt": "2023-01-01T00:00:00.000Z",
@@ -115,7 +115,7 @@ Get assignment information for all streams. (Declared before `GET /api/streams/{
 [
     {
         "name": "string",
-        "status": "created|discovered|pending_assignment|assigned|synced|sync_error|stale",
+        "status": "created|reserved|discovered|pending_assignment|assigned|synced|sync_error|stale",
         "assignedNode": "string|null",
         "assignedAt": "2023-01-01T00:00:00.000Z|null"
     }
@@ -150,11 +150,13 @@ Update an existing stream.
 {
   "source": "string (optional)",
   "isEnabled": boolean (optional),
-  "status": "created|discovered|pending_assignment|assigned|synced|sync_error|stale (optional)"
+  "status": "created|reserved|discovered|pending_assignment|assigned|synced|sync_error|stale (optional)"
 }
 ```
 
 **Response:** Updated stream object
+
+Lifecycle status changes are validated against the server's transition table and applied atomically. An illegal or concurrently superseded transition returns `409 Conflict`.
 
 ### Delete Stream
 
@@ -529,6 +531,22 @@ Emitted when a stale stream's cluster pipeline is removed.
 
 **Payload:** Stream name (string)
 
+#### Stream Reserved
+
+Emitted when an ingest slot is reserved for a stream.
+
+**Event Name:** `stream.reserved`
+
+**Payload:**
+
+```json
+{
+    "streamName": "string",
+    "ingestNode": "string",
+    "expiresAt": "2023-01-01T00:00:00.000Z"
+}
+```
+
 #### Stream Assigned
 
 Emitted when a stream is assigned to a node.
@@ -650,6 +668,16 @@ All endpoints may return the following error formats:
 }
 ```
 
+### 409 Conflict
+
+```json
+{
+    "statusCode": 409,
+    "message": "Illegal stream status transition",
+    "error": "Conflict"
+}
+```
+
 ### 500 Internal Server Error
 
 ```json
@@ -671,7 +699,7 @@ All endpoints may return the following error formats:
   _id: string;
   name: string;                 // unique
   source: string;
-  status: 'created' | 'discovered' | 'pending_assignment' | 'assigned' | 'synced' | 'sync_error' | 'stale';
+  status: 'created' | 'reserved' | 'discovered' | 'pending_assignment' | 'assigned' | 'synced' | 'sync_error' | 'stale';
   metadata: Record<string, any>;
   isEnabled: boolean;
   lastSeenAt?: Date | null;
