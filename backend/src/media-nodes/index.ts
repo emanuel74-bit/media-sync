@@ -1,6 +1,6 @@
 export { MediaNodesModule } from "./media-nodes.module";
 
-export type { NodeLoad, ContextualMediaMtxStream } from "./domain";
+export type { NodeLoad, ContextualMediaMtxStream, MediaMtxStreamListingResult } from "./domain";
 
 export {
     NodeResolver,

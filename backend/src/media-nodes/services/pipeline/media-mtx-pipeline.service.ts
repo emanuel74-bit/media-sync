@@ -41,24 +41,41 @@ export class MediaMtxPipelineService {
 
     async teardownClusterPullPipeline(streamName: string): Promise<void> {
         const nodes = await this.nodes.getActiveNodes(NodeRole.CLUSTER);
-        for (const { client } of nodes) {
-            await this.removePathFromClusterClient(client, streamName);
+        const failedNodeIds: string[] = [];
+        for (const { nodeId, client } of nodes) {
+            const removed = await this.removePathFromClusterClient(client, nodeId, streamName);
+            if (!removed) {
+                failedNodeIds.push(nodeId);
+            }
+        }
+        if (failedNodeIds.length) {
+            throw new Error(
+                `Failed to delete cluster pipeline ${streamName} from nodes: ${failedNodeIds.join(
+                    ", ",
+                )}`,
+            );
         }
     }
 
     private async removePathFromClusterClient(
         client: MediaMtxClient,
+        nodeId: string,
         streamName: string,
-    ): Promise<void> {
+    ): Promise<boolean> {
         try {
             await client.removePath(streamName);
+            return true;
         } catch (error) {
             // 404 = the path isn't on this node (expected: only the assigned node
             // hosts it, but delete fans out across all of them).
             if (isAxiosError(error) && error.response?.status === 404) {
-                return;
+                return true;
             }
-            this.logger.warn(`Failed to delete cluster pipeline ${streamName}`, error);
+            this.logger.warn(
+                `Failed to delete cluster pipeline ${streamName} from node ${nodeId}`,
+                error,
+            );
+            return false;
         }
     }
 }

@@ -99,6 +99,15 @@ export class MongoStreamRepository
         return result !== null;
     }
 
+    async deleteExpiredReservation(name: string, expiredBefore: Date): Promise<boolean> {
+        const result = await this.model.findOneAndDelete({
+            name,
+            status: StreamStatus.RESERVED,
+            reservedUntil: { $lt: expiredBefore },
+        });
+        return result !== null;
+    }
+
     async findAssignmentInfo(): Promise<StreamAssignmentInfo[]> {
         const docs = await this.model
             .find()

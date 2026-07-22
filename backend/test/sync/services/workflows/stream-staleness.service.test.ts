@@ -26,6 +26,8 @@ const makeContext = (overrides: Partial<SyncContext> = {}): SyncContext => ({
     clusterList: [],
     ingestNames: new Set(),
     clusterNames: new Set(),
+    ingestNodeIds: new Set(),
+    observedIngestNodeIds: new Set(),
     nodeIds: ["node-1"],
     allStreams: [],
     ...overrides,
@@ -39,7 +41,7 @@ describe("StreamStalenessService", () => {
         streams = {
             markStale: jest.fn(),
             teardownClusterPipeline: jest.fn(),
-            remove: jest.fn(),
+            expireReservation: jest.fn(),
         } as unknown as jest.Mocked<StreamsFacadeService>;
 
         const module: TestingModule = await Test.createTestingModule({
@@ -101,7 +103,7 @@ describe("StreamStalenessService", () => {
         await service.execute(makeContext({ allStreams: [reserved] }));
 
         expect(streams.markStale).not.toHaveBeenCalled();
-        expect(streams.remove).not.toHaveBeenCalled();
+        expect(streams.expireReservation).not.toHaveBeenCalled();
     });
 
     it("expires (removes) a RESERVED stream whose reservedUntil has passed", async () => {
@@ -110,12 +112,27 @@ describe("StreamStalenessService", () => {
             status: StreamStatus.RESERVED,
             reservedUntil: new Date(Date.now() - 1),
         });
-        streams.remove.mockResolvedValue(undefined);
+        streams.expireReservation.mockResolvedValue(true);
 
         await service.execute(makeContext({ allStreams: [expired] }));
 
-        expect(streams.remove).toHaveBeenCalledWith("expired");
+        expect(streams.expireReservation).toHaveBeenCalledWith("expired", expect.any(Date));
         expect(streams.markStale).not.toHaveBeenCalled();
+    });
+
+    it("does not delete a reservation promoted after the context snapshot", async () => {
+        const expired = makeStream({
+            name: "promoted",
+            status: StreamStatus.RESERVED,
+            reservedUntil: new Date(Date.now() - 1),
+        });
+        streams.expireReservation.mockResolvedValue(false);
+
+        await expect(
+            service.execute(makeContext({ allStreams: [expired] })),
+        ).resolves.toBeUndefined();
+
+        expect(streams.expireReservation).toHaveBeenCalledWith("promoted", expect.any(Date));
     });
 
     it("swallows a reservation-expiry failure", async () => {
@@ -125,7 +142,7 @@ describe("StreamStalenessService", () => {
             reservedUntil: new Date(Date.now() - 1),
         });
         const warnSpy = jest.spyOn((service as any).logger, "warn").mockImplementation();
-        streams.remove.mockRejectedValue(new Error("db down"));
+        streams.expireReservation.mockRejectedValue(new Error("db down"));
 
         await expect(
             service.execute(makeContext({ allStreams: [expired] })),
@@ -135,6 +152,34 @@ describe("StreamStalenessService", () => {
             "Failed to expire reservation expired",
             expect.any(Error),
         );
+    });
+
+    it("does not mark a stream stale when its active ingest node failed observation", async () => {
+        const stream = makeStream({ ingestNode: "ingest-a" });
+
+        await service.execute(
+            makeContext({
+                allStreams: [stream],
+                ingestNodeIds: new Set(["ingest-a"]),
+                observedIngestNodeIds: new Set(),
+            }),
+        );
+
+        expect(streams.markStale).not.toHaveBeenCalled();
+    });
+
+    it("marks a stream stale when its ingest node is no longer active", async () => {
+        const stream = makeStream({ ingestNode: "departed-ingest" });
+
+        await service.execute(
+            makeContext({
+                allStreams: [stream],
+                ingestNodeIds: new Set(["ingest-a"]),
+                observedIngestNodeIds: new Set(["ingest-a"]),
+            }),
+        );
+
+        expect(streams.markStale).toHaveBeenCalledWith("stream-1");
     });
 
     it("logs and swallows stale handling failures", async () => {
