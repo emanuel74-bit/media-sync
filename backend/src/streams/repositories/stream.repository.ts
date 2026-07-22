@@ -16,9 +16,12 @@ export abstract class StreamRepository {
 
     abstract upsert(name: string, data: Partial<Stream>): Promise<Stream>;
 
-    abstract assignToNode(name: string, nodeId: string, assignedAt: Date): Promise<Stream | null>;
-
-    abstract clearAssignment(name: string): Promise<Stream | null>;
+    /** Atomically update a stream only while it is still in the expected lifecycle state. */
+    abstract transitionStatus(
+        name: string,
+        expectedStatus: string,
+        data: Partial<Stream>,
+    ): Promise<Stream | null>;
 
     abstract update(name: string, data: Partial<Stream>): Promise<Stream | null>;
 

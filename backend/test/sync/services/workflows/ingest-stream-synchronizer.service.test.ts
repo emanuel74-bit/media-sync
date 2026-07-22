@@ -68,7 +68,6 @@ describe("IngestStreamSynchronizerService", () => {
             expect.objectContaining({
                 name: "stream-1",
                 source: "rtsp://source",
-                status: "ready",
                 reservedUntil: null,
                 isEnabled: true,
             }),
