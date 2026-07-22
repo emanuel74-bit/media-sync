@@ -52,7 +52,8 @@ The system solves the problem of coordinating media stream ingestion and distrib
 
 ### High-Level System Diagram
 
-A navigable LikeC4 version of this model lives in `docs/architecture/` (repo root) — see ADR-0006.
+Markdown architecture documents live in `docs/architecture/` (repo root). The navigable LikeC4
+version that used to live there was dropped when its trial ended — see ADR-0016.
 
 ```mermaid
 flowchart TB

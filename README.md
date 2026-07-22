@@ -40,7 +40,7 @@ It proxies API and Socket.IO traffic to the backend using the `BACKEND_UPSTREAM`
 ## Documentation
 
 - `docs/adr/` — Architecture Decision Records (why things are the way they are)
-- `docs/architecture/` — interactive LikeC4 architecture model (`npm run dev` there; Node ≥ 22)
+- `docs/architecture/` — system overview, module map, runtime flows, validation and tooling (Mermaid)
 - `backend/CONVENTIONS.md` — the rule registry for backend code (current law; rules cite their ADRs)
 - `backend/SYSTEM_DOCUMENTATION.md` — module design, data flows, deployment (Mermaid diagrams)
 - `backend/API_DOCUMENTATION.md` — REST/WebSocket reference

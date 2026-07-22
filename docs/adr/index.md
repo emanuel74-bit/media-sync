@@ -1,0 +1,41 @@
+# Architecture decisions — entry point
+
+Navigation into the ADR set. The record list, with statuses and the convention rule IDs each
+decision backs, lives in [`README.md`](README.md) — that table is the index, and it is not
+duplicated here.
+
+ADRs record **why** a decision was made. [`backend/CONVENTIONS.md`](../../backend/CONVENTIONS.md)
+records the current law that came out of it. The two are cross-linked and neither restates the
+other (`DOC-01`).
+
+## Rules that govern this folder
+
+- A decision that changes architecture, a public contract, or tooling behavior gets an ADR
+  (`DOC-01`). Use [`template.md`](template.md) and the next free number.
+- ADRs are **append-only** (`DOC-03`). To change a decision, add a new numbered ADR that
+  supersedes the old one and update the old one's status line. Never rewrite its content.
+- Add a row to the table in [`README.md`](README.md) when you add a record.
+- An OpenSpec `design.md` explains one change; it does not replace a durable ADR.
+
+## Reading paths
+
+By concern, for someone new to the repository:
+
+| If you are asking… | Read |
+|---|---|
+| How do we talk to MediaMTX? | [0001](0001-mediamtx-v3-api-behind-infrastructure-layer.md), [0003](0003-data-driven-track-parsing.md) |
+| Where does persistence live? | [0002](0002-abstract-repositories-with-mongo-implementations.md) |
+| Why are imports and barrels like this? | [0004](0004-curated-feature-root-barrels.md), [0008](0008-runtime-safe-barrel-imports.md) |
+| Why is there no wrapper service here? | [0005](0005-no-pass-through-services.md) |
+| What documents what? | [0006](0006-documentation-tooling-choices.md), [0015](0015-adopt-spec-driven-development-and-obsidian-navigation.md), [0016](0016-drop-likec4-architecture-model.md) |
+| How is this deployed? | [0007](0007-backend-deploy-layout.md), [0012](0012-cluster-nodes-as-statefulset.md) |
+| How does the system know which nodes exist? | [0009](0009-pod-derived-cluster-topology.md), [0012](0012-cluster-nodes-as-statefulset.md) |
+| How do alerts work? | [0010](0010-event-driven-alert-pipeline.md), [0011](0011-node-resource-alerts-third-producer.md) |
+| How does a stream get in and get placed? | [0013](0013-reserve-publish-ingest-cluster.md), [0014](0014-guard-stream-lifecycle-transitions.md) |
+
+## Related
+
+- [Documentation dashboard](../index.md)
+- [Specification map](../specification-map.md) — which capabilities have a verified baseline
+- [System overview](../architecture/system-overview.md)
+- [Glossary](../glossary.md)

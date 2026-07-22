@@ -1,6 +1,8 @@
 # ADR-0006: Documentation tooling — ADRs + Mermaid now, LikeC4 on trial, no Backstage
 
-- **Status**: Accepted
+- **Status**: Accepted; the **LikeC4 trial decision only** is superseded by
+  [ADR-0016](0016-drop-likec4-architecture-model.md). The ADR, Mermaid, and Backstage decisions
+  below remain in force.
 - **Date**: 2026-06-13
 - **Related rules**: DOC-01, DOC-02, DOC-03, DOC-04
 

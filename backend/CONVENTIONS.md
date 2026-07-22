@@ -437,7 +437,8 @@ Example: SVC-05 ← [ADR-0005](../docs/adr/0005-no-pass-through-services.md).
 
 **DOC-03** — Rule: ADRs are append-only. To change a decision, write a new ADR that supersedes the old one and update the old ADR's status line — never rewrite its content.
 
-**DOC-04** — Rule: While the LikeC4 trial runs ([ADR-0006](../docs/adr/0006-documentation-tooling-choices.md)), `docs/architecture/media-sync.c4` MUST be updated in the same change that adds, removes, or renames a container or backend feature module. Requires Node ≥ 22 (`docs/architecture/README.md`).
+**DOC-04** — ~~RETIRED~~ ([ADR-0016](../docs/adr/0016-drop-likec4-architecture-model.md)): the LikeC4 trial ended and the model was removed, so this rule has no subject. No replacement — DOC-02 governs the Mermaid diagrams that remain; a maintenance duty over `docs/architecture/*.md` would need a new rule ID.
+Retired text: While the LikeC4 trial runs ([ADR-0006](../docs/adr/0006-documentation-tooling-choices.md)), `docs/architecture/media-sync.c4` MUST be updated in the same change that adds, removes, or renames a container or backend feature module. Requires Node ≥ 22 (`docs/architecture/README.md`).
 
 ---
 

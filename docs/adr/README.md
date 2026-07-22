@@ -14,7 +14,7 @@ number, then add a row here.
 | [0003](0003-data-driven-track-parsing.md) | Parse media tracks via a field-map table, not parser strategies | Accepted | PHIL-02, INT-05 |
 | [0004](0004-curated-feature-root-barrels.md) | Curated feature-root barrels, wildcard nested barrels | Accepted | TOOL-03, IMP-01, IMP-03 |
 | [0005](0005-no-pass-through-services.md) | No pure pass-through services | Accepted | SVC-05 |
-| [0006](0006-documentation-tooling-choices.md) | Documentation tooling — ADRs + Mermaid now, LikeC4 on trial, no Backstage | Accepted | DOC-01..04 |
+| [0006](0006-documentation-tooling-choices.md) | Documentation tooling — ADRs + Mermaid now, LikeC4 on trial, no Backstage | Accepted; LikeC4 trial superseded by [0016](0016-drop-likec4-architecture-model.md) | DOC-01..03 |
 | [0007](0007-backend-deploy-layout.md) | Backend deployment artifacts live under deploy/{docker,k8s,mediamtx,scripts} | Accepted | DIR-09 |
 | [0008](0008-runtime-safe-barrel-imports.md) | Runtime-safe barrel imports (module-last barrels, no self-barrel value imports) | Accepted | IMP-01, IMP-04 |
 | [0009](0009-pod-derived-cluster-topology.md) | Pod-derived cluster topology, assigned-pod pipeline targeting, RTSP pull source | Accepted | INT-06 |
@@ -23,3 +23,5 @@ number, then add a row here.
 | [0012](0012-cluster-nodes-as-statefulset.md) | Run MediaMTX cluster nodes as a StatefulSet with stable per-pod identity | Accepted | ARCH-11, DIR-09 |
 | [0013](0013-reserve-publish-ingest-cluster.md) | Reserve→publish ingestion on a per-node ingest cluster | Accepted | ARCH-11, INT-06, SVC-02, DATA-05 |
 | [0014](0014-guard-stream-lifecycle-transitions.md) | Guard stream lifecycle transitions with one authority and atomic compare-and-set writes | Accepted | SVC-07, DATA-03, DATA-07 |
+| [0015](0015-adopt-spec-driven-development-and-obsidian-navigation.md) | Adopt OpenSpec-driven development and Obsidian navigation | Accepted | DOC-05 |
+| [0016](0016-drop-likec4-architecture-model.md) | End the LikeC4 trial — Mermaid is the sole diagram source | Accepted | DOC-02, DOC-04 (retired) |
