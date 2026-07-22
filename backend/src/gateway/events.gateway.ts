@@ -8,7 +8,7 @@ import {
     WebSocketServer,
 } from "@nestjs/websockets";
 
-import { SystemEventNames, SystemEventName } from "../common";
+import { SystemEventNames, SystemEventName } from "@/common";
 
 @WebSocketGateway({ cors: { origin: "*" } })
 export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit {
@@ -23,10 +23,10 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect, 
         SystemEventNames.STREAM_ASSIGNED,
         SystemEventNames.STREAM_UNASSIGNED,
         SystemEventNames.ALERT_CREATED,
+        SystemEventNames.ALERT_UPDATED,
         SystemEventNames.ALERT_RESOLVED,
         SystemEventNames.STREAM_INSPECTED,
-        SystemEventNames.POD_REGISTERED,
-        SystemEventNames.POD_REMOVED,
+        SystemEventNames.NODE_REGISTERED,
     ];
 
     constructor(private readonly events: EventEmitter2) {}

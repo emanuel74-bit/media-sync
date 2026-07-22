@@ -1,32 +1,32 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
-import { ScheduleModule } from "@nestjs/schedule";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 
-import { PodsModule } from "./pods";
 import { SyncModule } from "./sync";
+import { NodesModule } from "./nodes";
 import { AlertsModule } from "./alerts";
 import { ConfigModule } from "./config";
 import { GatewayModule } from "./gateway";
 import { MetricsModule } from "./metrics";
 import { StreamsModule } from "./streams";
-import { MediaMtxModule } from "./infrastructure/media-mtx";
+import { SchedulingModule } from "./common";
+import { MediaNodesModule } from "./media-nodes";
 import { StreamInspectionModule } from "./stream-inspection";
 
 @Module({
     imports: [
         ConfigModule,
-        ScheduleModule.forRoot(),
+        SchedulingModule,
         EventEmitterModule.forRoot(),
         MongooseModule.forRoot(process.env.MONGODB_URI ?? "mongodb://localhost:27017/media-sync"),
-        MediaMtxModule,
+        MediaNodesModule,
         StreamsModule,
         SyncModule,
         MetricsModule,
         AlertsModule,
         GatewayModule,
         StreamInspectionModule,
-        PodsModule,
+        NodesModule,
     ],
     controllers: [],
     providers: [],

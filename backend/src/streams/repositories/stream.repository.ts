@@ -9,11 +9,14 @@ export abstract class StreamRepository {
 
     abstract findUnassigned(): Promise<Stream[]>;
 
-    abstract findByAssignedPod(podId: string): Promise<Stream[]>;
+    abstract findByAssignedNode(nodeId: string): Promise<Stream[]>;
+
+    /** Count `RESERVED` streams grouped by the ingest node they hold a slot on. */
+    abstract countReservationsByIngestNode(): Promise<Record<string, number>>;
 
     abstract upsert(name: string, data: Partial<Stream>): Promise<Stream>;
 
-    abstract assignToPod(name: string, podId: string, assignedAt: Date): Promise<Stream | null>;
+    abstract assignToNode(name: string, nodeId: string, assignedAt: Date): Promise<Stream | null>;
 
     abstract clearAssignment(name: string): Promise<Stream | null>;
 
@@ -21,5 +24,5 @@ export abstract class StreamRepository {
 
     abstract delete(name: string): Promise<boolean>;
 
-    abstract getAssignmentInfo(): Promise<StreamAssignmentInfo[]>;
+    abstract findAssignmentInfo(): Promise<StreamAssignmentInfo[]>;
 }

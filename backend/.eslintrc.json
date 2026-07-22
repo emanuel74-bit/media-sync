@@ -14,13 +14,22 @@
     "extends": ["plugin:prettier/recommended"],
     "rules": {
         "no-unused-vars": "off",
+        "prefer-const": "error",
+        "no-var": "error",
         "no-restricted-imports": [
             "error",
             {
                 "patterns": [
                     {
-                        "group": ["./*/*", "../*/*", "@/*/*"],
-                        "message": "Use the folder barrel import (index.ts) instead of deep file imports."
+                        "group": [
+                            "./*/*",
+                            "../*/*",
+                            "@/*/*",
+                            "!../../**",
+                            "!@/*/repositories",
+                            "!@/infrastructure/database"
+                        ],
+                        "message": "Use the folder barrel import (index.ts) instead of deep file imports. The only permitted sub-barrels are `@/<feature>/repositories` (port contracts) and `@/infrastructure/database` (DatabaseModule) — imported deeply on purpose so a composition root takes a contract without pulling the feature's Nest module into the graph (ARCH-04)."
                     }
                 ]
             }
@@ -64,5 +73,13 @@
                 "order": "asc"
             }
         ]
-    }
+    },
+    "overrides": [
+        {
+            "files": ["test/**/*.ts", "src/**/*.spec.ts"],
+            "rules": {
+                "no-restricted-imports": "off"
+            }
+        }
+    ]
 }

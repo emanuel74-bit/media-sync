@@ -29,7 +29,7 @@ export function EditStreamDialog({ stream, open, onOpenChange }: Props) {
     useEffect(() => {
         if (stream) {
             setSource(stream.source);
-            setEnabled(stream.enabled);
+            setEnabled(stream.isEnabled);
         }
     }, [stream]);
 
@@ -41,7 +41,10 @@ export function EditStreamDialog({ stream, open, onOpenChange }: Props) {
         if (!trimmedSource) return;
 
         updateStream.mutate(
-            { name: stream.name, data: { source: trimmedSource, enabled } },
+            {
+                name: stream.name,
+                data: { source: trimmedSource, isEnabled: enabled },
+            },
             {
                 onSuccess: () => {
                     toast.success(`Stream "${stream.name}" updated`);

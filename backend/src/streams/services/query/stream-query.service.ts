@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 
 import { StreamRepository } from "../../repositories";
 import { Stream, StreamAssignmentInfo } from "../../domain";
@@ -15,31 +15,20 @@ export class StreamQueryService {
         return this.streamRepository.findByName(name);
     }
 
-    async findRequiredByName(name: string): Promise<Stream> {
-        const stream = await this.findByName(name);
-        if (!stream) {
-            throw new NotFoundException(`Stream ${name} not found`);
-        }
-        return stream;
-    }
-
-    async findAssignedByName(name: string): Promise<Stream | null> {
-        const stream = await this.findByName(name);
-        if (!stream?.assignedPod) {
-            return null;
-        }
-        return stream;
-    }
-
     async findUnassigned(): Promise<Stream[]> {
         return this.streamRepository.findUnassigned();
     }
 
-    async findByAssignedPod(podId: string): Promise<Stream[]> {
-        return this.streamRepository.findByAssignedPod(podId);
+    async findByAssignedNode(nodeId: string): Promise<Stream[]> {
+        return this.streamRepository.findByAssignedNode(nodeId);
+    }
+
+    /** Pending reservations grouped by the ingest node holding each slot. */
+    async countReservationsByIngestNode(): Promise<Record<string, number>> {
+        return this.streamRepository.countReservationsByIngestNode();
     }
 
     async getAssignmentInfo(): Promise<StreamAssignmentInfo[]> {
-        return this.streamRepository.getAssignmentInfo();
+        return this.streamRepository.findAssignmentInfo();
     }
 }

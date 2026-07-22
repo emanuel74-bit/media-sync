@@ -1,46 +1,29 @@
 import { Module } from "@nestjs/common";
 
-import { PodsModule } from "../pods";
-import { StreamsModule } from "../streams";
-import { CommonServicesModule } from "../common";
-import { SyncService } from "./services/scheduler";
-import { MediaMtxModule } from "../infrastructure/media-mtx";
-import { SyncQueryAggregatorService } from "./services/query";
-import { SyncOrchestratorService } from "./services/orchestration";
-import { SYNC_WORKFLOWS } from "./sync-workflows.token";
+import { NodesModule } from "@/nodes";
+import { StreamsModule } from "@/streams";
+import { MediaNodesModule } from "@/media-nodes";
+
+import { IngestActivationController } from "./controllers";
 import {
-    StreamIngestActivationService,
-    StreamIngestDiscoveryService,
+    SyncSchedulerService,
+    SyncContextBuilderService,
+    SyncOrchestratorService,
     IngestStreamSynchronizerService,
     StreamReconcileService,
     StreamStalenessService,
-} from "./services/workflows";
+} from "./services";
 
 @Module({
-    imports: [MediaMtxModule, StreamsModule, PodsModule, CommonServicesModule],
+    imports: [MediaNodesModule, StreamsModule, NodesModule],
     providers: [
-        SyncService,
+        SyncSchedulerService,
         SyncOrchestratorService,
-        SyncQueryAggregatorService,
-        StreamIngestDiscoveryService,
-        StreamIngestActivationService,
+        SyncContextBuilderService,
         IngestStreamSynchronizerService,
         StreamReconcileService,
         StreamStalenessService,
-        {
-            provide: SYNC_WORKFLOWS,
-            useFactory: (
-                ingestSync: IngestStreamSynchronizerService,
-                reconcile: StreamReconcileService,
-                staleness: StreamStalenessService,
-            ) => [ingestSync, reconcile, staleness],
-            inject: [
-                IngestStreamSynchronizerService,
-                StreamReconcileService,
-                StreamStalenessService,
-            ],
-        },
     ],
-    exports: [SyncService],
+    controllers: [IngestActivationController],
 })
 export class SyncModule {}

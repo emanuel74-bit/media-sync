@@ -2,10 +2,13 @@ import { ApiTags } from "@nestjs/swagger";
 import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
 
 import { Stream, StreamAssignmentInfo } from "../domain";
-import { StreamQueryService } from "../services/query";
-import { StreamAssignmentService } from "../services/assignment";
 import { AssignStreamDto, CreateStreamDto, UpdateStreamDto } from "../dto";
-import { StreamCrudService, StreamLifecycleService } from "../services/lifecycle";
+import {
+    StreamAssignmentService,
+    StreamCrudService,
+    StreamSetupService,
+    StreamQueryService,
+} from "../services";
 
 @ApiTags("streams")
 @Controller("api/streams")
@@ -13,7 +16,7 @@ export class StreamsController {
     constructor(
         private readonly streamQuery: StreamQueryService,
         private readonly streamCrud: StreamCrudService,
-        private readonly streamLifecycle: StreamLifecycleService,
+        private readonly streamSetup: StreamSetupService,
         private readonly streamAssignment: StreamAssignmentService,
     ) {}
 
@@ -23,8 +26,12 @@ export class StreamsController {
     }
 
     @Post()
-    create(@Body() createStreamDto: CreateStreamDto): Promise<Stream> {
-        return this.streamLifecycle.create(createStreamDto);
+    create(@Body() dto: CreateStreamDto): Promise<Stream> {
+        return this.streamSetup.onboard({
+            name: dto.name,
+            source: dto.source,
+            isEnabled: dto.isEnabled,
+        });
     }
 
     @Get("assignment")
@@ -38,8 +45,12 @@ export class StreamsController {
     }
 
     @Patch(":name")
-    update(@Param("name") name: string, @Body() updateStreamDto: UpdateStreamDto): Promise<Stream> {
-        return this.streamCrud.update(name, updateStreamDto);
+    update(@Param("name") name: string, @Body() dto: UpdateStreamDto): Promise<Stream> {
+        return this.streamCrud.update(name, {
+            source: dto.source,
+            isEnabled: dto.isEnabled,
+            status: dto.status,
+        });
     }
 
     @Delete(":name")
@@ -49,7 +60,7 @@ export class StreamsController {
 
     @Patch(":name/assign")
     assign(@Param("name") name: string, @Body() assignStreamDto: AssignStreamDto): Promise<Stream> {
-        return this.streamAssignment.assignToPod(name, assignStreamDto.podId);
+        return this.streamAssignment.assignToNode(name, assignStreamDto.nodeId);
     }
 
     @Patch(":name/unassign")

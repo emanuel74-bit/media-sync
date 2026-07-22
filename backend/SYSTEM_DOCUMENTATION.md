@@ -17,32 +17,33 @@
 
 ## System Overview
 
-**MediaMTX Stream Sync** is a distributed streaming orchestration platform built on NestJS that manages the lifecycle of RTSP/RTMP/HLS media streams across multiple MediaMTX nodes.
+**MediaMTX Stream Sync** is a distributed streaming orchestration platform built on NestJS that manages the lifecycle of media streams across multiple MediaMTX nodes.
 
 ### Core Purpose
 
 The system solves the problem of coordinating media stream ingestion and distribution across a cluster:
 
-1. **Dynamic Discovery**: Automatically discovers streams from one or more ingest sources
-2. **Distribution**: Distributes discovered streams to available cluster nodes
-3. **Load Balancing**: Uses consistent hashing to assign streams across cluster capacity
-4. **Monitoring**: Continuously monitors stream health with metrics and alerts
-5. **Analysis**: Inspects media tracks at regular intervals for quality and configuration issues
-6. **Real-time Awareness**: Broadcasts all state changes to connected clients via WebSocket
+1. **Dynamic Discovery**: Automatically discovers streams from the ingest MediaMTX node (with fallback to registered ingest nodes)
+2. **Distribution**: Creates pull pipelines for discovered streams on cluster nodes
+3. **Load Balancing**: Uses a deterministic hash policy to assign streams across active cluster nodes
+4. **Monitoring**: Continuously collects metrics and raises threshold-based alerts
+5. **Failover**: Reassigns degraded cluster streams to a different active node
+6. **Analysis**: Inspects media tracks at regular intervals for missing or unexpected content
+7. **Real-time Awareness**: Broadcasts state changes to connected clients via WebSocket
 
 ### Technology Stack
 
-- **Framework**: NestJS 9.x with TypeScript
-- **Database**: MongoDB via Mongoose ODM
+- **Framework**: NestJS 9.x with TypeScript (strict layering, barrel exports via barrelsby)
+- **Database**: MongoDB via Mongoose ODM (repository pattern; Mongo implementations in `infrastructure/`)
 - **Real-time**: Socket.IO for WebSocket events
-- **Scheduling**: @nestjs/schedule with Cron decorators
-- **HTTP Clients**: Axios for outbound API calls
-- **Media Integration**: Direct HTTP calls to MediaMTX REST APIs
+- **Scheduling**: a central `JobScheduler` (`src/common/scheduling/`) runs `@ScheduledTask`-decorated methods on config-driven intervals
+- **Eventing**: @nestjs/event-emitter (in-process event bus, bridged to WebSocket by the gateway)
+- **HTTP Clients**: Axios clients wrapping the MediaMTX v3 HTTP API
 
 ### Deployment Models
 
-- **Docker Compose**: Local development and single-machine deployments
-- **Docker Compose Scale**: Multi-instance deployments with automatic pod registration
+- **Docker Compose** (`deploy/docker/compose.local.yml`): Local development and single-machine deployments
+- **Docker Compose Scale** (+ `deploy/docker/compose.cluster.yml` override): Multi-instance cluster with automatic node registration
 - **Kubernetes**: Production deployments with health probes and automatic restarts
 
 ---
@@ -51,411 +52,281 @@ The system solves the problem of coordinating media stream ingestion and distrib
 
 ### High-Level System Diagram
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     NestJS Application                       │
-│                    (Stream Sync Service)                     │
-├─────────────────────────────────────────────────────────────┤
-│                                                               │
-│  ┌─────────────┐  ┌──────────────┐  ┌─────────────────┐    │
-│  │   Streams   │  │    Pods      │  │     Alerts      │    │
-│  │  Controller │  │  Controller  │  │   Controller    │    │
-│  └──────┬──────┘  └──────┬───────┘  └────────┬────────┘    │
-│         │                │                    │              │
-│  ┌──────▼──────┐  ┌──────▼───────┐  ┌────────▼────────┐   │
-│  │  Streams    │  │    Pods      │  │    Alerts       │   │
-│  │  Service    │  │   Service    │  │    Service      │   │
-│  └──────┬──────┘  └──────┬───────┘  └────────┬────────┘   │
-│         │                │                    │              │
-│  ┌──────▼──────────────────────────────────────────┐       │
-│  │          Sync Service (Periodic)                │       │
-│  │  - Discovers streams from ingest               │       │
-│  │  - Assigns to cluster pods                     │       │
-│  │  - Creates relay pipelines                     │       │
-│  │  - Cleans up deleted streams                   │       │
-│  └──────┬─────────────────────────────────────────┘       │
-│         │                                                   │
-│  ┌──────▼────────────────┐     ┌──────────────────────┐   │
-│  │   Metrics Service     │     │  Inspection Service  │   │
-│  │  - Samples stream     │     │  - Analyzes tracks   │   │
-│  │    performance        │     │  - Detects changes   │   │
-│  │  - Triggers failover  │     │  - Triggers alerts   │   │
-│  └──────┬────────────────┘     └──────────┬───────────┘   │
-│         │                              │                   │
-│  ┌──────▼──────────────────────────────────────┐           │
-│  │    MediaMTX Integration Service              │           │
-│  │  - Queries stream lists                    │           │
-│  │  - Collects statistics                     │           │
-│  │  - Creates/deletes relay pipelines         │           │
-│  └──────┬──────────────────────────────────────┘           │
-│         │                                                   │
-│  ┌──────▼──────────────────────────────────────┐           │
-│  │    Gateway (WebSocket Server)                │           │
-│  │  - Listens to application events            │           │
-│  │  - Broadcasts to connected clients          │           │
-│  └──────────────────────────────────────────────┘           │
-│                                                               │
-└────────────────────┬────────────────────────────────────────┘
-                     │
-        ┌────────────┼────────────┐
-        ▼            ▼            ▼
-   ┌────────┐  ┌─────────┐  ┌──────────┐
-   │MongoDB │  │ MediaMTX│  │ MediaMTX │
-   │ (Sync) │  │ (Ingest)│  │(Cluster) │
-   └────────┘  └─────────┘  └──────────┘
+A navigable LikeC4 version of this model lives in `docs/architecture/` (repo root) — see ADR-0006.
+
+```mermaid
+flowchart TB
+    subgraph app["NestJS Application (Stream Sync Service)"]
+        subgraph controllers["HTTP Controllers"]
+            StreamsC[Streams]
+            NodesC[Nodes]
+            AlertsC[Alerts]
+            MetricsC[Metrics]
+            InspectionC[Inspection]
+        end
+        services["Feature Services<br/>(query / mutation / lifecycle / orchestration per feature;<br/>StreamsFacadeService is the cross-module entry into streams)"]
+        subgraph workers["Scheduled Workers (@ScheduledTask)"]
+            SyncW["SyncSchedulerService (10s)<br/>runs sync step pipeline"]
+            MetricsW["MetricCollectionService (10s)<br/>collect → alerts → failover"]
+            InspectW["InspectionScheduler (30s)<br/>inspect + save"]
+        end
+        subgraph infra["Infrastructure Layer (src/infrastructure/)"]
+            MediaMtx["media-mtx/<br/>clients (axios, v3 API), registry<br/>(pool, round-robin), listing / pipeline / stats"]
+            Database["database/<br/>Mongo repositories, Mongoose schemas"]
+        end
+        Gateway["EventsGateway: EventEmitter2 events → Socket.IO"]
+
+        controllers --> services
+        services --> infra
+        workers --> infra
+        services -. emits .-> Gateway
+        workers -. emits .-> Gateway
+    end
+
+    Database --> Mongo[(MongoDB)]
+    MediaMtx --> Ingest["MediaMTX (Ingest)"]
+    MediaMtx --> Cluster["MediaMTX (Cluster ×N)"]
 ```
 
 ### Module Layout
 
 ```
 src/
-├── app.module.ts                 # Root module, imports all others
-├── main.ts                       # Entry point, bootstrap
-├── config/                       # Configuration service
-│   ├── config.module.ts
-│   └── config.service.ts
-├── pods/                         # Pod (MediaMTX instance) management
-│   ├── pods.module.ts
-│   ├── pods.controller.ts
-│   ├── pods.service.ts
-│   ├── pod.schema.ts             # Mongoose schema
-│   └── dto/
-│       └── register-pod.dto.ts
-├── streams/                      # Stream discovery and assignment
-│   ├── streams.module.ts
-│   ├── streams.controller.ts
-│   ├── streams.service.ts
-│   ├── stream.schema.ts
-│   └── dto/
-│       ├── create-stream.dto.ts
-│       ├── update-stream.dto.ts
-│       └── assign-stream.dto.ts
-├── alerts/                       # Alert management and generation
-│   ├── alerts.module.ts
-│   ├── alerts.controller.ts
-│   ├── alerts.service.ts
-│   └── alert.schema.ts
-├── metrics/                      # Performance metrics collection
-│   ├── metrics.module.ts
-│   ├── metrics.controller.ts
-│   ├── metrics.service.ts
-│   └── metric.schema.ts
-├── stream-inspection/            # Media track analysis
-│   ├── stream-inspection.module.ts
-│   ├── stream-inspection.controller.ts
-│   ├── stream-inspection.service.ts
-│   ├── stream-inspection.schema.ts
-│   └── dto/
-├── sync/                         # Background stream synchronization
-│   ├── sync.module.ts
-│   └── sync.service.ts
-├── media-mtx/                    # MediaMTX API integration
-│   ├── media-mtx.module.ts
-│   └── media-mtx.service.ts
-└── gateway/                      # WebSocket event broadcasting
-    ├── gateway.module.ts
-    └── gateway.gateway.ts
+├── app.module.ts                 # Root module
+├── main.ts                       # Bootstrap (ValidationPipe, Swagger at /api/docs)
+├── config/                       # ConfigService (env var access)
+├── common/                       # Shared domain + cross-cutting services
+│   ├── domain/
+│   │   ├── consts/               # system-event-names.const.ts
+│   │   ├── enums/                # AlertSeverity, AlertType, NodeRole, NodeStatus,
+│   │   │                         #   StreamStatus, TrackType
+│   │   └── types/                # event payloads, alert rule shapes, StreamTrack
+│   ├── rules/                    # metric-threshold predicate utils
+│   └── scheduling/               # JobScheduler + @ScheduledTask (cron framework)
+├── infrastructure/
+│   ├── database/
+│   │   ├── repositories/         # mongo-*.repository.ts (concrete implementations)
+│   │   └── schemas/              # Mongoose schemas (node, stream, alert, metric,
+│   │                             #   stream-inspection)
+│   └── media-mtx/
+│       ├── clients/              # MediaMtxClient (axios wrapper, v3 paths API)
+│       ├── registry/             # client factory (cached) + registry (round-robin)
+│       ├── mappers/              # v3 → domain mappers + TRACK_FIELD_MAP table
+│       ├── services/
+│       │   ├── listing/          # ingest/cluster listing strategies + fan-out
+│       │   ├── pipeline/         # MediaMtxPipelineService (create/delete paths)
+│       │   └── stats/            # MediaMtxStreamStatsService
+│       └── types/                # V3PathItem, StreamStats, etc.
+├── nodes/
+│   ├── controllers/              # POST register/heartbeat, GET /, GET /active
+│   ├── domain/types/
+│   ├── dto/                      # RegisterNodeDto, HeartbeatDto
+│   ├── repositories/             # NodeRepository (abstract contract)
+│   └── services/                 # query/ (NodeQueryService), lifecycle/ (NodeLifecycleService)
+├── streams/
+│   ├── controllers/
+│   ├── domain/types/
+│   ├── dto/                      # CreateStreamDto, UpdateStreamDto, AssignStreamDto
+│   ├── repositories/             # StreamRepository (abstract contract)
+│   └── services/
+│       ├── assignment/           # StreamAssignmentService (cluster assignment, persists assignedNode);
+│       │                         #   selection math is pure fns in @/common/selection
+│       ├── mutation/             # StreamCrudService, StreamStatusService
+│       ├── orchestration/        # StreamSetupService (onboard), StreamReservationService (reserve), StreamPipelineService
+│       ├── query/                # StreamQueryService
+│       └── streams-facade.service.ts  # public entry point for other modules
+├── alerts/
+│   ├── controllers/
+│   ├── domain/
+│   │   ├── consts/               # METRIC_ALERT_RULES, STREAM_TRACK_ALERT_RULES
+│   │   └── types/                # Alert, rule + context types
+│   ├── repositories/             # AlertRepository (abstract contract)
+│   └── services/                 # AlertReconcileService, AlertAccessService
+│       └── rulers/               #   MetricAlertRuler, TrackAlertRuler, NodeResourceRuler (@OnEvent)
+├── metrics/                      # MediaMTX operational metrics (no rules/alerts)
+│   ├── controllers/
+│   ├── domain/types/             # NodeMetric, PathMetric
+│   ├── repositories/             # NodeMetricRepository, PathMetricRepository
+│   └── services/
+│       ├── collection/           # scheduler: scrape → persist → emit metrics.collected
+│       └── persistence/          # MetricPersistenceService (node + path)
+├── stream-inspection/            # emits stream.inspected; no alert logic
+│   ├── controllers/
+│   ├── domain/types/             # StreamInspectionRecord
+│   ├── repositories/             # StreamInspectionRepository (abstract contract)
+│   └── services/
+│       ├── query/                # StreamInspectionQueryService
+│       └── collection/           # StreamInspectionCollectionService (@ScheduledTask 30s; sweep → inspect → record → emit)
+├── sync/
+│   ├── domain/                   # SyncContext / SyncDiscoveredStream types
+│   └── services/
+│       ├── scheduler/            # SyncSchedulerService (@ScheduledTask 10s)
+│       ├── context/              # SyncContextBuilderService (builds SyncContext)
+│       ├── orchestration/        # SyncOrchestratorService (runs each step via a guarded runStep)
+│       └── workflows/            # IngestStreamSynchronizer, StreamReconcile,
+│                                 #   StreamStaleness (+ discovery helper)
+└── gateway/                      # EventsGateway (Socket.IO broadcast)
 ```
+
+Every folder has a barrelsby-generated `index.ts`; imports between features go through `@/<feature>` path aliases.
 
 ---
 
 ## Module Design
 
-### Pods Module
+### Nodes Module
 
-**Responsibility**: Manage MediaMTX pod registration and lifecycle.
+**Responsibility**: Node registration, heartbeats, and active-node queries.
 
-**Key Entities**:
+**Services**:
 
-- Pod: Represents a running MediaMTX instance (ingest or cluster type)
-
-**Key Methods**:
-
-- `registerPod(podId, host?, type?, tags?)`: Register a new pod or update existing
-- `getActivePods()`: Get pods that have sent heartbeats within tolerance window
-- `getActiveIngestPods()`: Get active pods of type "ingest"
-- `getActiveClusterPods()`: Get active pods of type "cluster"
-
-**Schema**:
-
-```typescript
-{
-  podId: string (unique)
-  host: string?        // IP/hostname for API calls
-  type: 'ingest' | 'cluster'
-  tags: string[]
-  status: 'active' | 'inactive' | 'draining'
-  lastHeartbeatAt: Date
-  createdAt: Date
-  updatedAt: Date
-}
-```
+- `NodeLifecycleService.registerNode(data)`: Upsert by `nodeId`, set status `active`, refresh `lastHeartbeatAt`, write `host` + `type` (both required), emit `node.registered`
+- `NodeLifecycleService.heartbeat(nodeId)`: Refresh heartbeat only (no `node.registered`)
+- Both register/heartbeat accept optional `resources` (CPU/memory/disk %); when present, emit `node.sampled` for the alerts `NodeResourceRuler` (the nodes feature is a node-alert producer)
+- `NodeQueryService.getActiveNodes(role?)`: Nodes with a heartbeat within `NODE_HEALTH_TOLERANCE_SECONDS`
+- `NodeQueryService.listActiveNodeRefs(role?)` / `listActiveNodeIds(role?)`: Lightweight projections used by sync/metrics/infrastructure
 
 **Used By**:
 
-- MediaMtxService: To discover active ingest pods for stream queries
-- SyncService: To select available cluster pods for stream assignment
-- MetricsService: To identify pod health during failover decisions
+- `IngestStreamListingStrategy`: To discover ingest nodes when the primary ingest endpoint fails
+- `SyncContextBuilderService`: To select active cluster node IDs for assignment
+- `StreamFailoverService` / `StreamSetupService`: To pick failover/assignment candidates
 
 ---
 
 ### Streams Module
 
-**Responsibility**: Manage stream metadata and pod assignment.
+**Responsibility**: Stream metadata, status transitions, node assignment, and pipeline provisioning.
 
-**Key Entities**:
+Internally split by service role; `StreamsFacadeService` is the single entry point other modules (sync, metrics) use.
 
-- Stream: Represents a media stream discovered from ingest or created manually
+**Services**:
 
-**Key Methods**:
+- `StreamQueryService` (read): `findAll`, `findByName`, `findRequiredByName`, `findAssignedByName`, `getAssignmentInfo`
+- `StreamCrudService` (mutation): `create`, `update`, `patch`, `remove`
+- `StreamStatusService` (mutation): `upsertFromDiscovery`, `markStale`
+- `StreamAssignmentService` (mutation): `assignToNode` (emits `stream.assigned`), `clearAssignment` (emits `stream.unassigned`), `ensureAssigned`, `reassign`
+- `StreamSetupService` (orchestration): `create` → assign → provision; marks `pending_assignment` if no active cluster nodes
+- `StreamPipelineService` (orchestration): creates the cluster pull pipeline, sets `synced`/`sync_error`, emits `stream.synced`
+- `StreamsFacadeService`: thin facade re-exposing the above for cross-module callers
 
-- `create(dto)`: Create a new stream
-- `findAll()`: List all streams
-- `upsertFromDiscovery(info)`: Create or update stream from ingest discovery
-- `assignToPod(name, podId)`: Assign stream to a pod
-- `findUnassigned()`: Get streams not assigned to any pod
-- `reassign(name, candidatePods)`: Move assignment to a different pod
+**Assignment algorithms** (`@/common/selection`, context-free pure functions):
 
-**Schema**:
-
-```typescript
-{
-    name: string(unique);
-    source: string; // Origin or description
-    status: string; // discovered|assigned|active|inactive|error
-    metadata: object;
-    enabled: boolean;
-    lastSeenAt: Date
-        ? lastSyncedAt
-        : Date
-          ? lastError
-          : string
-            ? activeConsumers
-            : number;
-    assignedPod: string // Pod ID if assigned
-        ? assignedAt
-        : Date
-          ? createdAt
-          : Date;
-    updatedAt: Date;
-}
-```
-
-**Used By**:
-
-- SyncService: To track discovered streams
-- MetricsService: To route metrics to assigned pod
-- AlertsService: To generate stream-specific alerts
-- StreamInspectionService: To analyze tracks
-
----
-
-### Pods + Streams Integration Points
-
-1. **Pod Registration Events**: When a new pod registers, no immediate action occurs
-2. **Stream Assignment**: SyncService uses hash(`streamName`) % `activePodCount` to assign
-3. **Pod Removal Impact**: Streams assigned to removed pods become unassigned but are not deleted
-4. **Active Pod Queries**: Both modules independently query active pods; Sync uses results for assignment
+- `selectByHash(name, candidateNodes)` — cluster placement: djb2-style hash of the stream name modulo the candidate node count; deterministic as long as node list order is stable
+- `selectLeastLoaded(candidates)` — ingest placement: fewest live publishers + pending reservations, ties broken by id
+- `StreamAssignmentService` gathers the domain inputs and persists the outcome; neither algorithm is a swappable policy (single algorithm each)
 
 ---
 
 ### Alerts Module
 
-**Responsibility**: Track system alerts and conditions.
+**Responsibility**: Own the rule sets, evaluate producer data into alerts, and run the alert lifecycle (ADR-0010).
 
-**Key Entities**:
+**Rulers** (event listeners that evaluate rules → signals → reconcile):
 
-- Alert: Represents a system condition (performance or configuration issue)
+- `MetricAlertRuler` (`@OnEvent metrics.collected`): runs `METRIC_ALERT_RULES` over every path sample → per-stream signals → `reconcileSource(metrics, …)`
+- `TrackAlertRuler` (`@OnEvent stream.inspected`): runs `STREAM_TRACK_ALERT_RULES` over the inspected tracks (with the stream's expectations as context) → `reconcileSubject(inspection, stream, …)`
+- `NodeResourceRuler` (`@OnEvent node.sampled`): runs `NODE_RESOURCE_RULES` over a node's reported CPU/memory/disk (thresholds from config) → `reconcileSubject(node, nodeId, …)`
 
-**Key Methods**:
+An alert's **subject** is whatever the source alerts on — a stream name (metrics/inspection) or a node id (node). Reconcile is scoped by `(source, subject, type)`.
 
-- `createAlert(streamName, type, severity, message)`: Create an alert with deduplication
-- `checkMetricsAndAlert(streamName, metric)`: Analyze metric and create alerts
-- `resolveAlert(alertId)`: Mark as resolved
+**Reconcile** (`AlertReconcileService`, scoped by `AlertSource`): diffs current signals against open alerts of that source — add (`alert.created`), refresh (`lastSeenAt`), update (`alert.updated`), resolve (`alert.resolved`). `reconcileSource` auto-resolves subjects absent from a cycle; duplicate-type signals (same stream on multiple nodes) collapse to one. Add is an **atomic, idempotent upsert** on the `(source, subject, type)` dedup key, backed by a partial unique index (open alerts only), so concurrent reconciles for the same subject can't create duplicates and only the inserting one emits `alert.created`.
 
-**Schema**:
+**Read/manual surface** (`AlertAccessService`): `listAlerts`, `resolveAlert(id)` — the externally-triggered (REST) surface, distinct from the automatic reconcile lifecycle.
 
-```typescript
-{
-    streamName: string;
-    type: string; // bitrate_low|packet_loss|latency_high|etc.
-    severity: "info" | "warning" | "critical";
-    message: string;
-    resolved: boolean;
-    resolvedAt: Date ? createdAt : Date;
-    updatedAt: Date;
-}
-```
+**Rule sets** (`alerts/domain/consts/`, evaluated via the shared `RuleEvaluator`):
 
-**Deduplication**:
-
-- If an unresolved alert of type X already exists for stream Y, no new alert is created
-- Only first alert of a type emits an event
-
-**Conditions Checked**:
-
-- Bitrate < 500 kbps → warning
-- Packet loss > 2% → critical
-- Latency > 1000 ms → warning
+- `METRIC_ALERT_RULES`: `stream_not_ready` (path not ready, warning), `frames_in_error` (frames-in-error > 0, warning)
+- `STREAM_TRACK_ALERT_RULES`: missing video/audio track (warning, unless `metadata.hasExpectedVideo/Audio === false`), unexpected track types (info)
 
 ---
 
 ### Metrics Module
 
-**Responsibility**: Collect performance data and trigger failover.
+**Responsibility**: Monitor MediaMTX-as-a-service — scrape node + path operational metrics and emit them. No rules, no alerts, no failover (those moved out; per-stream quality is the inspection feature's job).
 
-**Key Methods**:
+**Flow** (`MetricCollectionService.collectMetrics`, `@ScheduledTask` every 10 seconds):
 
-- `collectMetrics()`: Periodic job (every 10 seconds) that:
-    1. Lists ingest streams and cluster streams
-    2. Queries stats for each
-    3. Saves metric samples
-    4. Checks for alerts
-    5. Triggers pod failover if degraded
+1. `MediaMtxMetricsService.collect()` scrapes every ingest + cluster node's Prometheus `/metrics` (nodes resolved from the live node registry, fallback to configured URLs; per-node failures isolated) → `MediaMtxMetricsSnapshot[]` (a `NodeMetric` + `PathMetric[]` per node)
+2. Persist all node + path samples (`MetricPersistenceService` → `nodemetrics` / `pathmetrics`)
+3. Emit `metrics.collected` `{ nodes, paths, collectedAt }` — the alerts `MetricAlertRuler` consumes it
 
-**Failover Logic**:
-
-- If cluster stream has `packetLoss > 2%` or `latency > 1000 ms`
-- Pick a different active pod from candidates
-- Call `streamsService.reassign(streamName, otherPodIds)`
-
-**Schema**:
-
-```typescript
-{
-    streamName: string;
-    context: "ingest" | "cluster";
-    bitrate: number; // bps
-    fps: number;
-    latency: number; // ms
-    jitter: number; // ms
-    packetLoss: number; // 0-100 percentage
-    consumers: number;
-    createdAt: Date;
-    updatedAt: Date;
-}
-```
+**Failover**: removed from this feature. Node-death reassignment in the sync loop (`ensureAssigned` dropping a vanished node) is the failover mechanism that has real data.
 
 ---
 
 ### Sync Module
 
-**Responsibility**: Core stream orchestration - discovery, assignment, relay creation.
+**Responsibility**: Core orchestration — discovery, assignment, pipeline creation, staleness cleanup.
 
-**Key Methods**:
+**Flow** (`SyncSchedulerService.periodicSync`, `@ScheduledTask` every 10 seconds):
 
-- `periodicSync()`: Executed on a schedule (method marked with @Cron decorator)
-    1. Query ingest streams
-    2. Query cluster streams
-    3. Upsert discovered ingest streams into DB
-    4. For unassigned streams, assign to pod using hash
-    5. For assigned streams, create relay pipeline on cluster if missing
-    6. Mark ingest streams as stale if removed from ingest
-    7. Delete relay pipelines for stale streams
-    8. Emit sync events
+1. `SyncContextBuilderService.buildContext()` gathers in parallel: ingest stream list, cluster stream list, active cluster node IDs, all DB streams → `SyncContext`
+2. `SyncOrchestratorService.execute(context)`:
+   - Skips entirely (with a warning) if no active cluster nodes are registered
+   - Runs each step service in a fixed order, isolating failures per step behind a private `runStep` guard (a failing step is logged by name and collected, without aborting the others)
+   - Emits `sync.tick` with `{ ingest, cluster, failures }`
 
-**Events Emitted**:
+**Steps** (injected directly by the orchestrator and run in this order):
 
-- `stream.synced`: Full stream document after successful relay creation
-- `stream.removed`: Stream name when ingest stream disappears
-- `sync.tick`: Inventory counts {ingest, cluster}
-- `stream.sync.failure`: {stream, error} on pipeline creation failure
+- `IngestStreamSynchronizerService`: For each discovered ingest stream — upsert into DB (`IngestStreamDiscoveryService`), ensure node assignment, and deploy a cluster pipeline if the stream is missing from the cluster
+- `StreamReconcileService`: For enabled manual streams (`isManual`) — ensure assignment and recreate missing cluster pipelines
+- `StreamStalenessService`: For non-manual DB streams no longer present on ingest — mark `stale` and, when present in the cluster, tear down the pipeline via `StreamsFacadeService.teardownClusterPipeline` (streams owns the `deleteClusterPipeline` call and the `stream.removed` event)
 
 ---
 
 ### Stream Inspection Module
 
-**Responsibility**: Analyze media tracks and detect content changes.
+**Responsibility**: Analyze media tracks and raise content alerts.
 
-**Key Methods**:
+**Flow** (`StreamInspectionCollectionService.inspectAllStreams`, `@ScheduledTask` every 30 seconds):
 
-- `inspectAllStreams()`: Periodic job (every 30 seconds) that:
-    1. Lists ingest and cluster streams
-    2. For each, calls getStreamDetails() to get track list
-    3. Persists inspection record
-    4. Checks for expected/unexpected tracks
+1. List all contextual streams (ingest + cluster)
+2. For each, `inspectAndRecord` (same service, isolated per stream):
+   - Fetch `/v3/paths/get/{name}` details (errors recorded in `lastError`, inspection still persisted)
+   - Track parsing happens inside infrastructure: `getStreamDetails` returns a domain `StreamDetails` (tracks mapped via the `TRACK_FIELD_MAP` table in `infrastructure/media-mtx/mappers/`); the service assembles the record inline, defaulting to empty tracks/metadata when inspection failed
+   - Persist the inspection record and emit `stream.inspected` (the service assembles the record inline)
+3. Alerting is decoupled: inspection just emits the event. The alerts feature's `TrackAlertRuler` reacts (see Alerts Module / ADR-0010) — inspection no longer imports `@/alerts` or `@/streams`.
 
-**Track Analysis**:
-
-- Extracts codec, resolution, fps, channels, sample rate from MediaMTX stream details
-- Compares against stream.metadata.expectedVideo and expectedAudio
-- Creates warning if expected video/audio missing
-- Creates info alert for unexpected track types
-
-**Schema**:
-
-```typescript
-{
-  streamName: string
-  source: 'ingest' | 'cluster'
-  tracks: StreamTrack[]
-  metadata: object
-  lastError: string?
-  inspectedAt: Date
-  createdAt: Date
-  updatedAt: Date
-}
-
-interface StreamTrack {
-  type: 'video' | 'audio' | 'subtitle' | 'data'
-  codec?: string
-  language?: string
-  bitrate?: number
-  width?: number         // video only
-  height?: number        // video only
-  fps?: number           // video only
-  channels?: number      // audio only
-  sampleRate?: number    // audio only
-}
-```
+**Query API**: `StreamInspectionQueryService` provides latest-per-stream, latest-for-one, and history.
 
 ---
 
-### MediaMTX Integration Module
+### MediaMTX Infrastructure (`src/infrastructure/media-mtx/`)
 
-**Responsibility**: Encapsulate all HTTP calls to MediaMTX instances.
+**Responsibility**: All HTTP communication with MediaMTX nodes, using the real **v3 API**.
 
-**Key Methods**:
+**Layers**:
 
-- `listIngestStreams()`: GET /api/streams from active ingest pods, with fallback
-- `listClusterStreams()`: GET /api/streams from all configured cluster nodes, deduplicate
-- `getStreamStats(context, streamName)`: GET /api/streams/{name}/stats
-- `createClusterPullPipeline(stream)`: POST /api/stream-pipelines with RTSP URI
-- `deleteClusterPipeline(streamName)`: DELETE /api/stream-pipelines/{name}
+- `MediaMtxClient` (client): thin axios wrapper per endpoint URL (8s timeout) —
+  `listPaths()` → `GET /v3/paths/list`, `getPathItem(name)` → `GET /v3/paths/get/{name}`,
+  `addPath(name, source)` → `POST /v3/config/paths/add/{name}`, `removePath(name)` → `DELETE /v3/config/paths/delete/{name}`.
+  Raw `V3PathItem`s are mapped to domain shapes (`mapV3PathToStream`) before leaving the client. No error handling — errors propagate.
+- `MediaMtxClientFactory` (registry): creates and **caches** one client per base URL
+- `MediaMtxClientRegistry` (registry): owns the ingest client and the *static* cluster pool (fallback); builds per-node clients at `http://{host||nodeId}:{INGEST_NODE_MEDIAMTX_PORT | CLUSTER_NODE_MEDIAMTX_PORT}`
+- `ClusterNodeResolverService` (registry): resolves the **live** cluster client set from the node registry — all active cluster nodes for fan-out, or the client for a specific assigned node — falling back to the static pool / round-robin pick when none are registered (see ADR-0009)
+- `MediaMtxStreamListingService` (service): ingest listing (primary endpoint with fallback to registered ingest nodes) and cluster listing (fan-out over all registered cluster nodes with per-node error isolation via `StreamCollectionService`)
+- `MediaMtxPipelineService` (service): create a cluster pull pipeline **on the node the stream is assigned to**, pulling from `${INGEST_RTSP_URL}/{name}` (or the stream's stored source when it is already a pullable protocol URL; treats HTTP 409 as already-exists); delete fans out across all active cluster nodes
+- `MediaMtxStreamStatsService` (service): `getStreamDetails(name, source)` — returns a domain `StreamDetails`, node selected by node role (used by inspection)
+- `MediaMtxMetricsService` (service): scrapes each node's Prometheus `/metrics` (`MediaMtxMetricsClient` → `parsePrometheusText` → `mapMetricsToSnapshot`), resolving nodes from the node registry; returns `MediaMtxMetricsSnapshot[]`
 
-**Pod Discovery**:
+---
 
-- Active ingest pods queried at: `http://{pod.host || pod.podId}:9000/api/streams`
-- Fallback to configured `INGEST_MEDIAMTX_BASE_URL` if no pods active
+### Database Infrastructure (`src/infrastructure/database/`)
 
-**Cluster Selection**:
-
-- Maintains list of axios clients, one per configured cluster URL
-- `pickClusterClient()` uses round-robin selection
-- All cluster queries broadcast to each node, results deduplicated
+Each feature defines an **abstract repository contract** in its own `repositories/` folder (e.g. `StreamRepository`); the concrete Mongoose implementations (`mongo-stream.repository.ts`, etc.) and schemas live in `infrastructure/database/`. Services depend only on the abstractions.
 
 ---
 
 ### Gateway (WebSocket)
 
-**Responsibility**: Real-time event broadcasting to connected clients.
+**Responsibility**: Bridge in-process events to Socket.IO clients (`EventsGateway`, CORS open).
 
-**Subscribed Events**:
+**Broadcast events** (subscribed at module init):
 
-- `stream.synced` → Forward to clients as `stream.synced`
-- `stream.removed` → Forward as `stream.removed`
-- `stream.assigned` → Forward as `stream.assigned`
-- `stream.unassigned` → Forward as `stream.unassigned`
-- `alert.created` → Forward as `alert.created`
-- `alert.resolved` → Forward as `alert.resolved`
-- `stream.inspected` → Forward as `stream.inspected`
-- `pod.registered` → Forward as `pod.registered`
-- `pod.removed` → Forward as `pod.removed`
+`stream.synced`, `stream.removed`, `stream.assigned`, `stream.unassigned`, `alert.created`, `alert.resolved`, `stream.inspected`, `node.registered`
 
-**Not Forwarded**:
-
-- `sync.tick` (internal diagnostics only)
-- `stream.sync.failure` (internal error tracking)
+**Not forwarded**: `sync.tick` (internal diagnostics only).
 
 ---
 
@@ -464,238 +335,63 @@ interface StreamTrack {
 ### Typical Stream Lifecycle
 
 ```
-1. POD REGISTRATION
-   ┌──────────────┐
-   │  MediaMTX    │ (ingest or cluster type)
-   │  Instance    │
-   └──────┬───────┘
-          │ POST /api/pods/register
-          │ {podId, host, type}
-          ▼
-   ┌──────────────────┐
-   │ Pods Service     │
-   │ registerPod()    │
-   └──────┬───────────┘
-          │
-          ▼
-   ┌──────────────────┐
-   │ MongoDB: Pod     │
-   │ Collection       │
-   │ (new/upsert)     │
-   └──────────────────┘
-          │
-          ▼ emit: pod.registered
-   ┌──────────────────┐
-   │ Gateway          │
-   │ → send to clients│
-   └──────────────────┘
+1. NODE REGISTRATION
+   MediaMTX node ──POST /api/nodes/register──▶ NodeLifecycleService
+        └─▶ upsert Node in MongoDB ──▶ emit node.registered ──▶ Gateway ──▶ clients
+   (subsequent POST /api/nodes/heartbeat refreshes lastHeartbeatAt, no event)
+```
 
-2. STREAM DISCOVERY (periodic, every 10 seconds)
-   ┌──────────────────┐
-   │ Sync Service     │
-   │ periodicSync()   │
-   └──────┬───────────┘
-          │
-          ├─→ listIngestStreams()  ─→ MediaMTX Ingest API
-          │   (via active pods or fallback)
-          │
-          └─→ For each discovered stream:
+2\. STREAM SYNC (every 10 seconds):
 
-              a) Upsert into DB
-              ┌──────────────────┐
-              │ Streams Service  │
-              │ upsertFrom       │
-              │ Discovery()      │
-              └─────┬────────────┘
-                    │
-                    ▼
-              ┌──────────────────┐
-              │ MongoDB: Stream   │
-              │ (new/update)      │
-              └──────────────────┘
+```mermaid
+sequenceDiagram
+    participant Cron as SyncSchedulerService (@ScheduledTask 10s)
+    participant Agg as SyncContextBuilder
+    participant MTX as MediaMTX Integration
+    participant Nodes as NodeQueryService
+    participant Str as StreamsFacade
+    participant Orch as SyncOrchestrator
+    participant Bus as Event Bus → Gateway
 
-              b) Assign to pod (if unassigned)
-              ┌──────────────────┐
-              │ hash(streamName) │
-              │ % activePodCount │
-              └─────┬────────────┘
-                    │
-                    ▼
-              ┌──────────────────┐──────────────┐
-              │ Streams Service  │ Pods Service │
-              │ assignToPod()    │ getActive()  │
-              └─────┬────────────┴──────────────┘
-                    │
-                    ▼
-              ┌──────────────────┐
-              │ MongoDB: Stream   │
-              │ {assignedPod,    │
-              │  assignedAt}     │
-              └──────────────────┘
-                    │
-                    ▼ emit: stream.assigned
-              ┌──────────────────┐
-              │ Gateway          │
-              │ → send to clients│
-              └──────────────────┘
+    Cron->>Agg: buildContext()
+    Agg->>MTX: listIngestStreams() (fallback: ingest nodes)
+    Agg->>MTX: listClusterStreams() (fan-out, error-isolated)
+    Agg->>Nodes: listActiveNodeIds(CLUSTER)
+    Agg->>Str: findAll()
+    Agg-->>Cron: SyncContext
+    Cron->>Orch: execute(context)
+    Note over Orch: skipped entirely if no active cluster nodes
+    loop Sync steps — IngestSync, Reconcile, Staleness (failures isolated per step)
+        Orch->>Str: upsertFromDiscovery / ensureAssigned / markStale
+        Str->>MTX: POST /v3/config/paths/add|remove/{name}
+        Str--)Bus: stream.assigned / stream.synced / stream.removed
+    end
+    Orch--)Bus: sync.tick {ingest, cluster, failures}
+```
 
-              c) Create relay pipeline
-              ┌──────────────────────┐
-              │ MediaMTX Service     │
-              │ createCluster        │
-              │ PullPipeline()       │
-              └────┬─────────────────┘
-                   │
-                   │ POST /api/stream-pipelines
-                   │ {name, source: rtsp://..., protocol}
-                   ▼
-              ┌──────────────────┐
-              │ MediaMTX Cluster │
-              │ Creates pipeline │
-              │ Starts pulling   │
-              └──────────────────┘
-                   │
-                   ▼ emit: stream.synced
-              ┌──────────────────┐
-              │ Gateway          │
-              │ → send to clients│
-              └──────────────────┘
+```
+3. METRICS COLLECTION (every 10 seconds)
+   MetricCollectionService
+     └─▶ MediaMtxMetricsService.collect()
+           └─ per node (ingest + cluster, resolved from node registry):
+                GET /metrics → parse → NodeMetric + PathMetric[]
+     └─▶ persist node + path metrics (nodemetrics / pathmetrics)
+     └─▶ emit metrics.collected {nodes, paths}
+           └─▶ MetricAlertRuler (@OnEvent, alerts feature):
+                 METRIC_ALERT_RULES over each path → signals →
+                 AlertReconcileService.reconcileSource(metrics)
+                 → alert.created / updated / resolved
 
-3. METRICS COLLECTION (periodic, every 10 seconds)
-   ┌──────────────────┐
-   │ Metrics Service  │
-   │ collectMetrics() │
-   └──────┬───────────┘
-          │
-          ├─→ listIngestStreams()
-          ├─→ listClusterStreams()
-          │
-          └─→ For each stream/context pair:
-
-              a) Get stats
-              ┌──────────────────┐
-              │ MediaMTX Service │
-              │ getStreamStats() │
-              └────┬─────────────┘
-                   │
-                   ▼
-              ┌──────────────────┐
-              │ MediaMTX API     │
-              │ /api/streams/:id/│
-              │ stats            │
-              └────┬─────────────┘
-                   │
-                   ▼
-              ┌──────────────────┐
-              │ Parse: bitrate,  │
-              │ fps, latency,    │
-              │ jitter,          │
-              │ packetLoss       │
-              └────┬─────────────┘
-
-              b) Persist metric
-              ┌──────────────────┐
-              │ MongoDB: Metric   │
-              │ (new doc)         │
-              └──────────────────┘
-
-              c) Check alerts
-              ┌──────────────────┐
-              │ Alerts Service   │
-              │ checkMetrics     │
-              │ AndAlert()       │
-              └────┬─────────────┘
-                   │
-                   ├─ bitrate < 500?
-                   ├─ packetLoss > 2?
-                   └─ latency > 1000?
-                        │
-                        ▼ (if condition met)
-                   ┌──────────────────┐
-                   │ createAlert()    │
-                   │ (with dedup)     │
-                   └────┬─────────────┘
-                        │
-                        ├─→ MongoDB: Alert (if new)
-                        │
-                        └─→ emit: alert.created
-                        ┌──────────────────┐
-                        │ Gateway          │
-                        │ → send to clients│
-                        └──────────────────┘
-
-              d) Failover (if degraded cluster stream)
-              ┌──────────────────────────┐
-              │ if packetLoss > 2 ||     │
-              │ latency > 1000           │
-              └────┬─────────────────────┘
-                   │
-                   ▼
-              ┌──────────────────┐
-              │ Pick different   │
-              │ active pod       │
-              └────┬─────────────┘
-                   │
-                   ▼
-              ┌──────────────────────┐
-              │ Streams Service      │
-              │ reassign(name,       │
-              │ otherPodIds)         │
-              └────┬─────────────────┘
-                   │
-                   ▼
-              ┌──────────────────┐
-              │ MongoDB: Stream   │
-              │ update assignedPod│
-              └──────────────────┘
-
-4. STREAM INSPECTION (periodic, every 30 seconds)
-   ┌───────────────────────┐
-   │ Inspection Service    │
-   │ inspectAllStreams()   │
-   └──────┬────────────────┘
-          │
-          ├─→ listIngestStreams()
-          ├─→ listClusterStreams()
-          │
-          └─→ For each stream:
-
-              a) Get stream details
-              ┌──────────────────┐
-              │ MediaMTX API     │
-              │ /api/streams/:id │
-              └────┬─────────────┘
-                   │
-                   ▼
-              ┌──────────────────┐
-              │ Extract tracks:  │
-              │ type, codec,     │
-              │ resolution, etc. │
-              └────┬─────────────┘
-
-              b) Persist inspection
-              ┌──────────────────┐
-              │ MongoDB:         │
-              │ StreamInspection │
-              │ {tracks, ...,    │
-              │  inspectedAt}    │
-              └──────────────────┘
-                   │
-                   ▼ emit: stream.inspected
-              ┌──────────────────┐
-              │ Gateway          │
-              │ → send to clients│
-              └──────────────────┘
-
-              c) Check track alerts
-              ┌──────────────────────┐
-              │ checkInspection      │
-              │ Alerts()             │
-              └────┬─────────────────┘
-                   │
-                   ├─ expectedVideo? warn if missing
-                   ├─ expectedAudio? warn if missing
-                   └─ unexpected tracks? create info alert
+4. STREAM INSPECTION (every 30 seconds)
+   StreamInspectionCollectionService
+     └─▶ listContextualStreams() → per stream (sequential):
+           ├─ GET /v3/paths/get/{name} (errors recorded as lastError)
+           ├─ tracks parsed in infrastructure (TRACK_FIELD_MAP-driven mapper)
+           ├─ persist StreamInspection record
+           └─ emit stream.inspected
+                 └─▶ TrackAlertRuler (@OnEvent, alerts feature):
+                       STREAM_TRACK_ALERT_RULES vs stream expectations → signals →
+                       AlertReconcileService.reconcileSubject(inspection, stream)
 ```
 
 ---
@@ -704,119 +400,60 @@ interface StreamTrack {
 
 ### Docker Compose (Single Machine)
 
+`npm run stack:up` (= `docker-compose -f deploy/docker/compose.local.yml up --build`)
+
+```mermaid
+flowchart LR
+    subgraph host["Docker Host"]
+        App["app (NestJS)<br/>:3000 API & WebSocket"]
+        Mongo[("mongodb<br/>:27017")]
+        Ingest["mediamtx-ingest<br/>API :9000, RTSP :8554, HLS :8888"]
+        Cluster["mediamtx-cluster<br/>API :9001, RTSP :8555, HLS :8889"]
+    end
+    App --> Mongo
+    App -- "v3 API" --> Ingest
+    App -- "v3 API" --> Cluster
+    Cluster -- "RTSP pull" --> Ingest
+    Ingest -. "register + heartbeat<br/>(node-heartbeat-monitor.sh)" .-> App
+    Cluster -. "register + heartbeat" .-> App
 ```
-┌──────────────────────────────────────────────────────┐
-│ Docker Host / Machine                                │
-├──────────────────────────────────────────────────────┤
-│                                                       │
-│  ┌────────────────┐                                  │
-│  │ sync-service   │  port 3000 (API & WebSocket)    │
-│  │ (NestJS App)   │                                  │
-│  └────────┬───────┘                                  │
-│           │                                           │
-│  ┌────────▼──────────────┬──────────────────┐       │
-│  │                       │                  │        │
-│  │  ┌──────────┐    ┌────▼─────┐    ┌─────▼────┐   │
-│  │  │ MongoDB  │    │MediaMTX  │    │MediaMTX  │   │
-│  │  │(Sync DB) │    │(Ingest)  │    │(Cluster) │   │
-│  │  │ 27017    │    │ 9000     │    │ 9001     │   │
-│  │  └──────────┘    └──────────┘    └──────────┘   │
-│  │                                                   │
-│  │  localhost:3000 → curl http://localhost:3000/... │
-│  │  localhost:9000 → ingest source streams         │
-│  │  localhost:9001 → cluster relay target          │
-│  │                                                   │
-│  └───────────────────────────────────────────────────┘
-│
-```
+
+Compose healthcheck on MediaMTX containers: `GET /v3/paths/list`.
 
 ### Docker Compose Scale (Multiple Cluster Instances)
 
 ```
-docker-compose -f docker-compose.scale.yml up --scale mediamtx-cluster=3
-
-┌──────────────────────────────────────────────────────┐
-│ Docker Host / Machine                                │
-├──────────────────────────────────────────────────────┤
-│                                                       │
-│  ┌────────────────────────────────────────────────┐ │
-│  │ sync-service                                   │ │
-│  │ port 3000                                      │ │
-│  └────────────────┬───────────────────────────────┘ │
-│                   │                                  │
-│         ┌─────────┼──────────┬────────┐             │
-│         │         │          │        │              │
-│    ┌────▼──┐  ┌───▼──┐  ┌───▼──┐  ┌─▼──────┐      │
-│    │MongoDB│  │Ingest│  │Clust1│  │Clust2  │      │
-│    │ 27017 │  │ 9000 │  │ 9001 │  │ 9002   │      │
-│    └───────┘  └──────┘  └──────┘  └────────┘      │
-│                                 │                   │
-│                            ┌────▼──┐               │
-│                            │Clust3 │               │
-│                            │ 9003  │               │
-│                            └───────┘               │
-│                                                    │
-│ Cluster instances auto-register via:              │
-│ POST /api/pods/register                           │
-│ {podId: "mediamtx-cluster_1", type: "cluster"}   │
-│                                                    │
-└────────────────────────────────────────────────────┘
+npm run stack:up:scaled
+# = docker-compose -f deploy/docker/compose.local.yml -f deploy/docker/compose.cluster.yml up --build
 ```
+
+The override sets `scale: 3` on `mediamtx-cluster`; instances self-register via `POST /api/nodes/register` with `type: cluster`.
 
 ### Kubernetes/OpenShift Production
 
+```mermaid
+flowchart TB
+    subgraph k8s["Kubernetes Cluster"]
+        Sync["Deployment: sync-service<br/>:3000"]
+        subgraph mtx["Deployment: mediamtx-cluster (replicas ×N)"]
+            P1["node 1<br/>API :9000"]
+            P2["node 2"]
+            PN["node N"]
+        end
+        MongoDB[("StatefulSet: mongodb<br/>:27017")]
+        CM["ConfigMap: mediamtx-config"]
+    end
+    Sync --> MongoDB
+    CM -.-> mtx
+    P1 -. "register + heartbeat<br/>(startup script in container)" .-> Sync
+    P2 -.-> Sync
+    PN -.-> Sync
+    Sync -- "v3 config API (pipelines)" --> mtx
 ```
-┌──────────────────────────────────────────────────┐
-│ Kubernetes Cluster                               │
-├──────────────────────────────────────────────────┤
-│                                                  │
-│  ┌─────────────────────────────────────────┐   │
-│  │ Namespace: streaming                    │   │
-│  ├─────────────────────────────────────────┤   │
-│  │                                         │   │
-│  │ Deployment: sync-service               │   │
-│  │  └─ Pod: sync-service-xxxxx            │   │
-│  │     └─ Container: sync-service:latest  │   │
-│  │         Port: 3000 (API, WebSocket)    │   │
-│  │         Liveness: GET /api/docs        │   │
-│  │         Readiness: GET /api/docs       │   │
-│  │                                        │   │
-│  │ Deployment: mediamtx-cluster           │   │
-│  │  ├─ Pod: mediamtx-cluster-1 (replicas)│   │
-│  │  │  └─ Container: mediamtx:latest      │   │
-│  │  │     Port: 9000 (API)                │   │
-│  │  │     Healthcheck: GET /api/version   │   │
-│  │  │     Pod init: register with sync    │   │
-│  │  │     Pod death: deregister from sync │   │
-│  │  ├─ Pod: mediamtx-cluster-2            │   │
-│  │  └─ Pod: mediamtx-cluster-3            │   │
-│  │                                        │   │
-│  │ StatefulSet: mongodb                   │   │
-│  │  └─ Pod: mongodb-0                     │   │
-│  │     Port: 27017                        │   │
-│  │                                        │   │
-│  │ ConfigMap: mediamtx-config             │   │
-│  │  └─ mediamtx.conf (shared config)     │   │
-│  │                                        │   │
-│  │ Service: sync-service                  │   │
-│  │  └─ Exposes port 3000 internally       │   │
-│  │     (accessible at sync-service:3000)  │   │
-│  │                                        │   │
-│  │ Service: mediamtx-cluster              │   │
-│  │  └─ Headless or ClusterIP              │   │
-│  │     (for pod-to-service discovery)     │   │
-│  │                                        │   │
-│  └─────────────────────────────────────────┘   │
-│                                                 │
-│ Scaling:                                        │
-│  kubectl scale deployment mediamtx-cluster --   │
-│    replicas=5                                   │
-│                                                 │
-│ New pods auto-register via pod-heartbeat.sh   │
-│ script running in container on startup         │
-│                                                 │
-└──────────────────────────────────────────────────┘
-```
+
+Scaling: `kubectl scale deployment mediamtx-cluster --replicas=5` — new nodes auto-register via the heartbeat script.
+
+Manifests: `deploy/k8s/mediamtx-configmap.yaml`, `deploy/k8s/mediamtx-cluster-deployment.yaml`. (The MediaMTX runtime configs mounted by compose live in `deploy/mediamtx/` — they are not k8s manifests.)
 
 ---
 
@@ -824,23 +461,19 @@ docker-compose -f docker-compose.scale.yml up --scale mediamtx-cluster=3
 
 ### MongoDB Collections
 
-#### pods
+All schemas use `{ timestamps: true }` (automatic `createdAt`/`updatedAt`).
+
+#### nodes
 
 ```javascript
 {
   "_id": ObjectId,
-  "podId": String (unique),
-  "host": String,
-  "type": String ("ingest" | "cluster"),
-  "tags": [String],
-  "status": String ("active" | "inactive" | "draining"),
-  "lastHeartbeatAt": Date,
-  "createdAt": Date,
-  "updatedAt": Date
+  "nodeId": String (unique),
+  "host": String (required),
+  "type": String ("ingest" | "cluster", required),
+  "status": String ("active" | "inactive" | "draining", default "active"),
+  "lastHeartbeatAt": Date
 }
-
-// Index: podId (unique)
-// Index: type, lastHeartbeatAt (for active pod queries)
 ```
 
 #### streams
@@ -850,21 +483,18 @@ docker-compose -f docker-compose.scale.yml up --scale mediamtx-cluster=3
   "_id": ObjectId,
   "name": String (unique),
   "source": String,
-  "status": String ("discovered" | "assigned" | "active" | "inactive" | "error"),
-  "metadata": Object,
-  "enabled": Boolean,
-  "lastSeenAt": Date,
-  "lastSyncedAt": Date,
-  "lastError": String,
-  "activeConsumers": Number,
-  "assignedPod": String,
-  "assignedAt": Date,
-  "createdAt": Date,
-  "updatedAt": Date
+  "status": String ("created" | "discovered" | "pending_assignment" |
+                    "assigned" | "synced" | "sync_error" | "stale"),
+  "metadata": Mixed (codec/resolution/fps/channels + bytesReceived/bytesSent/readers),
+  "isEnabled": Boolean (default false),
+  "lastSeenAt": Date | null,
+  "lastSyncedAt": Date | null,
+  "lastError": String | null,
+  "activeConsumers": Number (default 0),
+  "isManual": Boolean (default false),
+  "assignedNode": String | null,
+  "assignedAt": Date | null
 }
-
-// Index: name (unique)
-// Index: assignedPod (for pod-scoped queries)
 ```
 
 #### alerts
@@ -873,17 +503,12 @@ docker-compose -f docker-compose.scale.yml up --scale mediamtx-cluster=3
 {
   "_id": ObjectId,
   "streamName": String,
-  "type": String,
+  "type": String (AlertType enum),
   "severity": String ("info" | "warning" | "critical"),
   "message": String,
-  "resolved": Boolean,
-  "resolvedAt": Date,
-  "createdAt": Date,
-  "updatedAt": Date
+  "isResolved": Boolean (default false),
+  "resolvedAt": Date | null
 }
-
-// Index: streamName, type, resolved (for deduplication)
-// Index: createdAt (for chronological queries)
 ```
 
 #### metrics
@@ -898,13 +523,8 @@ docker-compose -f docker-compose.scale.yml up --scale mediamtx-cluster=3
   "latency": Number,
   "jitter": Number,
   "packetLoss": Number,
-  "consumers": Number,
-  "createdAt": Date,
-  "updatedAt": Date
+  "consumers": Number
 }
-
-// Index: streamName, createdAt (for time-series queries)
-// TTL Index on createdAt (optional, for automatic cleanup)
 ```
 
 #### streaminspections
@@ -914,27 +534,11 @@ docker-compose -f docker-compose.scale.yml up --scale mediamtx-cluster=3
   "_id": ObjectId,
   "streamName": String,
   "source": String ("ingest" | "cluster"),
-  "tracks": [
-    {
-      "type": String ("video" | "audio" | "subtitle" | "data"),
-      "codec": String,
-      "language": String,
-      "bitrate": Number,
-      "width": Number,        // video
-      "height": Number,       // video
-      "fps": Number,          // video
-      "channels": Number,     // audio
-      "sampleRate": Number    // audio
-    }
-  ],
-  "metadata": Object,
-  "lastError": String,
-  "inspectedAt": Date,
-  "createdAt": Date,
-  "updatedAt": Date
+  "tracks": [Mixed],            // StreamTrack[]
+  "metadata": Mixed,            // bytesReceived, bytesSent, readers
+  "lastError": String | null,
+  "inspectedAt": Date
 }
-
-// Index: streamName, inspectedAt (for history)
 ```
 
 ---
@@ -943,77 +547,63 @@ docker-compose -f docker-compose.scale.yml up --scale mediamtx-cluster=3
 
 ### Call Graph
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    External Callers (HTTP/WebSocket)         │
-├─────────────────────────────────────────────────────────────┤
-│                                                               │
-│  Controllers:                                                 │
-│  ├─ StreamsController ─→ StreamsService                      │
-│  ├─ PodsController ───→ PodsService                          │
-│  ├─ AlertsController ──→ AlertsService                       │
-│  ├─ MetricsController ─→ MetricsService                      │
-│  └─ InspectionController ──→ InspectionService              │
-│                                                               │
-├─────────────────────────────────────────────────────────────┤
-│                   Scheduled/Event-Driven Services             │
-├─────────────────────────────────────────────────────────────┤
-│                                                               │
-│  SyncService (every 10 sec)                                  │
-│  ├─→ MediaMtxService (ingest discovery)                      │
-│  ├─→ MediaMtxService (cluster discovery)                     │
-│  ├─→ StreamsService (upsert, assign, find unassigned)        │
-│  ├─→ PodsService (get active cluster pods)                   │
-│  └─→ MediaMtxService (create/delete pipelines)               │
-│                                                               │
-│  MetricsService (every 10 sec)                               │
-│  ├─→ MediaMtxService (list ingest/cluster)                   │
-│  ├─→ MediaMtxService (get stats)                             │
-│  ├─→ AlertsService (check metrics)                           │
-│  ├─→ StreamsService (reassign on failover)                   │
-│  └─→ PodsService (get active pods)                           │
-│                                                               │
-│  InspectionService (every 30 sec)                            │
-│  ├─→ MediaMtxService (list ingest/cluster)                   │
-│  ├─→ MediaMtxService (get stream details)                    │
-│  ├─→ AlertsService (create track alerts)                     │
-│  └─→ StreamsService (read metadata expectations)             │
-│                                                               │
-├─────────────────────────────────────────────────────────────┤
-│                      Integration Services                     │
-├─────────────────────────────────────────────────────────────┤
-│                                                               │
-│  MediaMtxService                                              │
-│  ├─→ ConfigService (read env vars)                           │
-│  ├─→ PodsService (get active ingest pods)                    │
-│  └─→ Axios HTTP clients                                      │
-│                                                               │
-│  PodsService                                                  │
-│  └─→ Pod MongoDB model                                       │
-│                                                               │
-│  StreamsService                                               │
-│  └─→ Stream MongoDB model                                    │
-│                                                               │
-│  AlertsService                                                │
-│  └─→ Alert MongoDB model                                     │
-│                                                               │
-│  InspectionService                                            │
-│  └─→ StreamInspection MongoDB model                          │
-│                                                               │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph http["HTTP Controllers"]
+        StreamsC[StreamsController]
+        NodesC[NodesController]
+        AlertsC[AlertsController]
+        MetricsC[MetricsController]
+        InspC[StreamInspectionController]
+    end
+
+    subgraph cron["Scheduled Services"]
+        SyncS["SyncSchedulerService (10s)"]
+        MetricS["MetricCollectionService (10s)"]
+        InspS["InspectionScheduler (30s)"]
+    end
+
+    StreamsC --> StrSvc["StreamQuery / Crud /<br/>Lifecycle / Assignment"]
+    NodesC --> NodeSvc["NodeRegistration / NodeQuery"]
+    AlertsC --> AlertLife[AlertAccessService]
+    MetricsC --> MetricPersist[MetricPersistenceService]
+    InspC --> InspQuery[StreamInspectionQueryService]
+
+    SyncS --> Agg[SyncContextBuilder]
+    SyncS --> Orch["SyncOrchestrator<br/>→ guarded steps (runStep)"]
+    Agg --> Listing[MediaMtxStreamListingService]
+    Agg --> NodeSvc
+    Agg --> Facade[StreamsFacadeService]
+    Orch --> Facade
+    Orch --> Pipeline[MediaMtxPipelineService]
+
+    MetricS --> MetricsSvc["MediaMtxMetricsService<br/>(scrape /metrics)"]
+    MetricS --> MetricPersist
+    MetricS -. "metrics.collected" .-> MRuler
+
+    InspS --> Recorder["InspectionRecorder<br/>→ Stats + Repository"]
+    Recorder -. "stream.inspected" .-> TRuler
+
+    subgraph alerts["Alerts feature (rulers + reconcile)"]
+        MRuler["MetricAlertRuler (@OnEvent)"]
+        TRuler["TrackAlertRuler (@OnEvent)<br/>→ StreamQuery"]
+        MRuler --> Reconcile[AlertReconcileService]
+        TRuler --> Reconcile
+    end
+    Reconcile -. "alert.created/updated/resolved" .-> Bus
+
+    Bus(("EventEmitter2")) -. "broadcast whitelist" .-> Gateway[EventsGateway] -.-> Clients["Socket.IO clients"]
 ```
 
-### ConfigService Dependencies
+### ConfigService Consumers
 
-Config is provided to:
+- **MediaMtxClientRegistry**: `ingestBaseUrl`, `clusterBaseUrl(s)`, `ingestNodeMediaMtxPort`, `clusterNodeMediaMtxPort`
+- **MediaMtxMetricsService**: `ingest/clusterBaseUrl(s)`, `mediaMtxMetricsPort`
+- **MediaMtxPipelineService**: `ingestRtspBaseUrl` (cluster pull source)
+- **NodeQueryService**: `nodeHeartbeatToleranceSeconds`
+- **NodeResourceRuler**: `nodeCpuHighThreshold`, `nodeMemoryHighThreshold`, `nodeDiskHighThreshold`
 
-- **MediaMtxService**: For ingest/cluster base URLs
-- **PodsService**: For pod health tolerance window
-- **SyncService**: (unused getters exist)
-- **MetricsService**: (unused getters exist)
-- **InspectionService**: (unused getters exist)
-
-**Note**: Many config getters are defined but not actually consumed. Environment variables should be explicitly documented as active or inactive.
+Getters for `syncPollInterval`, `metricsPollInterval`, `inspectionInterval` drive the `@ScheduledTask` cadences via `JobScheduler`. `bitrateDropPercent` and `staleSeconds` exist but are **not consumed** (operational alert rules use boolean checks, no thresholds).
 
 ---
 
@@ -1021,134 +611,84 @@ Config is provided to:
 
 ### Stream Lifecycle States
 
-```
-┌─────────────┐
-│ discovered  │ (initial state after discovery)
-└──────┬──────┘
-       │ auto-assign to pod
-       ▼
-┌─────────────┐
-│ assigned    │ (pod chosen, waiting for relay)
-└──────┬──────┘
-       │ relay pipeline created
-       ▼
-┌─────────────┐
-│ active      │ (streaming actively)
-└──────┬──────┘
-       │ metrics collected, inspections run
-       │
-       │ ◄─── failover: reassign to different pod
-       │      (if degraded)
-       │
-└──────┬──────┘
-       │ stream removed from ingest
-       ▼
-┌─────────────┐
-│ inactive    │ (no longer in ingest, marked stale)
-└──────┬──────┘
-       │ relay pipeline deleted
-       │ stream optionally deleted
-       ▼
-┌─────────────┐
-│  [removed]  │ (optionally deleted from DB)
-└─────────────┘
-
-Possible error state:
-┌─────────────┐
-│ error       │ (sync or relay failure)
-└──────┬──────┘
-       │ retry on next sync cycle
-       │
-       ▼
-       (state may recover to assigned/active)
+```mermaid
+stateDiagram-v2
+    [*] --> created: POST /api/streams (manual)
+    [*] --> discovered: ingest discovery
+    created --> pending_assignment: no active cluster nodes
+    pending_assignment --> assigned: nodes available (next cycle)
+    created --> assigned: node selected (hash policy)
+    discovered --> assigned: node selected (hash policy)
+    assigned --> synced: cluster pipeline created
+    assigned --> sync_error: pipeline create failed
+    sync_error --> synced: retried on next sync cycle
+    synced --> synced: failover reassigns node (stays synced)
+    synced --> stale: removed from ingest (pipeline deleted)
+    discovered --> stale: removed from ingest
 ```
 
-### Pod Health Pattern
+Statuses are the `StreamStatus` enum: `created`, `discovered`, `pending_assignment`, `assigned`, `synced`, `sync_error`, `stale`.
+
+### Node Health Pattern
 
 ```
-POD ALIVE:
-  └─→ Pod sends heartbeat
-      └─→ POST /api/pods/heartbeat
-          └─→ lastHeartbeatAt = now
-              └─→ status = active
+NODE ALIVE:
+  POST /api/nodes/heartbeat → lastHeartbeatAt = now, status = active
 
-POD DEAD:
-  └─→ Pod stops sending heartbeat
-      └─→ After POD_HEALTH_TOLERANCE_SECONDS (default: 120s)
-          └─→ PodsService filters it out of active queries
-              └─→ SyncService stops selecting it for new assignments
-                  └─→ MetricsService won't failover to it
-                      └─→ Existing assigned streams remain but new ones pick other pods
+NODE DEAD:
+  heartbeats stop → after NODE_HEALTH_TOLERANCE_SECONDS (default 120s)
+    → filtered out of all active-node queries
+      → sync skips it for new assignments; ensureAssigned reassigns streams
+        whose node is no longer in the candidate list
+      → failover won't select it
 ```
+
+There is no `node.removed` event; nodes silently age out of the active window. Their DB records remain.
 
 ### High-Availability Considerations
 
-**Single Pod Failure**:
+**Single Cluster Node Failure**:
 
-- Streams assigned to pod X remain in DB
-- MetricsService detects degradation and fails them over to pod Y
-- No manual action required
+- Streams assigned to the dead node are reassigned on the next sync cycle (`ensureAssigned` detects the node is no longer an active candidate)
+- Metrics-driven failover also moves degraded streams to healthy nodes
 
-**Ingest Pod Failure**:
+**Ingest Failure**:
 
-- After tolerance window, marked inactive
-- Streams marked stale
-- SyncService deletes relay pipelines on cluster
+- Primary ingest endpoint failure falls back to querying registered ingest nodes
+- Streams that disappear from ingest are marked `stale` and their cluster pipelines deleted
 
-**Cluster Pod Failure**:
+**No Active Cluster Nodes**:
 
-- After tolerance window, marked inactive
-- Streams fail over to healthy pods
-- If no healthy pods available, streams become unassigned
+- The whole sync orchestration cycle is skipped (logged warning)
+- Manually created streams are stored as `pending_assignment`
 
 **Database Failure**:
 
-- All pod registration lost
-- Pods re-register on recovery
-- All stream state recovered from DB
+- Nodes re-register on recovery (register is an upsert)
+- Stream state is recovered from MediaMTX discovery on the next sync cycles
 
 ---
 
 ## Known Limitations
 
-1. **Configuration Not Fully Respected**:
-    - `SYNC_POLL_INTERVAL`, `METRICS_POLL_INTERVAL`, `INSPECTION_INTERVAL` are defined but hard-coded:
-        - Sync: Every 10 seconds (via @Cron decorator)
-        - Metrics: Every 10 seconds (via @Cron decorator)
-        - Inspection: Every 30 seconds (via @Cron decorator)
-    - Alert thresholds are hard-coded in AlertsService, not read from ConfigService
-    - **Recommendation**: Refactor decorators to use DynamicModule pattern for configurable scheduling
+1. **Scheduling is centralized and config-driven**:
+    - Every scheduled job is a single `@ScheduledTask({ name, interval })` method, discovered and run by `JobScheduler` (`src/common/scheduling/`), which owns the timer, overlap protection, and error guarding
+    - Cadence comes from `ConfigService`: `SYNC_POLL_INTERVAL` (10s), `METRICS_POLL_INTERVAL` (10s), `INSPECTION_INTERVAL` (30s); no `@nestjs/schedule`/`@Cron` remains
 
-2. **Route Shadowing Risk**:
-    - `GET /api/streams/:name` before `GET /api/streams/assignment`
-    - If `:name` parameter is "assignment", the named endpoint will match first
-    - **Recommendation**: Reorder routes or use a prefix like `/api/streams/meta/assignment`
+2. **Metrics are operational, not quality**:
+    - The MediaMTX `/metrics` endpoint exposes node + path operational data (bytes, readers, conns/sessions, `framesInError`, ready state) — not per-stream bitrate/fps; per-session loss/jitter/RTT exist but are deferred to the inspection feature (ADR-0009/0010)
+    - So the only metric alerts are operational (`stream_not_ready`, `frames_in_error`); there is no metric-driven failover
 
-3. **MediaMtx Service Private Access**:
-    - InspectionService uses bracket notation to access `mediaService['ingestClient']`
-    - Should expose public methods instead
-    - **Recommendation**: Add public `getStreamDetails(name, source)` method
+3. **No node removal signal**:
+    - Inactive nodes age out of the active window but are never deleted, and no `node.removed` event is emitted
 
-4. **No Connection Pooling Limits**:
-    - Axios clients created fresh for each cluster; no pooling
-    - Can exhaust file descriptors in high-volume scenarios
-    - **Recommendation**: Reuse axios instances, configure maxSockets
+4. **Sequential scheduled processing**:
+    - Inspection processes streams one at a time in an inline loop; with many streams a cycle can exceed its 30s interval, but `JobScheduler`'s overlap guard skips the next tick rather than running cycles concurrently
 
-5. **Deduplication Only on Type**:
-    - Alert deduplication: `{streamName, type, resolved: false}`
-    - Multiple alerts of same type/stream/resolved status are deduplicated
-    - But if you resolve an alert, the same type can fire again without an event
-    - **Recommendation**: Document or add event on alert resolution
+5. **Discovery source fallback assumes RTSP**:
+    - When a discovered stream has no usable source, the pipeline source defaults to `${INGEST_RTSP_URL}/{name}`
 
-6. **No Graceful Shutdown**:
-    - Pods that go offline still remain assigned to streams
-    - No automatic cleanup of stale assignments
-    - **Recommendation**: Add cleanup job or manual unassign endpoint
-
-7. **Inspection Assumes MediaMTX StreamDetail Format**:
-    - Track extraction hardcoded to expected MediaMTX API fields
-    - No validation of track format
-    - **Recommendation**: Add schema validation or graceful parsing
+Previously documented limitations that are now fixed: route shadowing of `GET /api/streams/assignment` (route is declared before `:name`), private bracket access into the MediaMTX service (replaced by public `getStreamDetails`), unbounded axios client creation (clients cached per URL by `MediaMtxClientFactory`), broken relay teardown (`removePath` now uses `DELETE /v3/config/paths/delete`), and metrics fed by fake/zero stats (now real MediaMTX `/metrics`).
 
 ---
 
@@ -1169,88 +709,54 @@ POD DEAD:
     INGEST_MEDIAMTX_BASE_URL=http://localhost:9000
     CLUSTER_MEDIAMTX_BASE_URL=http://localhost:9001
     PORT=3000
-    POD_HEALTH_TOLERANCE_SECONDS=120
+    NODE_HEALTH_TOLERANCE_SECONDS=120
     ```
 
-3. **Run Services**:
+3. **Run Supporting Services**:
 
     ```bash
-    docker-compose up
+    npm run stack:up
     ```
 
 4. **Start Dev Server**:
 
     ```bash
-    npm run start:dev
+    npm run start:dev       # watch mode
+    npm run dev             # watch mode + barrel regeneration
     ```
 
 5. **Access API**:
     - REST: `http://localhost:3000`
     - Swagger: `http://localhost:3000/api/docs`
-    - WebSocket: `ws://localhost:3000`
+    - WebSocket: `ws://localhost:3000` (Socket.IO)
 
 ### Adding a New Endpoint
 
-1. **Create DTO** (if needed):
+Follow `CONVENTIONS.md` (file suffixes, folder structure, service roles). In short:
 
-    ```typescript
-    // src/module/dto/my-action.dto.ts
-    export class MyActionDto {
-        @IsString()
-        field: string;
-    }
-    ```
-
-2. **Add Controller Method**:
-
-    ```typescript
-    @Post('action')
-    async myAction(@Body() dto: MyActionDto) {
-      return this.service.doAction(dto);
-    }
-    ```
-
-3. **Add Service Method**:
-
-    ```typescript
-    async doAction(dto: MyActionDto) {
-      // Implement logic
-      // Emit events if needed
-    }
-    ```
-
-4. **Emit Events** (if publishing state):
-
-    ```typescript
-    this.eventEmitter.emit("my.event", { data });
-    ```
-
-5. **Update Gateway** (if real-time needed):
-    ```typescript
-    @OnEvent('my.event')
-    handleMyEvent(payload: any) {
-      this.server.emit('my.event', payload);
-    }
-    ```
+1. **Create a DTO** with `class-validator` decorators in the feature's `dto/` folder
+2. **Add the controller method** in `controllers/`, delegating to a service
+3. **Add the service method** in the appropriate role folder (`query/`, `mutation/`, `orchestration/`, …); data access goes through the feature's abstract repository
+4. **Emit events** via `EventEmitter2` using a name from `SystemEventNames`
+5. **Broadcast if needed** by adding the event to `EventsGateway.BROADCAST_EVENTS`
+6. **Regenerate barrels** (`npm run barrels:generate`) — or use `npm run dev`, which does it on save
+7. **Add tests** under `test/`, mirroring the `src/` path
 
 ### Testing
 
-Run test scripts:
-
 ```bash
-./test.ps1       # PowerShell
-./test.sh        # Bash
-./test-pods.ps1  # Pod registration test
+npm test               # Jest unit tests (test/ mirrors src/)
+npm run verify         # typecheck + lint + build + test
+./test.ps1             # E2E API smoke test (PowerShell; -Up starts the stack)
 ```
 
 ### Debugging
 
-- Logs available in terminal where `npm start` is running
-- Enable debug logs: `DEBUG=* npm start`
-- Use MongoDB compass to inspect collection documents
-- Use WebSocket client (e.g., websocat) to subscribe to events
+- Logs appear in the terminal running the dev server (NestJS Logger)
+- Use MongoDB Compass to inspect collection documents
+- Use a Socket.IO client to subscribe to broadcast events
+- `sync.tick` payloads (internal event) include per-cycle inventory counts and failed workflow names
 
 ---
 
-**Last Updated**: 2024
-**Version**: 1.0
+**Last Updated**: June 2026

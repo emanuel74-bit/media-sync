@@ -3,3 +3,4 @@
  */
 
 export * from "./media-mtx.client";
+export * from "./media-mtx-metrics.client";

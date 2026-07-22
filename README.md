@@ -36,3 +36,11 @@ The frontend Vite dev server proxies `/api` and `/socket.io` to the backend.
 The frontend can be deployed as a separate container from `frontend/Dockerfile`.
 
 It proxies API and Socket.IO traffic to the backend using the `BACKEND_UPSTREAM` environment variable.
+
+## Documentation
+
+- `docs/adr/` — Architecture Decision Records (why things are the way they are)
+- `docs/architecture/` — interactive LikeC4 architecture model (`npm run dev` there; Node ≥ 22)
+- `backend/CONVENTIONS.md` — the rule registry for backend code (current law; rules cite their ADRs)
+- `backend/SYSTEM_DOCUMENTATION.md` — module design, data flows, deployment (Mermaid diagrams)
+- `backend/API_DOCUMENTATION.md` — REST/WebSocket reference

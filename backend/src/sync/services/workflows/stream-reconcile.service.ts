@@ -1,54 +1,38 @@
 import { Injectable, Logger } from "@nestjs/common";
 
-import { Stream } from "../../../streams/domain";
-import { SyncContext, SyncWorkflow } from "../../domain";
-import { StreamAssignmentService } from "../../../streams/services/assignment";
-import { MediaMtxPipelineService } from "../../../infrastructure/media-mtx/services";
+import { Stream, StreamsFacadeService } from "@/streams";
+
+import { SyncContext } from "../../domain";
 
 @Injectable()
-export class StreamReconcileService implements SyncWorkflow {
+export class StreamReconcileService {
     private readonly logger = new Logger(StreamReconcileService.name);
 
-    constructor(
-        private readonly mediaMtxPipeline: MediaMtxPipelineService,
-        private readonly streamAssignment: StreamAssignmentService,
-    ) {}
+    constructor(private readonly streams: StreamsFacadeService) {}
 
-    async reconcileAll(
-        allStreams: Stream[],
-        clusterNames: Set<string>,
-        podIds: string[],
-    ): Promise<void> {
-        const manualStreams = allStreams.filter(
-            (stream) => stream.isManual && stream.enabled !== false,
+    async execute(context: SyncContext): Promise<void> {
+        const manualStreams = context.allStreams.filter(
+            (stream) => stream.isManual && stream.isEnabled,
         );
         for (const stream of manualStreams) {
-            await this.reconcileStream(stream, clusterNames, podIds);
+            await this.reconcileStream(stream, context.clusterNames, context.nodeIds);
         }
     }
 
-    async reconcileStream(
+    private async reconcileStream(
         stream: Stream,
         clusterNames: Set<string>,
-        podIds: string[],
+        nodeIds: string[],
     ): Promise<void> {
-        await this.streamAssignment.ensureAssigned(stream.name, podIds);
+        const assigned = await this.streams.ensureAssigned(stream.name, nodeIds);
 
-        if (!clusterNames.has(stream.name)) {
+        if (!clusterNames.has(assigned.name)) {
             try {
-                await this.mediaMtxPipeline.createClusterPullPipeline({
-                    name: stream.name,
-                    source: stream.source,
-                    status: stream.status,
-                });
+                await this.streams.buildClusterPipeline(assigned);
             } catch (err) {
                 const message = err instanceof Error ? err.message : String(err);
                 this.logger.error(`Failed manual sync create for ${stream.name}: ${message}`);
             }
         }
-    }
-
-    async execute(context: SyncContext): Promise<void> {
-        await this.reconcileAll(context.allStreams, context.clusterNames, context.podIds);
     }
 }

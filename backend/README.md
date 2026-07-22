@@ -4,73 +4,89 @@ NestJS backend for synchronizing streams between ingest and cluster MediaMTX ins
 
 ## Features
 
-- discovers ingest streams
-- syncs pull pipelines in cluster MediaMTX
-- metrics collection and alerting
-- supports CRUD stream control via REST
-- realtime notifications via WebSocket
-- persisted state/metrics/alerts/alerts in MongoDB
-- OpenAPI docs at `/api/docs`
-- Multi-pod assignment and failover
+- Discovers ingest streams via the MediaMTX v3 paths API
+- Creates pull pipelines on cluster MediaMTX nodes (round-robin across configured nodes)
+- Deterministic stream-to-node assignment (hash policy) with automatic failover on degraded metrics
+- Metrics collection and threshold-based alerting (thresholds configurable via env)
 - **Stream inspection**: periodic analysis of stream tracks (video, audio, subtitles, data) with alerting for missing/unexpected content
+- CRUD stream control via REST
+- Realtime notifications via Socket.IO WebSocket
+- Persisted state/metrics/alerts/inspections in MongoDB
+- OpenAPI docs at `/api/docs`
+- Multi-node registration and heartbeat-based health tracking
 
 ## Setup
 
 1. `npm install`
-2. configure `.env` values (defaults in .env)
-3. run `npm run start:dev`
+2. configure `.env` values (see Environment Variables in `API_DOCUMENTATION.md`)
+3. run `npm run start:dev` (or `npm run dev` to also regenerate barrel files on change)
+
+## Scripts
+
+| Script | Purpose |
+| --- | --- |
+| `npm run start:dev` | Start NestJS in watch mode |
+| `npm run dev` | Watch mode + automatic barrel (`index.ts`) regeneration |
+| `npm run build` | Compile |
+| `npm test` | Jest unit tests (`test/` tree mirrors `src/`) |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run lint` | ESLint with autofix |
+| `npm run verify` | typecheck + lint + build + test |
+| `npm run barrels:generate` | Regenerate all `index.ts` barrels (barrelsby) |
 
 ## Docker Testing
 
-To test with Docker Compose:
-
-1. Ensure Docker and Docker Compose are installed and Docker Desktop is running.
-2. Run `docker-compose up --build`
-3. Services will start: MongoDB, MediaMTX ingest, MediaMTX cluster (with automatic registration), and the app.
-4. Run tests: `./test.ps1` (PowerShell script for API tests)
-
-If Docker Desktop is not running, start it first.
-
-The MediaMTX cluster pods automatically register themselves with the sync service on startup and maintain heartbeats. Streams are dynamically assigned to available pods. Scale the cluster by running multiple instances of the same service.
-
-To scale the cluster horizontally for testing:
+All deployment artifacts live under `deploy/` (see `deploy/README.md` for the full map):
 
 ```bash
-# Scale to 3 instances
-docker-compose up --scale mediamtx-cluster=3 --build
+# Local stack: MongoDB, MediaMTX ingest, MediaMTX cluster, app
+npm run stack:up
 
-# Or use the scale override file
-docker-compose -f docker-compose.local -f docker-compose.cluster up --build
+# Scale the cluster to 3 instances
+npm run stack:up:scaled
+
+# Tear down
+npm run stack:down
 ```
+
+(Equivalent raw commands: `docker-compose -f deploy/docker/compose.local.yml [-f deploy/docker/compose.cluster.yml] up --build`.)
+
+Requirements: Docker and Docker Compose installed, Docker Desktop running.
+
+The MediaMTX nodes (built from `deploy/docker/mediamtx-node.Dockerfile`) automatically register themselves with the sync service on startup (`POST /api/nodes/register`) and maintain heartbeats via `deploy/scripts/node-heartbeat-monitor.sh`. Streams are dynamically assigned to available cluster nodes.
 
 ## Testing
 
-Run the included test scripts:
+```powershell
+# Unit tests (Jest)
+npm test
 
-```bash
-# PowerShell - Full API tests
-.\test.ps1
-
-# PowerShell - Pod registration tests
-.\test-pods.ps1
+# E2E API smoke test (streams, nodes, alerts, metrics, inspection lifecycle)
+.\test.ps1          # against an already-running stack
+.\test.ps1 -Up      # starts the compose stack first
 ```
-
-This will test all endpoints and report results.
 
 ## API Documentation
 
 - **Interactive Docs**: Visit `/api/docs` when the server is running for Swagger UI
 - **Complete Reference**: See `API_DOCUMENTATION.md` for detailed endpoint documentation
+- **Architecture**: See `SYSTEM_DOCUMENTATION.md` for module design and data flow
+- **Code Conventions**: See `CONVENTIONS.md`
 
 ## Endpoints
 
 - `GET /api/streams`
 - `POST /api/streams`
+- `GET /api/streams/assignment`
+- `GET /api/streams/:name`
 - `PATCH /api/streams/:name`
 - `DELETE /api/streams/:name`
-- `PATCH /api/streams/:name/assign` (assign to pod)
+- `PATCH /api/streams/:name/assign` (assign to node)
 - `PATCH /api/streams/:name/unassign`
-- `GET /api/streams/assignment`
+- `GET /api/nodes`
+- `GET /api/nodes/active`
+- `POST /api/nodes/register`
+- `POST /api/nodes/heartbeat`
 - `GET /api/alerts`
 - `PATCH /api/alerts/:id/resolve`
 - `GET /api/metrics/stream/:name`
@@ -79,9 +95,10 @@ This will test all endpoints and report results.
 - `GET /api/stream-inspection/:streamName/history`
 - `GET /api/docs`
 
-WebSocket: connect to server and listen `stream.synced`, `stream.removed`, `alert.created`.
+WebSocket: connect via Socket.IO and listen for `stream.synced`, `stream.removed`, `stream.assigned`, `stream.unassigned`, `stream.inspected`, `alert.created`, `alert.resolved`, `node.registered`.
 
 ## Notes
 
-- MediaMTX API paths are assumed (e.g., `/api/streams`, `/api/stream-pipelines`).
-- adjust pipeline creation logic in `MediaMtxService.createClusterPullPipeline` to match your OpenShift MediaMTX configuration.
+- The backend talks to the real MediaMTX v3 HTTP API: `/v3/paths/list`, `/v3/paths/get/{name}`, `POST /v3/config/paths/add/{name}`, `DELETE /v3/config/paths/delete/{name}`.
+- Pipeline creation logic lives in `src/infrastructure/media-mtx/services/pipeline/media-mtx-pipeline.service.ts` (`createClusterPullPipeline`); adjust it if your cluster MediaMTX configuration differs.
+- Scheduling intervals (sync every 10s, metrics every 10s, inspection every 30s) are hard-coded in `@Cron` decorators; the corresponding `*_INTERVAL` env vars are currently not consumed.

@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: mediamtx-cluster-config
+data:
+    mediamtx.yml: |
+        api: true
+        apiAddress: :9000
+
+        metrics: true
+        metricsAddress: :9998
+
+        # Internal auth — kept in sync with deploy/mediamtx/mediamtx-cluster.yml.
+        # The sync service authenticates as this user (CLUSTER_MEDIAMTX_AUTH=sync:syncpass),
+        # and the k8s probes send the matching Basic header.
+        authMethod: internal
+        authInternalUsers:
+            - user: sync
+              pass: syncpass
+              permissions:
+                  - action: api
+                  - action: metrics
+                  - action: read
+                  - action: publish
+
+        rtsp: true
+        rtspAddress: :8554
+
+        hls: true
+        hlsAddress: :8888
+
+        webrtc: true
+        webrtcAddress: :8889
+
+        srt: true
+        srtAddress: :8890
+
+        record: false
+
+        pathDefaults:
+            runOnDemand: true
+            runOnDemandRestart: true
+
+        # Catch-all so readers can pull relayed paths. The sync service also adds
+        # specific pull pipelines via the API (POST /v3/config/paths/add/{name}),
+        # which take precedence over this default.
+        paths:
+            all_others:

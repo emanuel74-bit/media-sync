@@ -1,0 +1,28 @@
+# MediaMTX with Node Registration and Health Monitoring
+FROM alpine:latest as base
+
+# Install curl and procps (for pgrep)
+RUN apk add --no-cache curl procps
+
+# Copy MediaMTX from official image
+FROM bluenviron/mediamtx:latest as mediamtx
+
+FROM base
+
+# Copy MediaMTX binary and config
+COPY --from=mediamtx /mediamtx /mediamtx
+COPY --from=mediamtx /mediamtx.yml /mediamtx.yml
+
+# Copy the heartbeat script (path relative to the build context: backend/)
+COPY deploy/scripts/node-heartbeat-monitor.sh /usr/local/bin/node-heartbeat.sh
+RUN chmod +x /usr/local/bin/node-heartbeat.sh
+
+# Set default environment variables
+ENV MEDIA_SYNC_API=http://media-sync:3000
+ENV HEARTBEAT_INTERVAL=20
+
+# Expose MediaMTX ports
+EXPOSE 8554 8888 8889 8890 9000 9998
+
+# Run the heartbeat script which monitors MediaMTX health
+CMD ["/usr/local/bin/node-heartbeat.sh"]

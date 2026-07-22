@@ -1,0 +1,45 @@
+import { mapV3PathToMetadata } from "./map-v3-path-to-metadata.mapper";
+import { V3PathItem, V3PathSource, V3TrackItem, MediaMtxStreamInfo } from "../types";
+
+/**
+ * Reduce the v3 `source` (object `{type,id}`, bare string, or null) to a short
+ * description of what feeds the path (e.g. "rtspSession"). This is informational
+ * only — it is NOT a URL the cluster can pull from (see MediaMtxPipelineService).
+ */
+function describeSource(source: V3PathSource | undefined): string {
+    if (!source) {
+        return "unknown";
+    }
+    if (typeof source === "string") {
+        return source || "unknown";
+    }
+    return source.type ?? "unknown";
+}
+
+export function mapV3PathToStream(path: V3PathItem): MediaMtxStreamInfo {
+    const trackList: V3TrackItem[] = Array.isArray(path?.tracks) ? path.tracks : [];
+    const videoTrack = trackList.find((track) => track?.type === "video");
+    const audioTrack = trackList.find((track) => track?.type === "audio");
+
+    return {
+        name: path?.name ?? "unknown",
+        source: describeSource(path?.source),
+        status: path?.ready ? "ready" : "inactive",
+        video: videoTrack
+            ? {
+                  codec: videoTrack.codec ?? "",
+                  width: videoTrack.width ?? 0,
+                  height: videoTrack.height ?? 0,
+                  fps: videoTrack.fps ?? 0,
+              }
+            : undefined,
+        audio: audioTrack
+            ? {
+                  codec: audioTrack.codec ?? "",
+                  channels: audioTrack.channels ?? 0,
+                  sampleRate: audioTrack.sampleRate ?? 0,
+              }
+            : undefined,
+        metadata: mapV3PathToMetadata(path),
+    };
+}

@@ -1,0 +1,123 @@
+// LikeC4 model for the Media Sync platform.
+// One model, multiple views: edit here, every view stays consistent.
+// Run interactively:  npx likec4 start docs/architecture   (from repo root)
+
+specification {
+  element actor {
+    style {
+      shape person
+    }
+  }
+  element system
+  element container
+  element component
+  element database {
+    style {
+      shape storage
+    }
+  }
+  element external {
+    style {
+      color muted
+    }
+  }
+}
+
+model {
+  operator = actor 'Operator' {
+    description 'Runs and monitors the streaming platform'
+  }
+
+  mediaSync = system 'Media Sync Platform' {
+    frontend = container 'Stream Harmony Control' {
+      technology 'React 18, Vite, TanStack Query'
+      description 'Dashboard for streams, pods, alerts, metrics, inspections'
+    }
+
+    backend = container 'Sync Service' {
+      technology 'NestJS 9, Socket.IO'
+      description 'Discovers ingest streams, provisions cluster pull pipelines, monitors stream health'
+
+      streams = component 'Streams' {
+        description 'CRUD, status, hash assignment policy, pipeline provisioning. Facade is the public surface.'
+      }
+      pods = component 'Pods' {
+        description 'Pod registration, heartbeats, active-pod queries'
+      }
+      sync = component 'Sync' {
+        description 'Cron (10s): discovery, manual reconcile, staleness workflows'
+      }
+      metrics = component 'Metrics' {
+        description 'Cron (10s): collect stats, evaluate alert rules, failover degraded streams'
+      }
+      inspection = component 'Stream Inspection' {
+        description 'Cron (30s): record media tracks, raise content alerts'
+      }
+      alerts = component 'Alerts' {
+        description 'Generic rule evaluation, dedup on unresolved {stream, type}, lifecycle'
+      }
+      gateway = component 'Events Gateway' {
+        description 'Bridges SystemEventNames from the event bus to Socket.IO clients'
+      }
+      mediamtx = component 'MediaMTX Integration' {
+        description 'v3 API clients + registry (round-robin pool), listing, pipelines, stats'
+      }
+    }
+
+    mongo = database 'MongoDB' {
+      technology 'Mongoose 7'
+      description 'streams, pods, alerts, metrics, streaminspections'
+    }
+  }
+
+  ingestNode = external 'MediaMTX Ingest' {
+    description 'Receives source streams; v3 API on :9000'
+  }
+  clusterNode = external 'MediaMTX Cluster' {
+    description 'Relay nodes pulling from ingest; horizontally scaled; v3 API'
+  }
+
+  // Outside-in
+  operator -> frontend 'operates via browser'
+  frontend -> backend 'REST /api + Socket.IO /socket.io'
+  ingestNode -> backend 'POST /api/pods/register + heartbeat'
+  clusterNode -> backend 'POST /api/pods/register + heartbeat'
+  clusterNode -> ingestNode 'RTSP pull per pipeline'
+
+  // Backend internals
+  backend -> mongo 'reads/writes via repositories'
+  sync -> mediamtx 'list ingest/cluster streams'
+  sync -> streams 'upsert, ensure assignment, provision (facade)'
+  sync -> pods 'active cluster pod ids'
+  metrics -> mediamtx 'per-stream stats'
+  metrics -> alerts 'evaluate METRIC_ALERT_RULES'
+  metrics -> streams 'reassign on degraded metrics'
+  metrics -> pods 'failover candidates'
+  inspection -> mediamtx 'stream details (parsed tracks)'
+  inspection -> alerts 'evaluate STREAM_TRACK_ALERT_RULES'
+  inspection -> streams 'read metadata expectations'
+  streams -> mediamtx 'create/delete cluster pipelines'
+  gateway -> frontend 'broadcasts stream/alert/pod events'
+
+  // Integration edges to the outside
+  mediamtx -> ingestNode 'GET /v3/paths/list, /v3/paths/get'
+  mediamtx -> clusterNode 'POST /v3/config/paths/add | remove'
+}
+
+views {
+  view index {
+    title 'System Landscape'
+    description 'Everything: operator, platform, MediaMTX nodes'
+    include *
+  }
+
+  view platform of mediaSync {
+    title 'Media Sync Platform — Containers'
+    include *, ingestNode, clusterNode
+  }
+
+  view backendFeatures of backend {
+    title 'Sync Service — Feature Modules'
+    include *
+  }
+}

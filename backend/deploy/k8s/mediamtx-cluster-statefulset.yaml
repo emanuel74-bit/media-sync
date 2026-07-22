@@ -1,0 +1,124 @@
+# MediaMTX cluster nodes as a StatefulSet.
+#
+# Why a StatefulSet (not a Deployment): each cluster node needs a STABLE identity.
+# The headless Service below gives every node a stable DNS name
+#   <node>.mediamtx-cluster.<namespace>.svc.cluster.local   (e.g. mediamtx-cluster-0. ...)
+# and the ordinal node name is a stable id. The node self-registers that (nodeId, host)
+# pair with the sync service (see deploy/scripts/node-heartbeat-monitor.sh); because
+# both survive reschedule, the sync service's node registry — the single source of
+# truth for live cluster topology (ARCH-11) — keeps addressing the same node across
+# restarts instead of chasing an ephemeral node IP.
+#
+# No volumeClaimTemplates: these are stateless media relays (record: false), so the
+# StatefulSet is used purely for stable network identity, not persistent storage.
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: mediamtx-cluster
+    labels:
+        app: mediamtx-cluster
+spec:
+    # Headless: no cluster IP, so each node gets its own stable per-node DNS record.
+    # This is the StatefulSet's governing service (spec.serviceName below).
+    clusterIP: None
+    selector:
+        app: mediamtx-cluster
+    ports:
+        - { name: rtsp, port: 8554 }
+        - { name: hls, port: 8888 }
+        - { name: webrtc, port: 8889 }
+        - { name: srt, port: 8890 }
+        - { name: api, port: 9000 }
+        - { name: metrics, port: 9998 }
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+    name: mediamtx-cluster
+    labels:
+        app: mediamtx-cluster
+spec:
+    serviceName: mediamtx-cluster # governing headless Service → stable per-node DNS
+    replicas: 1 # Scale this as needed (kubectl scale statefulset mediamtx-cluster --replicas=N)
+    nodeManagementPolicy: Parallel # relay nodes are independent; no ordinal startup ordering needed
+    selector:
+        matchLabels:
+            app: mediamtx-cluster
+    template:
+        metadata:
+            labels:
+                app: mediamtx-cluster
+        spec:
+            containers:
+                - name: mediamtx
+                  image: your-registry/mediamtx-node:latest
+                  ports:
+                      - containerPort: 8554
+                        name: rtsp
+                      - containerPort: 8888
+                        name: hls
+                      - containerPort: 8889
+                        name: webrtc
+                      - containerPort: 8890
+                        name: srt
+                      - containerPort: 9000
+                        name: api
+                      - containerPort: 9998
+                        name: metrics
+                  env:
+                      # Downward-API values, declared first so the composed vars below
+                      # can reference them via $(VAR) (k8s expands earlier-defined env).
+                      - name: NODE_NAME
+                        valueFrom:
+                            fieldRef:
+                                fieldPath: metadata.name
+                      - name: NODE_NAMESPACE
+                        valueFrom:
+                            fieldRef:
+                                fieldPath: metadata.namespace
+                      # Stable ordinal identity (mediamtx-cluster-0, -1, …) — survives reschedule.
+                      - name: NODE_ID
+                        value: "$(NODE_NAME)"
+                      # Stable per-node DNS from the headless Service — the reachable host the
+                      # sync service builds this node's client URL from. NOT the ephemeral node IP.
+                      - name: NODE_HOST
+                        value: "$(NODE_NAME).mediamtx-cluster.$(NODE_NAMESPACE).svc.cluster.local"
+                      - name: NODE_TYPE
+                        value: "cluster"
+                      - name: MEDIA_SYNC_API
+                        value: "http://media-sync:3000"
+                      - name: HEARTBEAT_INTERVAL
+                        value: "20"
+                  volumeMounts:
+                      - name: mediamtx-config
+                        mountPath: /mediamtx.yml
+                        subPath: mediamtx.yml
+                  # Probes hit the v3 API, which requires internal auth (sync/syncpass) —
+                  # base64("sync:syncpass"). Update if you change the ConfigMap credentials.
+                  readinessProbe:
+                      httpGet:
+                          path: /v3/paths/list
+                          port: 9000
+                          httpHeaders:
+                              - name: Authorization
+                                value: "Basic c3luYzpzeW5jcGFzcw=="
+                      initialDelaySeconds: 10
+                      periodSeconds: 5
+                      timeoutSeconds: 3
+                      failureThreshold: 3
+                  livenessProbe:
+                      httpGet:
+                          path: /v3/paths/list
+                          port: 9000
+                          httpHeaders:
+                              - name: Authorization
+                                value: "Basic c3luYzpzeW5jcGFzcw=="
+                      initialDelaySeconds: 30
+                      periodSeconds: 10
+                      timeoutSeconds: 5
+                      failureThreshold: 3
+            volumes:
+                - name: mediamtx-config
+                  configMap:
+                      name: mediamtx-cluster-config

@@ -1,151 +1,158 @@
-import { Alert, Stream, StreamInspection } from "@/types";
+import type {
+  Alert,
+  Node,
+  Stream,
+  StreamAssignedEvent,
+  StreamInspection,
+} from "@/types";
 
 type SocketLike = {
-    connected: boolean;
-    connect: () => void;
-    disconnect: () => void;
-    on: (event: string, listener: (...args: any[]) => void) => void;
+  connected: boolean;
+  connect: () => void;
+  disconnect: () => void;
+  on: (event: string, listener: (...args: unknown[]) => void) => void;
 };
 
 type EventMap = {
-    connection: boolean;
-    "stream.synced": Stream;
-    "stream.removed": string;
-    "alert.created": Alert;
-    "stream.inspected": StreamInspection;
+  connection: boolean;
+  "stream.synced": Stream;
+  "stream.removed": string;
+  "stream.assigned": StreamAssignedEvent;
+  "stream.unassigned": string;
+  "alert.created": Alert;
+  "alert.updated": Alert;
+  "alert.resolved": Alert;
+  "stream.inspected": StreamInspection;
+  "node.registered": Node;
 };
 
 type Listener<K extends keyof EventMap> = (payload: EventMap[K]) => void;
+type UnknownListener = (payload: unknown) => void;
 
 class WebSocketManager {
-    private socket: SocketLike | null = null;
-    private listeners = new Map<string, Set<Function>>();
-    private _connected = false;
-    private scriptPromise: Promise<void> | null = null;
+  private socket: SocketLike | null = null;
+  private listeners = new Map<keyof EventMap, Set<UnknownListener>>();
+  private isConnected = false;
+  private scriptPromise: Promise<void> | null = null;
 
-    get connected() {
-        return this._connected;
+  get connected(): boolean {
+    return this.isConnected;
+  }
+
+  connect(): void {
+    void this.ensureConnected();
+  }
+
+  on<K extends keyof EventMap>(event: K, listener: Listener<K>): () => void {
+    const wrapped: UnknownListener = (payload) =>
+      listener(payload as EventMap[K]);
+    const eventListeners =
+      this.listeners.get(event) ?? new Set<UnknownListener>();
+    eventListeners.add(wrapped);
+    this.listeners.set(event, eventListeners);
+
+    return () => {
+      eventListeners.delete(wrapped);
+    };
+  }
+
+  disconnect(): void {
+    this.socket?.disconnect();
+    this.socket = null;
+    this.isConnected = false;
+  }
+
+  private async ensureConnected(): Promise<void> {
+    if (this.socket) {
+      if (!this.socket.connected) {
+        this.socket.connect();
+      }
+      return;
     }
 
-    connect() {
-        void this.ensureConnected();
+    const baseUrl =
+      (import.meta.env.VITE_API_URL || "").replace(/\/$/, "") ||
+      window.location.origin;
+    await this.ensureSocketClientLoaded(baseUrl);
+
+    if (typeof window.io !== "function") {
+      return;
     }
 
-    private async ensureConnected() {
-        if (this.socket) {
-            if (!this.socket.connected) {
-                this.socket.connect();
-            }
-            return;
-        }
+    this.socket = window.io(baseUrl, {
+      path: "/socket.io",
+      transports: ["websocket", "polling"],
+      autoConnect: true,
+    });
 
-        const baseUrl =
-            (import.meta.env.VITE_API_URL || "").replace(/\/$/, "") ||
-            window.location.origin;
-        await this.ensureSocketClientLoaded(baseUrl);
+    this.socket.on("connect", () => {
+      this.isConnected = true;
+      this.emit("connection", true);
+    });
+    this.socket.on("disconnect", () => {
+      this.isConnected = false;
+      this.emit("connection", false);
+    });
 
-        if (typeof window.io !== "function") {
-            return;
-        }
+    this.forwardSocketEvent("stream.synced");
+    this.forwardSocketEvent("stream.removed");
+    this.forwardSocketEvent("stream.assigned");
+    this.forwardSocketEvent("stream.unassigned");
+    this.forwardSocketEvent("alert.created");
+    this.forwardSocketEvent("alert.updated");
+    this.forwardSocketEvent("alert.resolved");
+    this.forwardSocketEvent("stream.inspected");
+    this.forwardSocketEvent("node.registered");
+  }
 
-        this.socket = window.io(baseUrl, {
-            path: "/socket.io",
-            transports: ["websocket", "polling"],
-            autoConnect: true,
-        });
+  private forwardSocketEvent<K extends Exclude<keyof EventMap, "connection">>(
+    event: K,
+  ): void {
+    this.socket?.on(event, (payload) =>
+      this.emit(event, payload as EventMap[K]),
+    );
+  }
 
-        this.socket.on("connect", () => {
-            this._connected = true;
-            this.emit("connection", true);
-        });
+  private ensureSocketClientLoaded(baseUrl: string): Promise<void> {
+    if (typeof window === "undefined" || typeof window.io === "function") {
+      return Promise.resolve();
+    }
+    if (this.scriptPromise) {
+      return this.scriptPromise;
+    }
 
-        this.socket.on("disconnect", () => {
-            this._connected = false;
-            this.emit("connection", false);
-        });
-
-        this.socket.on("stream.synced", (payload: Stream) =>
-            this.emit("stream.synced", payload),
+    this.scriptPromise = new Promise<void>((resolve, reject) => {
+      const existing = document.querySelector<HTMLScriptElement>(
+        'script[data-socket-io-client="true"]',
+      );
+      if (existing) {
+        existing.addEventListener("load", () => resolve(), { once: true });
+        existing.addEventListener(
+          "error",
+          () => reject(new Error("Failed to load Socket.IO client")),
+          { once: true },
         );
-        this.socket.on("stream.removed", (payload: string) =>
-            this.emit("stream.removed", payload),
-        );
-        this.socket.on("alert.created", (payload: Alert) =>
-            this.emit("alert.created", payload),
-        );
-        this.socket.on("stream.inspected", (payload: StreamInspection) =>
-            this.emit("stream.inspected", payload),
-        );
-    }
+        return;
+      }
 
-    private ensureSocketClientLoaded(baseUrl: string) {
-        if (typeof window === "undefined") {
-            return Promise.resolve();
-        }
+      const script = document.createElement("script");
+      script.src = `${baseUrl}/socket.io/socket.io.min.js`;
+      script.async = true;
+      script.dataset.socketIoClient = "true";
+      script.onload = () => resolve();
+      script.onerror = () =>
+        reject(new Error("Failed to load Socket.IO client"));
+      document.head.appendChild(script);
+    }).catch(() => {
+      this.scriptPromise = null;
+    });
 
-        if (typeof window.io === "function") {
-            return Promise.resolve();
-        }
+    return this.scriptPromise;
+  }
 
-        if (this.scriptPromise) {
-            return this.scriptPromise;
-        }
-
-        this.scriptPromise = new Promise<void>((resolve, reject) => {
-            const existing = document.querySelector<HTMLScriptElement>(
-                'script[data-socket-io-client="true"]',
-            );
-
-            if (existing) {
-                existing.addEventListener("load", () => resolve(), {
-                    once: true,
-                });
-                existing.addEventListener(
-                    "error",
-                    () => reject(new Error("Failed to load Socket.IO client")),
-                    { once: true },
-                );
-                return;
-            }
-
-            const script = document.createElement("script");
-            script.src = `${baseUrl}/socket.io/socket.io.min.js`;
-            script.async = true;
-            script.dataset.socketIoClient = "true";
-            script.onload = () => resolve();
-            script.onerror = () =>
-                reject(new Error("Failed to load Socket.IO client"));
-            document.head.appendChild(script);
-        }).catch(() => {
-            this.scriptPromise = null;
-        });
-
-        return this.scriptPromise;
-    }
-
-    on<K extends keyof EventMap>(event: K, listener: Listener<K>) {
-        if (!this.listeners.has(event)) {
-            this.listeners.set(event, new Set());
-        }
-
-        this.listeners.get(event)!.add(listener);
-
-        return () => {
-            this.listeners.get(event)?.delete(listener);
-        };
-    }
-
-    private emit(event: keyof EventMap, data: EventMap[keyof EventMap]) {
-        this.listeners.get(event)?.forEach((listener) => {
-            listener(data);
-        });
-    }
-
-    disconnect() {
-        this.socket?.disconnect();
-        this.socket = null;
-        this._connected = false;
-    }
+  private emit<K extends keyof EventMap>(event: K, data: EventMap[K]): void {
+    this.listeners.get(event)?.forEach((listener) => listener(data));
+  }
 }
 
 export const wsManager = new WebSocketManager();

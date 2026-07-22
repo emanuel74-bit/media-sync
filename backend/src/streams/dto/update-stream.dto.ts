@@ -1,6 +1,6 @@
 import { IsBoolean, IsEnum, IsOptional, IsString } from "class-validator";
 
-import { StreamStatus } from "../../common";
+import { StreamStatus } from "@/common";
 
 export class UpdateStreamDto {
     @IsOptional()
@@ -9,7 +9,7 @@ export class UpdateStreamDto {
 
     @IsOptional()
     @IsBoolean()
-    enabled?: boolean;
+    isEnabled?: boolean;
 
     @IsOptional()
     @IsEnum(StreamStatus)

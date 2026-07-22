@@ -1,49 +1,64 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import { Stream } from "../../../streams/domain";
-import { SyncContext, SyncWorkflow } from "../../domain";
-import { StreamStatusService } from "../../../streams/services/lifecycle";
-import { MediaMtxPipelineService } from "../../../infrastructure/media-mtx/services";
-import { SystemEventNames } from "../../../common";
+import { StreamStatus } from "@/common";
+import { Stream, StreamsFacadeService } from "@/streams";
+
+import { SyncContext } from "../../domain";
 
 @Injectable()
-export class StreamStalenessService implements SyncWorkflow {
+export class StreamStalenessService {
     private readonly logger = new Logger(StreamStalenessService.name);
 
-    constructor(
-        private readonly mediaMtxPipeline: MediaMtxPipelineService,
-        private readonly streamStatus: StreamStatusService,
-        private readonly events: EventEmitter2,
-    ) {}
+    constructor(private readonly streams: StreamsFacadeService) {}
 
-    async removeStale(
-        allStreams: Stream[],
-        ingestNames: Set<string>,
-        clusterNames: Set<string>,
-    ): Promise<void> {
-        const staleStreams = allStreams.filter(
-            (stream) => !stream.isManual && !ingestNames.has(stream.name),
+    async execute(context: SyncContext): Promise<void> {
+        const now = Date.now();
+
+        // A RESERVED stream hasn't been published yet, so it is legitimately absent from
+        // ingest — never mark it stale. It is freed by its own TTL below, not by staleness.
+        const staleStreams = context.allStreams.filter(
+            (stream) =>
+                !stream.isManual &&
+                stream.status !== StreamStatus.RESERVED &&
+                !context.ingestNames.has(stream.name),
         );
         for (const stream of staleStreams) {
-            await this.markStale(stream, clusterNames);
+            await this.removeStale(stream, context.clusterNames);
+        }
+
+        for (const stream of context.allStreams) {
+            if (this.isExpiredReservation(stream, now)) {
+                await this.expireReservation(stream);
+            }
         }
     }
 
-    async markStale(stream: Stream, clusterNames: Set<string>): Promise<void> {
+    private isExpiredReservation(stream: Stream, now: number): boolean {
+        return (
+            stream.status === StreamStatus.RESERVED &&
+            !!stream.reservedUntil &&
+            stream.reservedUntil.getTime() < now
+        );
+    }
+
+    private async expireReservation(stream: Stream): Promise<void> {
         try {
-            await this.streamStatus.markStale(stream.name);
+            // Never claimed — no cluster pipeline was ever deployed, so just free the slot.
+            await this.streams.remove(stream.name);
+        } catch (error) {
+            this.logger.warn(`Failed to expire reservation ${stream.name}`, error);
+        }
+    }
+
+    private async removeStale(stream: Stream, clusterNames: Set<string>): Promise<void> {
+        try {
+            await this.streams.markStale(stream.name);
 
             if (clusterNames.has(stream.name)) {
-                await this.mediaMtxPipeline.deleteClusterPipeline(stream.name);
-                this.events.emit(SystemEventNames.STREAM_REMOVED, stream.name);
+                await this.streams.teardownClusterPipeline(stream);
             }
         } catch (error) {
             this.logger.warn(`Failed to remove stale stream ${stream.name}`, error);
         }
-    }
-
-    async execute(context: SyncContext): Promise<void> {
-        await this.removeStale(context.allStreams, context.ingestNames, context.clusterNames);
     }
 }

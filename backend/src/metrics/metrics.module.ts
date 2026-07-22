@@ -1,37 +1,14 @@
 import { Module } from "@nestjs/common";
-import { MongooseModule } from "@nestjs/mongoose";
 
-import { PodsModule } from "../pods";
-import { ConfigModule } from "../config";
-import { StreamsModule } from "../streams";
-import { CommonServicesModule } from "../common";
-import { MetricRepository } from "./repositories";
+import { MediaNodesModule } from "@/media-nodes";
+import { DatabaseModule } from "@/infrastructure/database";
+
 import { MetricsController } from "./controllers";
-import { StreamFailoverService } from "./services/failover";
-import { MediaMtxModule } from "../infrastructure/media-mtx";
-import { MetricAlertInvocationService } from "./services/alerts";
-import { MetricPersistenceService } from "./services/persistence";
-import { MongoMetricRepository } from "../infrastructure/database/repositories";
-import { MetricCollectionService, StreamMetricProcessor } from "./services/collection";
-import { Metric, MetricSchema } from "../infrastructure/database/schemas/metric.schema";
+import { MetricCollectionService, MetricPersistenceService } from "./services";
 
 @Module({
-    imports: [
-        MongooseModule.forFeature([{ name: Metric.name, schema: MetricSchema }]),
-        MediaMtxModule,
-        PodsModule,
-        ConfigModule,
-        StreamsModule,
-        CommonServicesModule,
-    ],
-    providers: [
-        MetricCollectionService,
-        StreamMetricProcessor,
-        MetricPersistenceService,
-        MetricAlertInvocationService,
-        StreamFailoverService,
-        { provide: MetricRepository, useClass: MongoMetricRepository },
-    ],
+    imports: [DatabaseModule, MediaNodesModule],
+    providers: [MetricCollectionService, MetricPersistenceService],
     controllers: [MetricsController],
     exports: [MetricPersistenceService],
 })

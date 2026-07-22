@@ -1,28 +1,28 @@
 import { Injectable } from "@nestjs/common";
 
-import { Metric } from "../../domain";
-import { PodRole } from "../../../common";
-import { MetricRepository } from "../../repositories";
-import { StreamStats } from "../../../infrastructure/media-mtx/types";
+import { NodeMetricRepository, PathMetricRepository } from "../../repositories";
+import { NodeMetric, PathMetric, NewNodeMetricData, NewPathMetricData } from "../../domain";
 
 @Injectable()
 export class MetricPersistenceService {
-    constructor(private readonly metricRepository: MetricRepository) {}
+    constructor(
+        private readonly nodeMetrics: NodeMetricRepository,
+        private readonly pathMetrics: PathMetricRepository,
+    ) {}
 
-    async findRecent(streamName: string, limit = 50): Promise<Metric[]> {
-        return this.metricRepository.findRecent(streamName, limit);
+    async saveNodeMetrics(data: NewNodeMetricData[]): Promise<void> {
+        await this.nodeMetrics.saveMany(data);
     }
 
-    async saveFromStats(streamName: string, context: PodRole, stats: StreamStats): Promise<Metric> {
-        return this.metricRepository.save({
-            streamName,
-            context,
-            bitrate: Number(stats.bitrate ?? 0),
-            fps: Number(stats.fps ?? 0),
-            latency: Number(stats.latency ?? 0),
-            jitter: Number(stats.jitter ?? 0),
-            packetLoss: Number(stats.packetLoss ?? 0),
-            consumers: Number(stats.consumers ?? 0),
-        });
+    async savePathMetrics(data: NewPathMetricData[]): Promise<void> {
+        await this.pathMetrics.saveMany(data);
+    }
+
+    async findRecentNodeMetrics(limit = 50): Promise<NodeMetric[]> {
+        return this.nodeMetrics.findRecent(limit);
+    }
+
+    async findRecentPathMetrics(streamName: string, limit = 50): Promise<PathMetric[]> {
+        return this.pathMetrics.findRecent(streamName, limit);
     }
 }

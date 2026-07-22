@@ -1,19 +1,29 @@
 import { Module } from "@nestjs/common";
-import { MongooseModule } from "@nestjs/mongoose";
 
-import { AlertRepository } from "./repositories";
+import { ConfigModule } from "@/config";
+import { StreamsModule } from "@/streams";
+import { DatabaseModule } from "@/infrastructure/database";
+
 import { AlertsController } from "./controllers";
-import { AlertLifecycleService } from "./services";
-import { MongoAlertRepository } from "../infrastructure/database/repositories";
-import { Alert, AlertSchema } from "../infrastructure/database/schemas/alert.schema";
+import {
+    AlertAccessService,
+    AlertReconcileService,
+    MetricAlertRuler,
+    TrackAlertRuler,
+    NodeResourceRuler,
+    RuleEvaluator,
+} from "./services";
 
 @Module({
-    imports: [MongooseModule.forFeature([{ name: Alert.name, schema: AlertSchema }])],
+    imports: [DatabaseModule, ConfigModule, StreamsModule],
     providers: [
-        AlertLifecycleService,
-        { provide: AlertRepository, useClass: MongoAlertRepository },
+        RuleEvaluator,
+        AlertAccessService,
+        AlertReconcileService,
+        MetricAlertRuler,
+        TrackAlertRuler,
+        NodeResourceRuler,
     ],
     controllers: [AlertsController],
-    exports: [AlertLifecycleService],
 })
 export class AlertsModule {}

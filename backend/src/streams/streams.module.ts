@@ -1,44 +1,39 @@
 import { Module } from "@nestjs/common";
-import { MongooseModule } from "@nestjs/mongoose";
 
-import { PodsModule } from "../pods";
-import { StreamRepository } from "./repositories";
-import { StreamsController } from "./controllers";
-import { StreamQueryService } from "./services/query";
-import { MediaMtxModule } from "../infrastructure/media-mtx";
-import { StreamAssignmentService } from "./services/assignment";
-import { MongoStreamRepository } from "../infrastructure/database/repositories";
-import { Stream, StreamSchema } from "../infrastructure/database/schemas/stream.schema";
+import { NodesModule } from "@/nodes";
+import { ConfigModule } from "@/config";
+import { MediaNodesModule } from "@/media-nodes";
+import { DatabaseModule } from "@/infrastructure/database";
+
+import { IngestController, IngestAuthController, StreamsController } from "./controllers";
 import {
+    StreamQueryService,
+    StreamAssignmentService,
+    IngestPlacementService,
+    StreamsFacadeService,
     StreamCrudService,
-    StreamProvisioningService,
     StreamStatusService,
-    StreamLifecycleService,
-} from "./services/lifecycle";
+    StreamPipelineService,
+    StreamSetupService,
+    StreamReservationService,
+    PublishAuthService,
+} from "./services";
 
 @Module({
-    imports: [
-        MongooseModule.forFeature([{ name: Stream.name, schema: StreamSchema }]),
-        MediaMtxModule,
-        PodsModule,
-    ],
+    imports: [DatabaseModule, MediaNodesModule, NodesModule, ConfigModule],
     providers: [
         StreamQueryService,
+        StreamsFacadeService,
         StreamCrudService,
-        StreamProvisioningService,
+        StreamPipelineService,
         StreamAssignmentService,
+        IngestPlacementService,
         StreamStatusService,
-        StreamLifecycleService,
-        { provide: StreamRepository, useClass: MongoStreamRepository },
+        StreamSetupService,
+        StreamReservationService,
+        PublishAuthService,
     ],
-    controllers: [StreamsController],
-    exports: [
-        StreamQueryService,
-        StreamCrudService,
-        StreamProvisioningService,
-        StreamAssignmentService,
-        StreamStatusService,
-        StreamLifecycleService,
-    ],
+    controllers: [IngestController, IngestAuthController, StreamsController],
+    exports: [StreamsFacadeService, StreamQueryService],
 })
 export class StreamsModule {}

@@ -1,0 +1,35 @@
+api: true
+apiAddress: :9000
+
+metrics: true
+metricsAddress: :9998
+
+authMethod: internal
+authInternalUsers:
+    - user: sync
+      pass: syncpass
+      permissions:
+          - action: api
+          - action: metrics
+          - action: read
+          - action: publish
+
+rtsp: true
+rtspAddress: :8554
+
+hls: true
+hlsAddress: :8888
+
+webrtc: true
+webrtcAddress: :8889
+
+srt: true
+srtAddress: :8890
+
+record: false
+
+# Catch-all so readers can pull relayed paths. The sync service also adds
+# specific pull pipelines via the API (POST /v3/config/paths/add/{name}),
+# which take precedence over this default.
+paths:
+    all_others:

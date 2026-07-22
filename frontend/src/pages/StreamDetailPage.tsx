@@ -1,77 +1,143 @@
-import { useParams, useNavigate } from 'react-router-dom';
-import { useStream, useStreamMetrics, useAlerts, useToggleStream, useAssignStream, useUnassignStream, useActivePods } from '@/hooks/use-streams';
-import { StatusBadge, SeverityBadge } from '@/components/StatusBadge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, AlertTriangle, Pencil, Trash2, Scan, Link2, Unlink } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { formatDistanceToNow, format } from 'date-fns';
-import { useMemo, useState } from 'react';
-import { EditStreamDialog } from '@/components/EditStreamDialog';
-import { DeleteStreamDialog } from '@/components/DeleteStreamDialog';
-import { StreamInspectionPanel } from '@/components/StreamInspectionPanel';
-import { toast } from 'sonner';
+import { useParams, useNavigate } from "react-router-dom";
+import {
+  useStream,
+  useStreamMetrics,
+  useAlerts,
+  useToggleStream,
+  useAssignStream,
+  useUnassignStream,
+  useActiveClusterNodes,
+} from "@/hooks/use-streams";
+import { StatusBadge, SeverityBadge } from "@/components/StatusBadge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  ArrowLeft,
+  AlertTriangle,
+  Pencil,
+  Trash2,
+  Scan,
+  Link2,
+  Unlink,
+} from "lucide-react";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import { formatDistanceToNow, format } from "date-fns";
+import { useMemo, useState } from "react";
+import { EditStreamDialog } from "@/components/EditStreamDialog";
+import { DeleteStreamDialog } from "@/components/DeleteStreamDialog";
+import { StreamInspectionPanel } from "@/components/StreamInspectionPanel";
+import { LifecycleStepper } from "@/components/LifecycleStepper";
+import { StreamTopology } from "@/components/StreamTopology";
+import { toast } from "sonner";
 
 const chartStyle = {
-  backgroundColor: 'hsl(var(--popover))',
-  border: '1px solid hsl(var(--border))',
-  borderRadius: '6px',
+  backgroundColor: "hsl(var(--popover))",
+  border: "1px solid hsl(var(--border))",
+  borderRadius: "6px",
   fontSize: 12,
 };
 
 export default function StreamDetailPage() {
   const { name } = useParams<{ name: string }>();
   const navigate = useNavigate();
-  const { data: stream } = useStream(name || '');
-  const { data: metrics = [] } = useStreamMetrics(name || '', 60);
+  const { data: stream, isLoading, isError, error } = useStream(name || "");
+  const { data: metrics = [] } = useStreamMetrics(name || "", 60);
   const { data: allAlerts = [] } = useAlerts();
-  const { data: activePods = [] } = useActivePods();
+  const { data: activeNodes = [] } = useActiveClusterNodes();
   const toggleStream = useToggleStream();
   const assignStream = useAssignStream();
   const unassignStream = useUnassignStream();
-  const [context, setContext] = useState<'all' | 'ingest' | 'cluster'>('all');
+  const [context, setContext] = useState<"all" | "ingest" | "cluster">("all");
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
-  const streamAlerts = useMemo(() => allAlerts.filter(a => a.streamName === name), [allAlerts, name]);
+  const streamAlerts = useMemo(
+    () => allAlerts.filter((a) => a.subject === name),
+    [allAlerts, name],
+  );
 
   const chartData = useMemo(() => {
-    const filtered = context === 'all' ? metrics : metrics.filter(m => m.context === context);
-    return filtered.map(m => ({
-      time: format(new Date(m.createdAt), 'HH:mm'),
-      bitrate: Math.round(m.bitrate),
-      fps: Number(m.fps.toFixed(1)),
-      latency: Math.round(m.latency),
-      jitter: Number(m.jitter.toFixed(1)),
-      packetLoss: Number(m.packetLoss.toFixed(2)),
-      consumers: m.consumers,
-    }));
+    const filtered =
+      context === "all"
+        ? metrics
+        : metrics.filter((m) => m.context === context);
+    return filtered
+      .map((m) => ({
+        time: format(new Date(m.createdAt ?? 0), "HH:mm"),
+        bytesReceived: m.bytesReceived,
+        bytesSent: m.bytesSent,
+        readers: m.readers,
+        framesInError: m.framesInError,
+        ready: m.ready ? 1 : 0,
+      }))
+      .reverse();
   }, [metrics, context]);
 
-  if (!stream) return <div className="text-muted-foreground">Loading...</div>;
+  if (isLoading) return <div className="text-muted-foreground">Loading...</div>;
+  if (isError)
+    return <div className="text-status-critical">{error.message}</div>;
+  if (!stream)
+    return <div className="text-muted-foreground">Stream not found.</div>;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/streams')}><ArrowLeft className="h-4 w-4" /></Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate("/streams")}
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-semibold font-mono-metric">{stream.name}</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{stream.source}</p>
+          <h1 className="text-2xl font-semibold font-mono-metric">
+            {stream.name}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {stream.source}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
             <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
           </Button>
-          <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => setDeleteOpen(true)}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-destructive hover:text-destructive"
+            onClick={() => setDeleteOpen(true)}
+          >
             <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
           </Button>
           <div className="flex items-center gap-2 ml-2">
             <span className="text-sm text-muted-foreground">Enabled</span>
-            <Switch checked={stream.enabled} onCheckedChange={(checked) => toggleStream.mutate({ name: stream.name, enabled: checked })} />
+            <Switch
+              checked={stream.isEnabled}
+              onCheckedChange={(checked) =>
+                toggleStream.mutate({
+                  name: stream.name,
+                  isEnabled: checked,
+                })
+              }
+            />
           </div>
           <StatusBadge status={stream.status} />
         </div>
@@ -80,30 +146,57 @@ export default function StreamDetailPage() {
       <Tabs defaultValue="overview">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="inspection"><Scan className="h-3.5 w-3.5 mr-1" />Inspection</TabsTrigger>
+          <TabsTrigger value="inspection">
+            <Scan className="h-3.5 w-3.5 mr-1" />
+            Inspection
+          </TabsTrigger>
           <TabsTrigger value="metrics">Metrics</TabsTrigger>
-          <TabsTrigger value="alerts">Alerts ({streamAlerts.length})</TabsTrigger>
+          <TabsTrigger value="alerts">
+            Alerts ({streamAlerts.length})
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4 mt-4">
+          <Card className="border-border/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Lifecycle</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <LifecycleStepper stream={stream} />
+              <StreamTopology stream={stream} />
+            </CardContent>
+          </Card>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <Card className="border-border/50">
               <CardContent className="p-4">
                 <p className="text-xs text-muted-foreground">Consumers</p>
-                <p className="text-xl font-semibold font-mono-metric mt-1">{stream.activeConsumers}</p>
+                <p className="text-xl font-semibold font-mono-metric mt-1">
+                  {stream.activeConsumers}
+                </p>
               </CardContent>
             </Card>
             <Card className="border-border/50">
               <CardContent className="p-4">
-                <p className="text-xs text-muted-foreground">Assigned Pod</p>
+                <p className="text-xs text-muted-foreground">Assigned Node</p>
                 <div className="flex items-center gap-2 mt-1">
                   <Select
-                    value={stream.assignedPod || '__none__'}
+                    value={stream.assignedNode || "__none__"}
                     onValueChange={(val) => {
-                      if (val === '__none__') {
-                        unassignStream.mutate(stream.name, { onSuccess: () => toast.success('Stream unassigned') });
+                      if (val === "__none__") {
+                        unassignStream.mutate(stream.name, {
+                          onSuccess: () => toast.success("Stream unassigned"),
+                        });
                       } else {
-                        assignStream.mutate({ name: stream.name, podId: val }, { onSuccess: () => toast.success(`Assigned to ${val}`) });
+                        assignStream.mutate(
+                          {
+                            name: stream.name,
+                            nodeId: val,
+                          },
+                          {
+                            onSuccess: () =>
+                              toast.success(`Assigned to ${val}`),
+                          },
+                        );
                       }
                     }}
                   >
@@ -112,8 +205,10 @@ export default function StreamDetailPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="__none__">— Unassigned —</SelectItem>
-                      {activePods.map(p => (
-                        <SelectItem key={p.podId} value={p.podId}>{p.podId}</SelectItem>
+                      {activeNodes.map((node) => (
+                        <SelectItem key={node.nodeId} value={node.nodeId}>
+                          {node.nodeId}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -123,13 +218,25 @@ export default function StreamDetailPage() {
             <Card className="border-border/50">
               <CardContent className="p-4">
                 <p className="text-xs text-muted-foreground">Last Seen</p>
-                <p className="text-sm mt-1">{stream.lastSeenAt ? formatDistanceToNow(new Date(stream.lastSeenAt), { addSuffix: true }) : '—'}</p>
+                <p className="text-sm mt-1">
+                  {stream.lastSeenAt
+                    ? formatDistanceToNow(new Date(stream.lastSeenAt), {
+                        addSuffix: true,
+                      })
+                    : "—"}
+                </p>
               </CardContent>
             </Card>
             <Card className="border-border/50">
               <CardContent className="p-4">
                 <p className="text-xs text-muted-foreground">Last Synced</p>
-                <p className="text-sm mt-1">{stream.lastSyncedAt ? formatDistanceToNow(new Date(stream.lastSyncedAt), { addSuffix: true }) : '—'}</p>
+                <p className="text-sm mt-1">
+                  {stream.lastSyncedAt
+                    ? formatDistanceToNow(new Date(stream.lastSyncedAt), {
+                        addSuffix: true,
+                      })
+                    : "—"}
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -138,15 +245,21 @@ export default function StreamDetailPage() {
               <CardContent className="p-4 flex items-start gap-3">
                 <AlertTriangle className="h-4 w-4 text-status-critical mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-status-critical">Last Error</p>
-                  <p className="text-sm text-muted-foreground mt-1">{stream.lastError}</p>
+                  <p className="text-sm font-medium text-status-critical">
+                    Last Error
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {stream.lastError}
+                  </p>
                 </div>
               </CardContent>
             </Card>
           )}
           {stream.metadata && Object.keys(stream.metadata).length > 0 && (
             <Card className="border-border/50">
-              <CardHeader className="pb-2"><CardTitle className="text-sm">Metadata</CardTitle></CardHeader>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Metadata</CardTitle>
+              </CardHeader>
               <CardContent>
                 <pre className="text-xs font-mono-metric text-muted-foreground bg-muted/50 p-3 rounded overflow-auto max-h-40">
                   {JSON.stringify(stream.metadata, null, 2)}
@@ -157,35 +270,86 @@ export default function StreamDetailPage() {
         </TabsContent>
 
         <TabsContent value="inspection" className="mt-4">
-          <StreamInspectionPanel streamName={name || ''} />
+          <StreamInspectionPanel streamName={name || ""} />
         </TabsContent>
 
         <TabsContent value="metrics" className="space-y-4 mt-4">
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Context:</span>
-            {(['all', 'ingest', 'cluster'] as const).map(c => (
-              <Button key={c} variant={context === c ? 'default' : 'outline'} size="sm" onClick={() => setContext(c)} className="capitalize">{c}</Button>
+            {(["all", "ingest", "cluster"] as const).map((c) => (
+              <Button
+                key={c}
+                variant={context === c ? "default" : "outline"}
+                size="sm"
+                onClick={() => setContext(c)}
+                className="capitalize"
+              >
+                {c}
+              </Button>
             ))}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[
-              { key: 'bitrate', label: 'Bitrate (kbps)', color: '--primary' },
-              { key: 'fps', label: 'FPS', color: '--status-healthy' },
-              { key: 'latency', label: 'Latency (ms)', color: '--status-warning' },
-              { key: 'jitter', label: 'Jitter (ms)', color: '--status-info' },
-              { key: 'packetLoss', label: 'Packet Loss (%)', color: '--status-critical' },
-              { key: 'consumers', label: 'Consumers', color: '--primary' },
+              {
+                key: "bytesReceived",
+                label: "Bytes Received",
+                color: "--primary",
+              },
+              {
+                key: "bytesSent",
+                label: "Bytes Sent",
+                color: "--status-healthy",
+              },
+              {
+                key: "readers",
+                label: "Readers",
+                color: "--status-warning",
+              },
+              {
+                key: "framesInError",
+                label: "Frames in Error",
+                color: "--status-info",
+              },
+              {
+                key: "ready",
+                label: "Ready (1/0)",
+                color: "--status-critical",
+              },
             ].map(({ key, label, color }) => (
               <Card key={key} className="border-border/50">
-                <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle></CardHeader>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    {label}
+                  </CardTitle>
+                </CardHeader>
                 <CardContent className="h-40">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="time" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} />
-                      <YAxis tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} />
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="hsl(var(--border))"
+                      />
+                      <XAxis
+                        dataKey="time"
+                        tick={{
+                          fontSize: 9,
+                          fill: "hsl(var(--muted-foreground))",
+                        }}
+                      />
+                      <YAxis
+                        tick={{
+                          fontSize: 9,
+                          fill: "hsl(var(--muted-foreground))",
+                        }}
+                      />
                       <Tooltip contentStyle={chartStyle} />
-                      <Area type="monotone" dataKey={key} stroke={`hsl(var(${color}))`} fill={`hsl(var(${color}) / 0.15)`} strokeWidth={1.5} />
+                      <Area
+                        type="monotone"
+                        dataKey={key}
+                        stroke={`hsl(var(${color}))`}
+                        fill={`hsl(var(${color}) / 0.15)`}
+                        strokeWidth={1.5}
+                      />
                     </AreaChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -196,17 +360,33 @@ export default function StreamDetailPage() {
 
         <TabsContent value="alerts" className="mt-4">
           <div className="space-y-2">
-            {streamAlerts.length === 0 && <p className="text-sm text-muted-foreground py-8 text-center">No alerts for this stream</p>}
-            {streamAlerts.map(alert => (
-              <Card key={alert._id} className="border-border/50">
+            {streamAlerts.length === 0 && (
+              <p className="text-sm text-muted-foreground py-8 text-center">
+                No alerts for this stream
+              </p>
+            )}
+            {streamAlerts.map((alert) => (
+              <Card key={alert.id} className="border-border/50">
                 <CardContent className="p-4 flex items-center gap-3">
                   <SeverityBadge severity={alert.severity} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm">{alert.message}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{alert.type} · {formatDistanceToNow(new Date(alert.createdAt), { addSuffix: true })}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {alert.type} ·{" "}
+                      {formatDistanceToNow(new Date(alert.createdAt), {
+                        addSuffix: true,
+                      })}
+                    </p>
                   </div>
-                  <Badge variant={alert.resolved ? 'secondary' : 'outline'} className={alert.resolved ? '' : 'border-status-warning/30 text-status-warning'}>
-                    {alert.resolved ? 'Resolved' : 'Open'}
+                  <Badge
+                    variant={alert.isResolved ? "secondary" : "outline"}
+                    className={
+                      alert.isResolved
+                        ? ""
+                        : "border-status-warning/30 text-status-warning"
+                    }
+                  >
+                    {alert.isResolved ? "Resolved" : "Open"}
                   </Badge>
                 </CardContent>
               </Card>
@@ -215,8 +395,17 @@ export default function StreamDetailPage() {
         </TabsContent>
       </Tabs>
 
-      <EditStreamDialog stream={stream} open={editOpen} onOpenChange={setEditOpen} />
-      <DeleteStreamDialog streamName={stream.name} open={deleteOpen} onOpenChange={setDeleteOpen} onDeleted={() => navigate('/streams')} />
+      <EditStreamDialog
+        stream={stream}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+      />
+      <DeleteStreamDialog
+        streamName={stream.name}
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onDeleted={() => navigate("/streams")}
+      />
     </div>
   );
 }
