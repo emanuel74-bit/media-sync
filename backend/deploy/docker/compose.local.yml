@@ -77,6 +77,11 @@ services:
             - "3000:3000"
         env_file:
             - ../../.env
+        environment:
+            # The local cluster MediaMTX API uses internal basic auth. Keep the app's
+            # transport credential aligned even when a developer's .env predates the
+            # node-derived topology variables.
+            - CLUSTER_MEDIAMTX_AUTH=${CLUSTER_MEDIAMTX_AUTH:-sync:syncpass}
         depends_on:
             - mongodb
             - mediamtx-ingest

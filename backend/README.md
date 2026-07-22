@@ -61,10 +61,26 @@ The MediaMTX nodes (built from `deploy/docker/mediamtx-node.Dockerfile`) automat
 # Unit tests (Jest)
 npm test
 
-# E2E API smoke test (streams, nodes, alerts, metrics, inspection lifecycle)
-.\test.ps1          # against an already-running stack
-.\test.ps1 -Up      # starts the compose stack first
+# Live reserve -> publish -> relay -> disappearance smoke test
+.\test.ps1 -Up
+
+# Against an already-running local Compose stack
+.\test.ps1 -PublishHost localhost
 ```
+
+The smoke test is intentionally separate from `npm test`. It requires PowerShell 5.1+, FFmpeg
+with the `lavfi` input and `libx264` encoder, and reachable sync, ingest, and cluster HTTP APIs.
+`-Up` additionally requires Docker Desktop and Docker Compose. It starts a synthetic RTSP
+publisher, verifies reservation auth and targeted activation, waits for a ready cluster relay,
+then stops publication and verifies stale teardown. Its unique stream, relay path, publisher
+process, and temporary log are cleaned in `finally`, including after a failed transition. The
+Compose stack remains running for inspection and can be stopped with `npm run stack:down`.
+
+For a non-local deployment, omit `-PublishHost` so the reservation URL is used as returned, and
+override `-BaseUrl`, `-IngestApiUrl`, and `-ClusterApiUrl` as needed. The current harness expects
+one externally reachable cluster MediaMTX API; override `-ClusterApiAuth` if it does not use the
+local `sync:syncpass` credential. Use the unscaled local Compose topology for the full relay
+assertions.
 
 ## API Documentation
 
