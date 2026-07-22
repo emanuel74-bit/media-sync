@@ -62,7 +62,7 @@ describe("MediaMtxPipelineService", () => {
     });
 
     describe("teardownClusterPullPipeline", () => {
-        it("fans out removal across all active cluster clients, isolating failures", async () => {
+        it("finishes removal fan-out, then reports the nodes that failed", async () => {
             const c1 = { removePath: jest.fn().mockRejectedValue(new Error("down")) };
             const c2 = { removePath: jest.fn().mockResolvedValue(undefined) };
             clusterNodes.getActiveNodes.mockResolvedValue([
@@ -70,7 +70,9 @@ describe("MediaMtxPipelineService", () => {
                 { nodeId: "b", client: c2 },
             ] as never);
 
-            await expect(service.teardownClusterPullPipeline("live")).resolves.toBeUndefined();
+            await expect(service.teardownClusterPullPipeline("live")).rejects.toThrow(
+                "Failed to delete cluster pipeline live from nodes: a",
+            );
 
             expect(c1.removePath).toHaveBeenCalledWith("live");
             expect(c2.removePath).toHaveBeenCalledWith("live");

@@ -24,5 +24,7 @@ export abstract class StreamRepository {
 
     abstract delete(name: string): Promise<boolean>;
 
+    abstract deleteExpiredReservation(name: string, expiredBefore: Date): Promise<boolean>;
+
     abstract findAssignmentInfo(): Promise<StreamAssignmentInfo[]>;
 }

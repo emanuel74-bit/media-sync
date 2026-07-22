@@ -26,6 +26,7 @@ describe("StreamCrudService", () => {
             create: jest.fn(),
             update: jest.fn(),
             delete: jest.fn(),
+            deleteExpiredReservation: jest.fn(),
         } as unknown as jest.Mocked<StreamRepository>;
 
         const module: TestingModule = await Test.createTestingModule({
@@ -90,6 +91,23 @@ describe("StreamCrudService", () => {
             repo.delete.mockResolvedValue(false);
 
             await expect(service.remove("missing")).rejects.toBeInstanceOf(NotFoundException);
+        });
+    });
+
+    describe("expireReservation", () => {
+        it("delegates an atomic status-and-expiry guarded delete", async () => {
+            const expiredBefore = new Date();
+            repo.deleteExpiredReservation.mockResolvedValue(true);
+
+            await expect(service.expireReservation("s1", expiredBefore)).resolves.toBe(true);
+
+            expect(repo.deleteExpiredReservation).toHaveBeenCalledWith("s1", expiredBefore);
+        });
+
+        it("reports a concurrent promotion without deleting it", async () => {
+            repo.deleteExpiredReservation.mockResolvedValue(false);
+
+            await expect(service.expireReservation("s1", new Date())).resolves.toBe(false);
         });
     });
 });

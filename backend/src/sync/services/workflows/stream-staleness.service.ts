@@ -20,7 +20,8 @@ export class StreamStalenessService {
             (stream) =>
                 !stream.isManual &&
                 stream.status !== StreamStatus.RESERVED &&
-                !context.ingestNames.has(stream.name),
+                !context.ingestNames.has(stream.name) &&
+                this.canConfirmAbsent(stream, context),
         );
         for (const stream of staleStreams) {
             await this.removeStale(stream, context.clusterNames);
@@ -41,10 +42,18 @@ export class StreamStalenessService {
         );
     }
 
+    private canConfirmAbsent(stream: Stream, context: SyncContext): boolean {
+        if (stream.ingestNode) {
+            const nodeIsActive = context.ingestNodeIds.has(stream.ingestNode);
+            return !nodeIsActive || context.observedIngestNodeIds.has(stream.ingestNode);
+        }
+        return context.ingestNodeIds.size === context.observedIngestNodeIds.size;
+    }
+
     private async expireReservation(stream: Stream): Promise<void> {
         try {
             // Never claimed — no cluster pipeline was ever deployed, so just free the slot.
-            await this.streams.remove(stream.name);
+            await this.streams.expireReservation(stream.name, new Date());
         } catch (error) {
             this.logger.warn(`Failed to expire reservation ${stream.name}`, error);
         }

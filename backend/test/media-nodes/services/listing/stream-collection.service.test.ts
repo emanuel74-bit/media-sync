@@ -199,7 +199,7 @@ describe("StreamCollectionService", () => {
                 NodeRole.INGEST,
             );
 
-            expect(result).toEqual([
+            expect(result.streams).toEqual([
                 {
                     stream: expect.objectContaining({ name: "s1" }),
                     context: NodeRole.INGEST,
@@ -211,6 +211,8 @@ describe("StreamCollectionService", () => {
                     nodeId: "ingest-b",
                 },
             ]);
+            expect(result.nodeIds).toEqual(["ingest-a", "ingest-b"]);
+            expect(result.observedNodeIds).toEqual(["ingest-a", "ingest-b"]);
         });
 
         it("isolates a failing node and still tags the healthy one", async () => {
@@ -222,13 +224,15 @@ describe("StreamCollectionService", () => {
                 NodeRole.INGEST,
             );
 
-            expect(result).toEqual([
+            expect(result.streams).toEqual([
                 {
                     stream: expect.objectContaining({ name: "ok" }),
                     context: NodeRole.INGEST,
                     nodeId: "ingest-b",
                 },
             ]);
+            expect(result.nodeIds).toEqual(["ingest-a", "ingest-b"]);
+            expect(result.observedNodeIds).toEqual(["ingest-b"]);
         });
     });
 });

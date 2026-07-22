@@ -27,6 +27,8 @@ const makeContext = (overrides: Partial<SyncContext> = {}): SyncContext => ({
     clusterList: [],
     ingestNames: new Set(["stream-1"]),
     clusterNames: new Set(),
+    ingestNodeIds: new Set(["ingest-1"]),
+    observedIngestNodeIds: new Set(["ingest-1"]),
     nodeIds: ["node-1"],
     allStreams: [],
     ...overrides,
@@ -117,6 +119,31 @@ describe("IngestStreamSynchronizerService", () => {
 
         expect(streams.ensureAssigned).toHaveBeenCalledTimes(1);
         expect(streams.deployClusterPipeline).not.toHaveBeenCalled();
+    });
+
+    it("continues relaying later ingest streams after one stream fails", async () => {
+        const errorSpy = jest.spyOn(
+            (service as never as { logger: { error: jest.Mock } }).logger,
+            "error",
+        );
+        streams.upsertFromDiscovery
+            .mockRejectedValueOnce(new Error("database unavailable"))
+            .mockResolvedValueOnce(makeStream({ name: "stream-2" }));
+
+        await service.execute(
+            makeContext({
+                ingestList: [
+                    { name: "stream-1", source: "rtsp://one", status: "ready" },
+                    { name: "stream-2", source: "rtsp://two", status: "ready" },
+                ],
+            }),
+        );
+
+        expect(streams.upsertFromDiscovery).toHaveBeenCalledTimes(2);
+        expect(streams.ensureAssigned).toHaveBeenCalledWith("stream-2", ["node-1"]);
+        expect(errorSpy).toHaveBeenCalledWith(
+            "Failed to relay ingest stream stream-1: database unavailable",
+        );
     });
 
     describe("activate — the targeted hook", () => {

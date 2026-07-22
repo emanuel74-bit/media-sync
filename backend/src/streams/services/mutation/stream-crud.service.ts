@@ -63,4 +63,8 @@ export class StreamCrudService {
             throw new NotFoundException(`Stream ${name} not found`);
         }
     }
+
+    async expireReservation(name: string, expiredBefore: Date): Promise<boolean> {
+        return this.streamRepository.deleteExpiredReservation(name, expiredBefore);
+    }
 }

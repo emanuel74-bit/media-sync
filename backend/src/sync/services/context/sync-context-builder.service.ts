@@ -25,19 +25,21 @@ export class SyncContextBuilderService {
 
         // Carry each ingest stream's owning node forward so the relay pulls from that
         // specific ingest node (multi-ingest per-node origin).
-        const ingestList = ingestStreams.map(({ stream, nodeId }) => ({
+        const ingestList = ingestStreams.streams.map(({ stream, nodeId }) => ({
             name: stream.name,
             source: stream.source,
             status: stream.status,
             ingestNode: nodeId ?? undefined,
         }));
-        const clusterList = clusterStreams.map(({ stream }) => stream);
+        const clusterList = clusterStreams.streams.map(({ stream }) => stream);
 
         return {
             ingestList,
             clusterList,
             ingestNames: new Set(ingestList.map((stream) => stream.name)),
             clusterNames: new Set(clusterList.map((stream) => stream.name)),
+            ingestNodeIds: new Set(ingestStreams.nodeIds),
+            observedIngestNodeIds: new Set(ingestStreams.observedNodeIds),
             nodeIds,
             allStreams,
         };

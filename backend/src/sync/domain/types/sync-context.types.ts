@@ -7,6 +7,8 @@ export interface SyncContext {
     clusterList: SyncDiscoveredStream[];
     ingestNames: Set<string>;
     clusterNames: Set<string>;
+    ingestNodeIds: Set<string>;
+    observedIngestNodeIds: Set<string>;
     nodeIds: string[];
     allStreams: Stream[];
 }

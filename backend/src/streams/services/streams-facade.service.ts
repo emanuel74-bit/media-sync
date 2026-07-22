@@ -47,4 +47,8 @@ export class StreamsFacadeService {
     async remove(name: string): Promise<void> {
         await this.streamCrud.remove(name);
     }
+
+    async expireReservation(name: string, expiredBefore: Date): Promise<boolean> {
+        return this.streamCrud.expireReservation(name, expiredBefore);
+    }
 }

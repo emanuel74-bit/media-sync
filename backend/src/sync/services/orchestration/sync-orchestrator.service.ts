@@ -22,14 +22,11 @@ export class SyncOrchestratorService {
     ) {}
 
     async execute(context: SyncContext): Promise<void> {
-        if (!context.nodeIds.length) {
-            this.logger.warn("No active cluster nodes registered, skipping stream assignment");
-            return;
-        }
-
+        const assignmentOutcomes = context.nodeIds.length
+            ? await this.runAssignmentWorkflows(context)
+            : this.skipAssignmentWorkflows();
         const outcomes = [
-            await this.runStep("IngestSync", () => this.ingestSync.execute(context)),
-            await this.runStep("Reconcile", () => this.reconcile.execute(context)),
+            ...assignmentOutcomes,
             await this.runStep("Staleness", () => this.staleness.execute(context)),
         ];
         const failures = outcomes.filter((name): name is string => name !== null);
@@ -39,6 +36,18 @@ export class SyncOrchestratorService {
             cluster: context.clusterList.length,
             failures,
         });
+    }
+
+    private async runAssignmentWorkflows(context: SyncContext): Promise<(string | null)[]> {
+        return [
+            await this.runStep("IngestSync", () => this.ingestSync.execute(context)),
+            await this.runStep("Reconcile", () => this.reconcile.execute(context)),
+        ];
+    }
+
+    private skipAssignmentWorkflows(): (string | null)[] {
+        this.logger.warn("No active cluster nodes registered, skipping stream assignment");
+        return [];
     }
 
     /** Run one step in isolation; returns its name on failure, null on success. */
