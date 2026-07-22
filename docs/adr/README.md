@@ -25,3 +25,4 @@ number, then add a row here.
 | [0014](0014-guard-stream-lifecycle-transitions.md) | Guard stream lifecycle transitions with one authority and atomic compare-and-set writes | Accepted | SVC-07, DATA-03, DATA-07 |
 | [0015](0015-adopt-spec-driven-development-and-obsidian-navigation.md) | Adopt OpenSpec-driven development and Obsidian navigation | Accepted | DOC-05 |
 | [0016](0016-drop-likec4-architecture-model.md) | End the LikeC4 trial — Mermaid is the sole diagram source | Accepted | DOC-02, DOC-04 (retired) |
+| [0017](0017-feature-and-subsystem-documentation.md) | Maintain feature and subsystem architecture documentation | Accepted | DOC-06 |

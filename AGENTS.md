@@ -7,9 +7,11 @@ Before non-trivial work:
 
 1. Read the active change under `openspec/changes/`.
 2. Inspect the relevant implementation and tests.
-3. Read applicable rules in `backend/CONVENTIONS.md` and cite their stable IDs.
-4. Read ADRs linked by those rules.
-5. Inspect the current Git diff before modifying files.
+3. Read the relevant feature page under `docs/features/` and subsystem trace under
+   `docs/subsystems/`, then verify their claims against code and tests.
+4. Read applicable rules in `backend/CONVENTIONS.md` and cite their stable IDs.
+5. Read ADRs linked by those rules.
+6. Inspect the current Git diff before modifying files.
 
 ## Artifact responsibilities
 
@@ -17,10 +19,18 @@ Before non-trivial work:
 - `docs/adr/`: durable architecture and tooling decisions.
 - `openspec/specs/`: current intended observable behavior.
 - `openspec/changes/`: proposed behavior, design, and tasks.
+- `docs/features/`: derived single-feature ownership and public-surface maps.
+- `docs/subsystems/`: derived cross-feature runtime traces.
 - `docs/index.md`: navigation only.
 - Code and tests: current implementation evidence.
 
 Do not duplicate these sources or silently resolve conflicts between them.
+
+Feature and subsystem pages are lower-authority orientation. Update them in the same
+change when responsibilities, module boundaries, public surfaces, dependency
+direction, state/persistence ownership, events, jobs, subsystem/integration flows,
+failure behavior, idempotency, or consistency guarantees materially change; never
+use them to override OpenSpec, conventions, ADRs, code, or tests.
 
 ## Method
 

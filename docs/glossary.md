@@ -1,5 +1,5 @@
 ---
-last_verified: 2026-07-22
+last_verified: 2026-07-23
 verified_against: backend/src/common/domain/enums, backend/src/nodes/domain, backend/src/streams/domain, backend/src/alerts/domain
 ---
 
@@ -31,8 +31,9 @@ stable per-pod identity ([ADR-0012](adr/0012-cluster-nodes-as-statefulset.md)).
 
 **Node registry** — the single source of truth for runtime topology: which nodes exist, their
 hosts, their liveness. Fed by registration and heartbeat, owned by `NodesModule`. A transport
-adapter is never a second source (`ARCH-11`). Behavior:
-[`node-registry` baseline](../openspec/changes/baseline-node-registry-specification/specs/node-registry/spec.md).
+adapter is never a second source (`ARCH-11`). See the
+[node registration subsystem](subsystems/node-registration-and-heartbeat.md); no canonical
+behavioral OpenSpec currently exists.
 
 **Live / active node** — a registry entry with `status = active` whose `lastHeartbeatAt` falls
 inside the tolerance window (`NODE_HEALTH_TOLERANCE_SECONDS`, default 120s). Computed at read
@@ -60,8 +61,9 @@ only talks to it (`ARCH-09`, `ARCH-11`).
 applies the change with compare-and-set semantics, retrying once against the winning state
 (`DATA-07`, [ADR-0014](adr/0014-guard-stream-lifecycle-transitions.md)). MediaMTX wire states such
 as `ready` and `inactive` are *observations*, not persisted lifecycle values. The authority's
-general rules are specified in the
-[`stream-assignment` baseline](../openspec/changes/baseline-stream-assignment-specification/specs/stream-assignment/spec.md).
+general rules are traced in the
+[assignment subsystem](subsystems/stream-assignment-and-pipeline-deployment.md); no canonical
+behavioral OpenSpec currently exists.
 
 **Birth state** — the lifecycle state a stream is created in, written only by its create flow and
 never reached by a transition: `created` for a manual stream, `reserved` for an ingest
@@ -70,8 +72,9 @@ reservation.
 **Reservation** — a held publish slot on a specific ingest node, created by
 `POST /api/ingest/streams` before any media arrives. Carries a publish token and a TTL
 (`INGEST_RESERVATION_TTL_MS`, default 300 000 ms); the sync loop frees expired reservations.
-Publishing is the claim — there is no confirm call. Behavior:
-[`stream-reservation` baseline](../openspec/changes/baseline-stream-reservation-specification/specs/stream-reservation/spec.md).
+Publishing is the claim — there is no confirm call. See the
+[reservation subsystem](subsystems/stream-reservation-and-publication.md); no canonical behavioral
+OpenSpec currently exists.
 
 **Publish token** — an opaque per-reservation secret, embedded in the returned RTSP publish URL
 and validated at `POST /api/ingest/auth`. Cleared when the stream is promoted out of `reserved`,
@@ -83,8 +86,8 @@ stream name. A cluster stream lives on exactly the node it was assigned to, so s
 operations must target that node — never a pick over the pool, which would hit a sibling replica
 and 404 (`INT-06`). Unlike ingest placement, assignment is a persisted mutation with its own
 event. There is **no failover**: a stream moves only when convergence finds its node absent from
-the candidate list. Behavior:
-[`stream-assignment` baseline](../openspec/changes/baseline-stream-assignment-specification/specs/stream-assignment/spec.md).
+the candidate list. See the
+[assignment subsystem](subsystems/stream-assignment-and-pipeline-deployment.md).
 
 **Convergence** (`ensureAssigned`) — the operation that leaves a stream assigned to one of the
 currently live cluster nodes, whatever it was before. A no-op when the stream is already on a
@@ -93,8 +96,8 @@ its own node when that node is still live, or hashes it onto a new one.
 
 **Placement** — choosing the ingest node for a *reservation*, least-loaded, at reserve time,
 where load is a node's live publishers plus the reservations already pending on it. Distinct from
-assignment: placement is a birth-time input, assignment is a persisted mutation. Behavior:
-[`stream-reservation` baseline](../openspec/changes/baseline-stream-reservation-specification/specs/stream-reservation/spec.md).
+assignment: placement is a birth-time input, assignment is a persisted mutation. See the
+[reservation subsystem](subsystems/stream-reservation-and-publication.md).
 
 **Pipeline** — the MediaMTX path configuration created on a cluster node so it pulls a stream
 from its source. Built, deployed, and torn down by `StreamPipelineService`.
@@ -113,8 +116,8 @@ emitted as `stream.inspected`.
 MediaMTX nodes and converges persisted records toward it: relay live ingest streams to the
 cluster, reconcile manual streams, retire streams confirmed absent. Runs every
 `SYNC_POLL_INTERVAL` (default 10s), never overlaps itself, and ends by emitting `sync.tick`.
-Behavior:
-[`stream-synchronization` baseline](../openspec/changes/baseline-stream-synchronization-specification/specs/stream-synchronization/spec.md).
+See the [synchronization subsystem](subsystems/synchronization-and-reconciliation.md); no canonical
+behavioral OpenSpec currently exists.
 
 **Observation snapshot** (`SyncContext`) — the single view of the world one cycle is built on:
 streams live on ingest and on cluster, live cluster node ids, and every persisted stream. Every

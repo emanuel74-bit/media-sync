@@ -28,12 +28,20 @@ Before modifying code:
 
 1. Inspect the relevant implementation, tests, public contracts, and current Git diff.
 2. Read the active OpenSpec change artifacts, when the task belongs to a change.
-3. Read the relevant rules in `backend/CONVENTIONS.md`.
-4. Follow links from those rules to relevant ADRs in `docs/adr/`.
-5. State the affected rule IDs in the plan or implementation summary.
+3. Read the relevant feature page under `docs/features/` and subsystem trace under
+   `docs/subsystems/`, then verify their claims against code and tests.
+4. Read the relevant rules in `backend/CONVENTIONS.md`.
+5. Follow links from those rules to relevant ADRs in `docs/adr/`.
+6. State the affected rule IDs in the plan or implementation summary.
 
 Do not infer current behavior only from specs or documentation in this brownfield
 repository. Verify it against code and tests.
+
+Feature/subsystem pages are derived, lower-authority orientation. Update them in the
+same change when responsibilities, module boundaries, public surfaces, dependency
+direction, state/persistence ownership, events, jobs, subsystem/integration flows,
+failure behavior, idempotency, or consistency guarantees materially change. They
+never override OpenSpec, conventions, ADRs, code, or tests.
 
 ## Change classification
 

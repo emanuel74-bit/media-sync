@@ -1,5 +1,5 @@
 ---
-last_verified: 2026-07-22
+last_verified: 2026-07-23
 verified_against: backend/src/nodes, backend/src/streams, backend/src/sync, backend/src/media-nodes, backend/src/gateway, backend/src/common/scheduling
 ---
 
@@ -17,8 +17,8 @@ Read against [`nodes.controller.ts`](../../backend/src/nodes/controllers/nodes.c
 [`node-lifecycle.service.ts`](../../backend/src/nodes/services/lifecycle/node-lifecycle.service.ts),
 [`mongo-node.repository.ts`](../../backend/src/infrastructure/database/mongo/node/mongo-node.repository.ts),
 and [`events.gateway.ts`](../../backend/src/gateway/events.gateway.ts).
-Behavior is specified in the
-[`node-registry` baseline](../../openspec/changes/baseline-node-registry-specification/specs/node-registry/spec.md).
+No canonical behavioral OpenSpec currently exists; see the
+[node registration subsystem](../subsystems/node-registration-and-heartbeat.md).
 
 ```mermaid
 sequenceDiagram
@@ -64,8 +64,8 @@ Read against [`ingest.controller.ts`](../../backend/src/streams/controllers/inge
 [`node-resolver.service.ts`](../../backend/src/media-nodes/services/topology/node-resolver.service.ts),
 [`ingest-auth.controller.ts`](../../backend/src/streams/controllers/ingest-auth.controller.ts),
 and [`publish-auth.service.ts`](../../backend/src/streams/services/query/publish-auth.service.ts).
-Behavior is specified in the
-[`stream-reservation` baseline](../../openspec/changes/baseline-stream-reservation-specification/specs/stream-reservation/spec.md).
+No canonical behavioral OpenSpec currently exists; see the
+[reservation subsystem](../subsystems/stream-reservation-and-publication.md).
 Decision: [ADR-0013](../adr/0013-reserve-publish-ingest-cluster.md).
 
 ```mermaid
@@ -116,8 +116,8 @@ Read against [`stream-assignment.service.ts`](../../backend/src/streams/services
 [`stream-status.service.ts`](../../backend/src/streams/services/mutation/stream-status.service.ts),
 [`stream-status-transitions.const.ts`](../../backend/src/streams/domain/consts/stream-status-transitions.const.ts),
 and [`mongo-stream.repository.ts`](../../backend/src/infrastructure/database/mongo/stream/mongo-stream.repository.ts).
-Behavior is specified in the
-[`stream-assignment` baseline](../../openspec/changes/baseline-stream-assignment-specification/specs/stream-assignment/spec.md).
+No canonical behavioral OpenSpec currently exists; see the
+[assignment subsystem](../subsystems/stream-assignment-and-pipeline-deployment.md).
 Decision: [ADR-0014](../adr/0014-guard-stream-lifecycle-transitions.md).
 
 Every persisted lifecycle write — from the API, from setup, from the sync loop — goes through one
@@ -171,8 +171,8 @@ Read against [`sync-scheduler.service.ts`](../../backend/src/sync/services/sched
 [`sync-orchestrator.service.ts`](../../backend/src/sync/services/orchestration/sync-orchestrator.service.ts),
 the three workflow services in [`sync/services/workflows/`](../../backend/src/sync/services/workflows/),
 and [`job-scheduler.service.ts`](../../backend/src/common/scheduling/job-scheduler.service.ts).
-Behavior is specified in the
-[`stream-synchronization` baseline](../../openspec/changes/baseline-stream-synchronization-specification/specs/stream-synchronization/spec.md).
+No canonical behavioral OpenSpec currently exists; see the
+[synchronization subsystem](../subsystems/synchronization-and-reconciliation.md).
 This is the shape `SVC-03` and `JOB-01..03` prescribe.
 
 ```mermaid
@@ -228,7 +228,7 @@ Clearing the secret is what makes a publisher unable to redial — see
 ## Named, not verified here
 
 Each of these was located but **not** read line-by-line for this document. Do not treat the
-one-line summaries as contracts — read the source, and prefer a baseline specification once one
+one-line summaries as contracts — read the source, and prefer a canonical specification once one
 exists ([specification map](../specification-map.md)).
 
 | Flow | Entry point | Status |

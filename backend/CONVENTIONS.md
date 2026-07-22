@@ -446,6 +446,11 @@ Retired text: While the LikeC4 trial runs ([ADR-0006](../docs/adr/0006-documenta
 Decision history: [ADR-0015](../docs/adr/0015-adopt-spec-driven-development-and-obsidian-navigation.md).
 Enforced: review + tooling.
 
+**DOC-06** — Rule: Every verified top-level backend feature MUST have one architecture document at `docs/features/<feature>.md`. A capability MUST also have a document under `docs/subsystems/` when it coordinates two or more features, implements an end-to-end runtime lifecycle, crosses feature boundaries through events, combines domain behavior with an external integration, or has material failure, consistency, or idempotency semantics. Each feature or subsystem document MUST identify its responsibility boundaries, supported public surfaces, direct participants, owned data, events, primary flows, failure behavior, real code and test paths, relevant canonical OpenSpec specifications (or explicitly state that none exists), relevant ADRs, applicable convention rule IDs, evidence for material claims, and a `last_verified` date. These documents describe architecture, ownership, and implementation structure; `openspec/specs/` remains authoritative for intended observable behavior, `docs/adr/` for durable decision rationale, this registry for current engineering law, and code/tests for implementation evidence. A change that materially alters a feature responsibility or boundary, public surface, subsystem flow, state or persistence ownership, event contract, cross-feature dependency, integration boundary, failure behavior, or idempotency/consistency guarantee MUST update the affected feature or subsystem documents in the same change.
+Example: `docs/features/streams.md` owns the Streams feature map, while `docs/subsystems/stream-reservation-and-publication.md` traces the cross-feature reservation flow without copying its behavioral specification.
+Decision history: [ADR-0017](../docs/adr/0017-feature-and-subsystem-documentation.md).
+Enforced: review + link/path validation.
+
 ## 99. DEVN — Known deviations & open items
 
 Current, verified gaps between the rules above and the code. Fix on touch; remove the entry when fixed.

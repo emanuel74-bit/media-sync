@@ -1,5 +1,5 @@
 ---
-last_verified: 2026-07-22
+last_verified: 2026-07-23
 verified_against: backend/src (app.module.ts, feature modules), backend/package.json
 ---
 
@@ -53,8 +53,9 @@ Three seams carry most of the weight:
 - **The transport adapter is addressless.** It turns a caller-supplied host into a client and
   holds no node addresses. Runtime topology has one source of truth: the node registry, fed by
   heartbeats (`ARCH-11`, [ADR-0009](../adr/0009-pod-derived-cluster-topology.md)). That registry's
-  behavior is specified in
-  [the `node-registry` baseline](../../openspec/changes/baseline-node-registry-specification/specs/node-registry/spec.md).
+  no canonical behavioral OpenSpec currently exists; see the
+  [specification map](../specification-map.md) and
+  [node registration subsystem](../subsystems/node-registration-and-heartbeat.md).
 
 See [module map](module-map.md) for the module-by-module breakdown and
 [runtime flows](runtime-flows.md) for the sequences.
