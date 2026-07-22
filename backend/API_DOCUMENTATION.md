@@ -531,6 +531,22 @@ Emitted when a stale stream's cluster pipeline is removed.
 
 **Payload:** Stream name (string)
 
+#### Stream Reserved
+
+Emitted when an ingest slot is reserved for a stream.
+
+**Event Name:** `stream.reserved`
+
+**Payload:**
+
+```json
+{
+    "streamName": "string",
+    "ingestNode": "string",
+    "expiresAt": "2023-01-01T00:00:00.000Z"
+}
+```
+
 #### Stream Assigned
 
 Emitted when a stream is assigned to a node.

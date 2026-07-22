@@ -111,7 +111,7 @@ assertions.
 - `GET /api/stream-inspection/:streamName/history`
 - `GET /api/docs`
 
-WebSocket: connect via Socket.IO and listen for `stream.synced`, `stream.removed`, `stream.assigned`, `stream.unassigned`, `stream.inspected`, `alert.created`, `alert.resolved`, `node.registered`.
+WebSocket: connect via Socket.IO and listen for `stream.synced`, `stream.removed`, `stream.reserved`, `stream.assigned`, `stream.unassigned`, `stream.inspected`, `alert.created`, `alert.updated`, `alert.resolved`, `node.registered`.
 
 ## Notes
 
