@@ -4,6 +4,7 @@ import type {
   Stream,
   StreamAssignedEvent,
   StreamInspection,
+  StreamReservedEvent,
 } from "@/types";
 
 type SocketLike = {
@@ -17,6 +18,7 @@ type EventMap = {
   connection: boolean;
   "stream.synced": Stream;
   "stream.removed": string;
+  "stream.reserved": StreamReservedEvent;
   "stream.assigned": StreamAssignedEvent;
   "stream.unassigned": string;
   "alert.created": Alert;
@@ -96,6 +98,7 @@ class WebSocketManager {
 
     this.forwardSocketEvent("stream.synced");
     this.forwardSocketEvent("stream.removed");
+    this.forwardSocketEvent("stream.reserved");
     this.forwardSocketEvent("stream.assigned");
     this.forwardSocketEvent("stream.unassigned");
     this.forwardSocketEvent("alert.created");

@@ -153,3 +153,9 @@ export interface StreamAssignedEvent {
   nodeId: string;
   assignedAt?: string | null;
 }
+
+export interface StreamReservedEvent {
+  streamName: string;
+  ingestNode: string;
+  expiresAt: string;
+}

@@ -7,7 +7,7 @@ import { db, timestamps } from "./fixtures";
 // react-query in useRealtimeSync invalidates on each event and refetches from
 // the MSW handlers — so the mutated state shows up live in the UI.
 
-const { now, minutesAhead } = timestamps;
+const { now } = timestamps;
 
 type SocketListener = (...args: unknown[]) => void;
 
@@ -159,15 +159,6 @@ const scenarios: Array<() => void> = [
     node.lastHeartbeatAt = now();
     node.updatedAt = now();
     emit("node.registered", node);
-  },
-
-  // Reserved stream expiry refresh
-  () => {
-    const stream = pick(db.streams.filter((s) => s.status === "reserved"));
-    if (!stream) return;
-    stream.reservedUntil = minutesAhead(5);
-    stream.updatedAt = now();
-    emit("stream.synced", stream satisfies Stream);
   },
 ];
 
