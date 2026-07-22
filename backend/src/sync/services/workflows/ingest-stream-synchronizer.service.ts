@@ -81,7 +81,6 @@ export class IngestStreamSynchronizerService {
     private async upsertDiscoveredStream(ingest: SyncDiscoveredStream): Promise<Stream> {
         const data: Partial<Stream> & { name: string } = {
             name: ingest.name,
-            status: (ingest.status as StreamStatus) || StreamStatus.DISCOVERED,
             ingestNode: ingest.ingestNode,
             reservedUntil: null,
             lastSeenAt: new Date(),

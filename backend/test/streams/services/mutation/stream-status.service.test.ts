@@ -1,5 +1,5 @@
-import { NotFoundException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
+import { ConflictException, NotFoundException } from "@nestjs/common";
 
 import { StreamStatus } from "@/common";
 import { Stream } from "@/streams/domain";
@@ -23,8 +23,9 @@ describe("StreamStatusService", () => {
 
     beforeEach(async () => {
         repo = {
+            findByName: jest.fn(),
+            transitionStatus: jest.fn(),
             upsert: jest.fn(),
-            update: jest.fn(),
         } as unknown as jest.Mocked<StreamRepository>;
 
         const module: TestingModule = await Test.createTestingModule({
@@ -34,72 +35,138 @@ describe("StreamStatusService", () => {
         service = module.get<StreamStatusService>(StreamStatusService);
     });
 
-    it("upsertFromDiscovery upserts with isManual: false", async () => {
-        const stream = makeStream();
-        repo.upsert.mockResolvedValue(stream);
+    it("records discovery data without persisting MediaMTX's wire status", async () => {
+        const synced = makeStream({ status: StreamStatus.SYNCED });
+        repo.findByName.mockResolvedValue(synced);
+        repo.upsert.mockResolvedValue(synced);
 
-        const result = await service.upsertFromDiscovery({ name: "s1", source: "rtsp://x" });
+        const result = await service.upsertFromDiscovery({
+            name: "s1",
+            source: "rtsp://x",
+            status: "ready" as StreamStatus,
+        });
 
-        expect(result).toBe(stream);
+        expect(result).toBe(synced);
         expect(repo.upsert).toHaveBeenCalledWith("s1", {
             name: "s1",
             source: "rtsp://x",
             isManual: false,
+            reservedUntil: null,
+            publishToken: null,
         });
     });
 
-    it("markStale sets STALE status and lastSeenAt", async () => {
-        repo.update.mockResolvedValue(makeStream({ status: StreamStatus.STALE }));
+    it("moves a reservation to DISCOVERED and clears its publish secret", async () => {
+        const reserved = makeStream({
+            status: StreamStatus.RESERVED,
+            publishToken: "secret",
+            reservedUntil: new Date(),
+        });
+        const discovered = makeStream();
+        repo.findByName.mockResolvedValue(reserved);
+        repo.transitionStatus.mockResolvedValue(discovered);
 
-        await service.markStale("s1");
+        await expect(service.upsertFromDiscovery({ name: "s1" })).resolves.toBe(discovered);
 
-        expect(repo.update).toHaveBeenCalledWith("s1", {
-            status: StreamStatus.STALE,
-            lastSeenAt: expect.any(Date),
+        expect(repo.transitionStatus).toHaveBeenCalledWith("s1", StreamStatus.RESERVED, {
+            name: "s1",
+            isManual: false,
+            reservedUntil: null,
+            publishToken: null,
+            lastError: null,
+            status: StreamStatus.DISCOVERED,
         });
     });
 
-    it("markSynced sets SYNCED, refreshes lastSyncedAt, and clears lastError", async () => {
+    it("normalizes a legacy MediaMTX wire status already persisted in the database", async () => {
+        const legacy = makeStream({ status: "ready" as StreamStatus });
+        const discovered = makeStream();
+        repo.findByName.mockResolvedValue(legacy);
+        repo.transitionStatus.mockResolvedValue(discovered);
+
+        await expect(service.upsertFromDiscovery({ name: "s1" })).resolves.toBe(discovered);
+
+        expect(repo.transitionStatus).toHaveBeenCalledWith(
+            "s1",
+            "ready",
+            expect.objectContaining({ status: StreamStatus.DISCOVERED }),
+        );
+    });
+
+    it("does not regress a state advanced by a concurrent discovery worker", async () => {
+        const reserved = makeStream({ status: StreamStatus.RESERVED });
         const synced = makeStream({ status: StreamStatus.SYNCED });
-        repo.update.mockResolvedValue(synced);
+        repo.findByName.mockResolvedValue(reserved);
+        repo.transitionStatus.mockResolvedValue(null);
+        repo.upsert.mockResolvedValue(synced);
+
+        await expect(service.upsertFromDiscovery({ name: "s1" })).resolves.toBe(synced);
+
+        expect(repo.upsert).toHaveBeenCalledWith("s1", {
+            name: "s1",
+            isManual: false,
+            reservedUntil: null,
+            publishToken: null,
+        });
+    });
+
+    it("atomically applies an allowed transition", async () => {
+        const assigned = makeStream({ status: StreamStatus.ASSIGNED });
+        const synced = makeStream({ status: StreamStatus.SYNCED });
+        repo.findByName.mockResolvedValue(assigned);
+        repo.transitionStatus.mockResolvedValue(synced);
 
         await expect(service.markSynced("s1")).resolves.toBe(synced);
-        expect(repo.update).toHaveBeenCalledWith("s1", {
+
+        expect(repo.transitionStatus).toHaveBeenCalledWith("s1", StreamStatus.ASSIGNED, {
             status: StreamStatus.SYNCED,
             lastSyncedAt: expect.any(Date),
             lastError: null,
         });
     });
 
-    it("markSyncError sets SYNC_ERROR with the error message", async () => {
-        repo.update.mockResolvedValue(makeStream({ status: StreamStatus.SYNC_ERROR }));
+    it("allows an idempotent same-state update", async () => {
+        const synced = makeStream({ status: StreamStatus.SYNCED });
+        repo.findByName.mockResolvedValue(synced);
+        repo.transitionStatus.mockResolvedValue(synced);
 
-        await service.markSyncError("s1", "pull failed");
+        await expect(service.markSynced("s1")).resolves.toBe(synced);
 
-        expect(repo.update).toHaveBeenCalledWith("s1", {
-            status: StreamStatus.SYNC_ERROR,
-            lastError: "pull failed",
+        expect(repo.transitionStatus).toHaveBeenCalledWith(
+            "s1",
+            StreamStatus.SYNCED,
+            expect.objectContaining({ status: StreamStatus.SYNCED }),
+        );
+    });
+
+    it("rejects an illegal lifecycle jump", async () => {
+        repo.findByName.mockResolvedValue(makeStream({ status: StreamStatus.RESERVED }));
+
+        await expect(service.markSynced("s1")).rejects.toBeInstanceOf(ConflictException);
+
+        expect(repo.transitionStatus).not.toHaveBeenCalled();
+    });
+
+    it("retries once when a concurrent transition wins the compare-and-set", async () => {
+        const discovered = makeStream({ status: StreamStatus.DISCOVERED });
+        const assigned = makeStream({ status: StreamStatus.ASSIGNED });
+        const stale = makeStream({ status: StreamStatus.STALE });
+        repo.findByName.mockResolvedValueOnce(discovered).mockResolvedValueOnce(assigned);
+        repo.transitionStatus.mockResolvedValueOnce(null).mockResolvedValueOnce(stale);
+
+        await expect(service.transitionTo("s1", StreamStatus.STALE)).resolves.toBe(stale);
+
+        expect(repo.transitionStatus).toHaveBeenNthCalledWith(1, "s1", StreamStatus.DISCOVERED, {
+            status: StreamStatus.STALE,
+        });
+        expect(repo.transitionStatus).toHaveBeenNthCalledWith(2, "s1", StreamStatus.ASSIGNED, {
+            status: StreamStatus.STALE,
         });
     });
 
-    it("markPendingAssignment sets PENDING_ASSIGNMENT with the reason", async () => {
-        repo.update.mockResolvedValue(makeStream({ status: StreamStatus.PENDING_ASSIGNMENT }));
-
-        await service.markPendingAssignment("s1", "no nodes");
-
-        expect(repo.update).toHaveBeenCalledWith("s1", {
-            status: StreamStatus.PENDING_ASSIGNMENT,
-            lastError: "no nodes",
-        });
-    });
-
-    it("throws NotFound when the stream no longer exists (transition target gone)", async () => {
-        repo.update.mockResolvedValue(null);
+    it("throws NotFound when the transition target does not exist", async () => {
+        repo.findByName.mockResolvedValue(null);
 
         await expect(service.markSynced("gone")).rejects.toBeInstanceOf(NotFoundException);
-        await expect(service.markSyncError("gone", "x")).rejects.toBeInstanceOf(NotFoundException);
-        await expect(service.markPendingAssignment("gone", "x")).rejects.toBeInstanceOf(
-            NotFoundException,
-        );
     });
 });

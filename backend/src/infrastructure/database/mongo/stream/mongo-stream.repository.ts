@@ -76,26 +76,15 @@ export class MongoStreamRepository
         return this.fromDocument(doc!);
     }
 
-    async assignToNode(name: string, nodeId: string, assignedAt: Date): Promise<Stream | null> {
+    async transitionStatus(
+        name: string,
+        expectedStatus: string,
+        data: Partial<Stream>,
+    ): Promise<Stream | null> {
         const doc = await this.model.findOneAndUpdate(
-            { name },
-            {
-                $set: {
-                    assignedNode: nodeId,
-                    assignedAt,
-                    status: StreamStatus.ASSIGNED,
-                },
-            },
-            { new: true },
-        );
-        return doc ? this.fromDocument(doc) : null;
-    }
-
-    async clearAssignment(name: string): Promise<Stream | null> {
-        const doc = await this.model.findOneAndUpdate(
-            { name },
-            { $set: { assignedNode: null, assignedAt: null } },
-            { new: true },
+            { name, status: expectedStatus },
+            { $set: data },
+            { new: true, runValidators: true },
         );
         return doc ? this.fromDocument(doc) : null;
     }
