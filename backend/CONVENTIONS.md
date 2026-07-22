@@ -441,6 +441,10 @@ Example: SVC-05 ← [ADR-0005](../docs/adr/0005-no-pass-through-services.md).
 
 ---
 
+**DOC-05** — Rule: A non-trivial change that adds or changes observable behavior, a public contract, schema, event, architecture, cross-feature behavior, tooling, or a significant refactor MUST have an active OpenSpec change under `openspec/changes/` before production implementation begins. Trivial isolated changes that do not alter observable behavior MAY skip OpenSpec. `openspec/specs/` records canonical intended behavior; `docs/adr/` records durable decisions; this file remains the current engineering law. A change is complete only when its implementation, tasks, specifications, `npm run verify`, and `openspec validate --all` agree.
+Decision history: [ADR-0015](../docs/adr/0015-adopt-spec-driven-development-and-obsidian-navigation.md).
+Enforced: review + tooling.
+
 ## 99. DEVN — Known deviations & open items
 
 Current, verified gaps between the rules above and the code. Fix on touch; remove the entry when fixed.

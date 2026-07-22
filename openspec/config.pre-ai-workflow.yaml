@@ -1,0 +1,58 @@
+schema: spec-driven
+
+context: |
+  Project: media-sync backend.
+  Stack: TypeScript, NestJS, MongoDB/Mongoose, Jest, ESLint, and Prettier.
+  This is an existing brownfield repository; specifications are adopted incrementally.
+
+  Canonical sources have distinct responsibilities:
+  - backend/CONVENTIONS.md defines current coding, structure, architecture-boundary,
+    wiring, testing, and tooling rules using stable rule IDs.
+  - docs/adr/ stores append-only architectural decisions and rationale.
+  - openspec/specs/ defines current intended observable behavior.
+  - openspec/changes/ contains proposed changes until they are completed and archived.
+  - Code, tests, and deterministic validation provide implementation evidence.
+
+  If CONVENTIONS.md is located at the repository root, use that path instead of
+  backend/CONVENTIONS.md.
+
+  Before generating artifacts, inspect the relevant implementation and tests, read
+  the relevant convention rules, and read their linked ADRs. Do not invent current
+  behavior from documentation alone. Surface conflicts rather than silently choosing
+  one source.
+
+rules:
+  proposal:
+    - State the problem, intended outcome, scope, and explicit non-goals.
+    - Distinguish current verified behavior from proposed behavior.
+    - Identify affected domains, public contracts, data, events, configuration, and deployment concerns.
+    - Cite relevant CONVENTIONS rule IDs and existing ADRs.
+    - State whether DOC-01 requires a new or superseding ADR.
+    - Include compatibility, migration, rollout, and rollback concerns when relevant.
+    - Keep the change focused; split unrelated work into separate changes.
+
+  specs:
+    - Describe observable behavior and contracts, not ordinary implementation style.
+    - Use MUST, SHOULD, and MAY deliberately.
+    - Give each requirement concrete GIVEN/WHEN/THEN scenarios.
+    - Cover failure, empty-state, retry, idempotency, and compatibility behavior when relevant.
+    - Do not describe proposed behavior as already implemented.
+    - Preserve unaffected behavior explicitly when modifying an existing requirement.
+
+  design:
+    - Inspect the actual code and tests before selecting an approach.
+    - Read relevant sections of backend/CONVENTIONS.md and cite rule IDs.
+    - Read relevant ADRs and do not contradict an accepted decision without a superseding ADR.
+    - Explain component boundaries, dependency direction, data flow, error handling, and validation.
+    - Prefer existing repository patterns over new abstractions.
+    - Identify every ADR, convention, barrel, diagram, migration, and test update required.
+    - Record rejected alternatives and why they were rejected.
+
+  tasks:
+    - Order tasks so contracts and tests are updated with the behavior they validate.
+    - Keep tasks small, concrete, and independently verifiable.
+    - Include required ADR and CONVENTIONS updates as explicit tasks.
+    - Include focused validation after meaningful implementation groups.
+    - Include npm run verify as the final mandatory validation task.
+    - Do not mark a task complete until its implementation and validation are complete.
+    - Include OpenSpec synchronization and archive only after implementation matches the specs.

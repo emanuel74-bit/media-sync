@@ -5,3 +5,8 @@
 /docs/architecture/node_modules/
 /docs/architecture/dist/
 /docs/architecture/export/
+
+# media-sync-ai-workflow:start
+# Personal Obsidian vault state and plugins
+.obsidian/
+# media-sync-ai-workflow:end
