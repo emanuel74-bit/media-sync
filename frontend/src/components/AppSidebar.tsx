@@ -3,9 +3,8 @@ import {
   Radio,
   BarChart3,
   AlertTriangle,
-  Server,
+  Network,
   Activity,
-  HardDrive,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -28,10 +27,9 @@ import { Badge } from "@/components/ui/badge";
 const navItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Streams", url: "/streams", icon: Radio },
-  { title: "Nodes", url: "/nodes", icon: HardDrive },
+  { title: "Topology", url: "/topology", icon: Network },
   { title: "Metrics", url: "/metrics", icon: BarChart3 },
   { title: "Alerts", url: "/alerts", icon: AlertTriangle },
-  { title: "Cluster", url: "/cluster", icon: Server },
 ];
 
 export function AppSidebar() {

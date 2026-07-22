@@ -90,11 +90,15 @@ export default {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.5" },
         },
+        "flow-dash": {
+          to: { "stroke-dashoffset": "-16" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "pulse-status": "pulse-status 2s ease-in-out infinite",
+        "flow-dash": "flow-dash 0.6s linear infinite",
       },
     },
   },

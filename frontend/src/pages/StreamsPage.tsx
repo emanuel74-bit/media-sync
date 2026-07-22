@@ -49,7 +49,7 @@ import {
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CreateStreamDialog } from "@/components/CreateStreamDialog";
 import { EditStreamDialog } from "@/components/EditStreamDialog";
@@ -65,8 +65,11 @@ export default function StreamsPage() {
   const assignStream = useAssignStream();
   const unassignStream = useUnassignStream();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState(
+    () => searchParams.get("status") ?? "all",
+  );
   const [enabledFilter, setEnabledFilter] = useState("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [createOpen, setCreateOpen] = useState(false);
@@ -140,7 +143,16 @@ export default function StreamsPage() {
             className="pl-9 h-9 bg-card"
           />
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select
+          value={statusFilter}
+          onValueChange={(value) => {
+            setStatusFilter(value);
+            setSearchParams(
+              value === "all" ? {} : { status: value },
+              { replace: true },
+            );
+          }}
+        >
           <SelectTrigger className="w-[140px] h-9 bg-card">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
@@ -248,7 +260,7 @@ export default function StreamsPage() {
               <TableRow
                 key={stream.name}
                 className="cursor-pointer group"
-                onClick={() => navigate(`/streams/${stream.name}`)}
+                onClick={() => navigate(`/streams/${encodeURIComponent(stream.name)}`)}
               >
                 <TableCell onClick={(e) => e.stopPropagation()}>
                   <Checkbox
@@ -324,7 +336,7 @@ export default function StreamsPage() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem
-                        onClick={() => navigate(`/streams/${stream.name}`)}
+                        onClick={() => navigate(`/streams/${encodeURIComponent(stream.name)}`)}
                       >
                         <ExternalLink className="h-3.5 w-3.5 mr-2" /> View
                         Details

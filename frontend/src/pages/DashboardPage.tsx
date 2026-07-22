@@ -1,26 +1,21 @@
+import { useMemo } from "react";
+import {
+  Activity,
+  AlertTriangle,
+  HardDrive,
+  Radio,
+  Server,
+  Users,
+  Zap,
+} from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+
 import { useAlerts, useNodes, useStreams } from "@/hooks/use-streams";
 import { KPICard } from "@/components/KPICard";
 import { SeverityBadge, StatusBadge } from "@/components/StatusBadge";
+import { LifecyclePipeline } from "@/components/LifecyclePipeline";
+import { PlaneHealthCard } from "@/components/PlaneHealthCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Radio,
-  Activity,
-  AlertTriangle,
-  Users,
-  Server,
-  Zap,
-} from "lucide-react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-import { useMemo } from "react";
-import { formatDistanceToNow } from "date-fns";
 
 export default function DashboardPage() {
   const { data: streams = [] } = useStreams();
@@ -29,46 +24,36 @@ export default function DashboardPage() {
 
   const stats = useMemo(() => {
     const synced = streams.filter((s) => s.status === "synced").length;
-    const stale = streams.filter((s) => s.status === "stale").length;
     const errors = streams.filter((s) => s.status === "sync_error").length;
-    const enabled = streams.filter((s) => s.isEnabled).length;
     const consumers = streams.reduce((sum, s) => sum + s.activeConsumers, 0);
     const unresolved = alerts.filter((a) => !a.isResolved);
     const critical = unresolved.filter((a) => a.severity === "critical").length;
     const warning = unresolved.filter((a) => a.severity === "warning").length;
-    const activeNodes = nodes.filter((node) => node.status === "active").length;
+
+    const ingest = nodes.filter((n) => n.type === "ingest");
+    const cluster = nodes.filter((n) => n.type === "cluster");
     return {
       total: streams.length,
       synced,
-      stale,
       errors,
-      enabled,
       consumers,
       unresolved: unresolved.length,
       critical,
       warning,
-      activeNodes,
+      ingestActive: ingest.filter((n) => n.status === "active").length,
+      ingestTotal: ingest.length,
+      clusterActive: cluster.filter((n) => n.status === "active").length,
+      clusterTotal: cluster.length,
+      reservations: streams.filter((s) => s.status === "reserved").length,
+      publishing: streams.filter(
+        (s) => s.status === "discovered" || s.status === "synced",
+      ).length,
+      assigned: streams.filter((s) => s.assignedNode).length,
     };
   }, [streams, alerts, nodes]);
 
-  const nodeDistribution = useMemo(() => {
-    const distribution: Record<string, { streams: number; consumers: number }> =
-      {};
-    streams.forEach((s) => {
-      const node = s.assignedNode || "Unassigned";
-      if (!distribution[node])
-        distribution[node] = { streams: 0, consumers: 0 };
-      distribution[node].streams++;
-      distribution[node].consumers += s.activeConsumers;
-    });
-    return Object.entries(distribution).map(([name, data]) => ({
-      name,
-      ...data,
-    }));
-  }, [streams]);
-
   const recentActivity = useMemo(() => {
-    const items = [
+    return [
       ...streams.slice(0, 5).map((s) => ({
         type: "sync" as const,
         message: `${s.name} synced`,
@@ -90,7 +75,6 @@ export default function DashboardPage() {
     ]
       .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
       .slice(0, 8);
-    return items;
   }, [streams, alerts]);
 
   const unhealthyStreams = useMemo(
@@ -110,13 +94,14 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="mt-1 text-sm text-muted-foreground">
           System overview and real-time status
         </p>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+      <LifecyclePipeline streams={streams} />
+
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6">
         <KPICard title="Total Streams" value={stats.total} icon={Radio} />
         <KPICard
           title="Synced"
@@ -142,67 +127,65 @@ export default function DashboardPage() {
                 : "default"
           }
         />
-        <KPICard title="Consumers" value={stats.consumers} icon={Users} />
-        <KPICard title="Active Nodes" value={stats.activeNodes} icon={Server} />
+        <KPICard
+          title="Ingest Nodes"
+          value={`${stats.ingestActive}/${stats.ingestTotal}`}
+          icon={HardDrive}
+        />
+        <KPICard
+          title="Cluster Nodes"
+          value={`${stats.clusterActive}/${stats.clusterTotal}`}
+          icon={Server}
+        />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card className="border-border/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Node Distribution
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={nodeDistribution} layout="vertical">
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="hsl(var(--border))"
-                  horizontal={false}
-                />
-                <XAxis
-                  type="number"
-                  tick={{
-                    fontSize: 10,
-                    fill: "hsl(var(--muted-foreground))",
-                  }}
-                />
-                <YAxis
-                  type="category"
-                  dataKey="name"
-                  tick={{
-                    fontSize: 10,
-                    fill: "hsl(var(--muted-foreground))",
-                  }}
-                  width={80}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--popover))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "6px",
-                    fontSize: 12,
-                  }}
-                />
-                <Bar
-                  dataKey="streams"
-                  fill="hsl(var(--primary))"
-                  radius={[0, 3, 3, 0]}
-                  name="Streams"
-                />
-                <Bar
-                  dataKey="consumers"
-                  fill="hsl(var(--status-info))"
-                  radius={[0, 3, 3, 0]}
-                  opacity={0.5}
-                  name="Consumers"
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      {/* Two-plane health — equal weight for ingest and cluster */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <PlaneHealthCard
+          title="Ingest Plane"
+          icon={HardDrive}
+          accent="text-status-info"
+          stats={[
+            {
+              label: "Nodes active",
+              value: `${stats.ingestActive}/${stats.ingestTotal}`,
+              tone:
+                stats.ingestActive < stats.ingestTotal
+                  ? "text-status-warning"
+                  : "text-status-healthy",
+            },
+            {
+              label: "Reservations",
+              value: stats.reservations,
+              tone: "text-status-info",
+            },
+            { label: "Publishing", value: stats.publishing },
+          ]}
+        />
+        <PlaneHealthCard
+          title="Cluster Plane"
+          icon={Server}
+          accent="text-status-healthy"
+          stats={[
+            {
+              label: "Nodes active",
+              value: `${stats.clusterActive}/${stats.clusterTotal}`,
+              tone:
+                stats.clusterActive < stats.clusterTotal
+                  ? "text-status-warning"
+                  : "text-status-healthy",
+            },
+            {
+              label: "Synced",
+              value: stats.synced,
+              tone: "text-status-healthy",
+            },
+            { label: "Consumers", value: stats.consumers },
+          ]}
+        />
+      </div>
 
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card className="border-border/50">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -210,7 +193,7 @@ export default function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3 max-h-56 overflow-auto">
+            <div className="max-h-56 space-y-3 overflow-auto">
               {alerts
                 .filter((alert) => !alert.isResolved)
                 .slice(0, 8)
@@ -220,8 +203,8 @@ export default function DashboardPage() {
                     className="flex items-start gap-3 text-sm"
                   >
                     <SeverityBadge severity={alert.severity} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-foreground truncate">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-foreground">
                         {alert.subject}: {alert.message}
                       </p>
                       <p className="text-xs text-muted-foreground">
@@ -238,9 +221,7 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card className="border-border/50">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -248,7 +229,7 @@ export default function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3 max-h-56 overflow-auto">
+            <div className="max-h-56 space-y-3 overflow-auto">
               {unhealthyStreams.map((stream) => (
                 <div
                   key={stream.name}
@@ -256,7 +237,7 @@ export default function DashboardPage() {
                 >
                   <div className="min-w-0">
                     <p className="truncate font-medium">{stream.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">
+                    <p className="truncate text-xs text-muted-foreground">
                       {stream.lastError || "Status requires attention"}
                     </p>
                   </div>
@@ -271,47 +252,45 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
-
-        <Card className="border-border/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Recent Activity
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3 max-h-56 overflow-auto">
-              {recentActivity.map((item, i) => (
-                <div key={i} className="flex items-start gap-3 text-sm">
-                  <div
-                    className={`mt-1 h-1.5 w-1.5 rounded-full shrink-0 ${
-                      item.type === "alert"
-                        ? item.severity === "critical"
-                          ? "bg-status-critical"
-                          : item.severity === "warning"
-                            ? "bg-status-warning"
-                            : "bg-status-info"
-                        : "bg-status-healthy"
-                    }`}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-foreground truncate">{item.message}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(item.time), {
-                        addSuffix: true,
-                      })}
-                    </p>
-                  </div>
-                </div>
-              ))}
-              {recentActivity.length === 0 && (
-                <p className="text-sm text-muted-foreground">
-                  No recent activity.
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
       </div>
+
+      <Card className="border-border/50">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium text-muted-foreground">
+            Recent Activity
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid max-h-56 grid-cols-1 gap-x-6 gap-y-3 overflow-auto md:grid-cols-2">
+            {recentActivity.map((item, i) => (
+              <div key={i} className="flex items-start gap-3 text-sm">
+                <div
+                  className={`mt-1 h-1.5 w-1.5 shrink-0 rounded-full ${
+                    item.type === "alert"
+                      ? item.severity === "critical"
+                        ? "bg-status-critical"
+                        : item.severity === "warning"
+                          ? "bg-status-warning"
+                          : "bg-status-info"
+                      : "bg-status-healthy"
+                  }`}
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-foreground">{item.message}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatDistanceToNow(new Date(item.time), {
+                      addSuffix: true,
+                    })}
+                  </p>
+                </div>
+              </div>
+            ))}
+            {recentActivity.length === 0 && (
+              <p className="text-sm text-muted-foreground">No recent activity.</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

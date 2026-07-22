@@ -44,6 +44,8 @@ import { useMemo, useState } from "react";
 import { EditStreamDialog } from "@/components/EditStreamDialog";
 import { DeleteStreamDialog } from "@/components/DeleteStreamDialog";
 import { StreamInspectionPanel } from "@/components/StreamInspectionPanel";
+import { LifecycleStepper } from "@/components/LifecycleStepper";
+import { StreamTopology } from "@/components/StreamTopology";
 import { toast } from "sonner";
 
 const chartStyle = {
@@ -155,6 +157,15 @@ export default function StreamDetailPage() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4 mt-4">
+          <Card className="border-border/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Lifecycle</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <LifecycleStepper stream={stream} />
+              <StreamTopology stream={stream} />
+            </CardContent>
+          </Card>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <Card className="border-border/50">
               <CardContent className="p-4">

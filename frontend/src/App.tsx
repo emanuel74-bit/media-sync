@@ -9,13 +9,12 @@ import { AppLayout } from "@/components/AppLayout";
 import { useRealtimeSync } from "@/hooks/use-streams";
 
 const AlertsPage = lazy(() => import("@/pages/AlertsPage"));
-const ClusterPage = lazy(() => import("@/pages/ClusterPage"));
 const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
 const MetricsPage = lazy(() => import("@/pages/MetricsPage"));
-const NodesPage = lazy(() => import("@/pages/NodesPage"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const StreamDetailPage = lazy(() => import("@/pages/StreamDetailPage"));
 const StreamsPage = lazy(() => import("@/pages/StreamsPage"));
+const TopologyPage = lazy(() => import("@/pages/TopologyPage"));
 
 const queryClient = new QueryClient();
 
@@ -36,11 +35,12 @@ const AppRoutes = () => {
             <Route path="/" element={<DashboardPage />} />
             <Route path="/streams" element={<StreamsPage />} />
             <Route path="/streams/:name" element={<StreamDetailPage />} />
-            <Route path="/nodes" element={<NodesPage />} />
-            <Route path="/pods" element={<Navigate to="/nodes" replace />} />
+            <Route path="/topology" element={<TopologyPage />} />
+            <Route path="/nodes" element={<Navigate to="/topology" replace />} />
+            <Route path="/pods" element={<Navigate to="/topology" replace />} />
+            <Route path="/cluster" element={<Navigate to="/topology" replace />} />
             <Route path="/metrics" element={<MetricsPage />} />
             <Route path="/alerts" element={<AlertsPage />} />
-            <Route path="/cluster" element={<ClusterPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
