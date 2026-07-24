@@ -109,8 +109,9 @@ events can repeat because each successful registration call emits one.
 
 ## Concurrency and consistency
 
-The repository's unique `nodeId` key converges concurrent upserts. Registry persistence and
-event-driven alert/broadcast reactions do not share a transaction.
+The repository defines a unique `nodeId` key intended to converge concurrent upserts, but no live
+repository integration test verifies that behavior. Registry persistence and event-driven
+alert/broadcast reactions do not share a transaction.
 
 ## Operational considerations
 
@@ -148,6 +149,6 @@ See [`backend/CONVENTIONS.md`](../../backend/CONVENTIONS.md).
 
 | Claim | Implementation | Test |
 |---|---|---|
-| Registration/heartbeat upsert one registry identity | [`node-lifecycle.service.ts`](../../backend/src/nodes/services/lifecycle/node-lifecycle.service.ts), [`mongo-node.repository.ts`](../../backend/src/infrastructure/database/mongo/node/mongo-node.repository.ts) | [`node-lifecycle.service.test.ts`](../../backend/test/nodes/services/lifecycle/node-lifecycle.service.test.ts) |
+| Registration/heartbeat target one registry identity | [`node-lifecycle.service.ts`](../../backend/src/nodes/services/lifecycle/node-lifecycle.service.ts), [`mongo-node.repository.ts`](../../backend/src/infrastructure/database/mongo/node/mongo-node.repository.ts) | [`node-lifecycle.service.test.ts`](../../backend/test/nodes/services/lifecycle/node-lifecycle.service.test.ts) covers service delegation; no live repository integration test |
 | Liveness is a read-time heartbeat/status filter | [`node-query.service.ts`](../../backend/src/nodes/services/query/node-query.service.ts) | [`node-query.service.test.ts`](../../backend/test/nodes/services/query/node-query.service.test.ts) |
 | Resource payloads feed node alert rules | [`node-resource-ruler.service.ts`](../../backend/src/alerts/services/rulers/node-resource-ruler.service.ts) | [`node-resource-ruler.service.test.ts`](../../backend/test/alerts/services/rulers/node-resource-ruler.service.test.ts) |

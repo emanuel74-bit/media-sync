@@ -118,9 +118,9 @@ flowchart LR
 
 ## Behavioral specifications
 
-No canonical OpenSpec specification currently exists for this capability. The canonical
-[`openspec/specs/`](../../openspec/specs/) directory is empty; the current documentation change
-specifies documentation governance only.
+No canonical behavioral OpenSpec specification currently exists for this capability. The
+canonical documentation-governance specification does not define Streams runtime behavior; see
+the [specification map](../specification-map.md).
 
 ## Architecture decisions
 
@@ -153,7 +153,11 @@ See the [conventions registry](../../backend/CONVENTIONS.md).
 ## Known limitations
 
 - The duplicate-name reservation check is read-then-create; the unique name index is the only
-  concurrent guard, and a deterministic HTTP 409 for two racing reserves is not verified.
+  concurrent guard. The index is configured in the schema but has no live repository integration
+  test, and deterministic HTTP 409 mapping for two racing reserves is not verified.
+- Publish authorization checks the action, path, and stored secret, but does not directly check
+  `reservedUntil`, the ingest-node identity, or the supplied username. An expired unused secret
+  remains usable until Sync deletes the reservation; discovery clears the stored secret.
 - Several produced stream events lack shared payload types, contrary to `EVT-05`.
 - The two ingest controllers do not have direct controller tests; their services do.
 - Manual stream deletion/disable does not have a verified cluster-pipeline teardown path.
@@ -163,6 +167,6 @@ See the [conventions registry](../../backend/CONVENTIONS.md).
 | Claim | Implementation evidence | Test evidence |
 |---|---|---|
 | Lifecycle writes use one transition authority with compare-and-set retry | [`stream-status.service.ts`](../../backend/src/streams/services/mutation/stream-status.service.ts), [`mongo-stream.repository.ts`](../../backend/src/infrastructure/database/mongo/stream/mongo-stream.repository.ts) | [`stream-status.service.test.ts`](../../backend/test/streams/services/mutation/stream-status.service.test.ts) |
-| Reservation persists birth-time ingest placement and an expiring publish secret | [`stream-reservation.service.ts`](../../backend/src/streams/services/orchestration/stream-reservation.service.ts), [`stream-crud.service.ts`](../../backend/src/streams/services/mutation/stream-crud.service.ts) | [`stream-reservation.service.test.ts`](../../backend/test/streams/services/orchestration/stream-reservation.service.test.ts), [`publish-auth.service.test.ts`](../../backend/test/streams/services/query/publish-auth.service.test.ts) |
+| Reservation persists birth-time ingest placement, a cleanup deadline, and a publish secret | [`stream-reservation.service.ts`](../../backend/src/streams/services/orchestration/stream-reservation.service.ts), [`stream-crud.service.ts`](../../backend/src/streams/services/mutation/stream-crud.service.ts) | [`stream-reservation.service.test.ts`](../../backend/test/streams/services/orchestration/stream-reservation.service.test.ts), [`publish-auth.service.test.ts`](../../backend/test/streams/services/query/publish-auth.service.test.ts) |
 | Cluster assignment is sticky/deterministic for live candidates | [`stream-assignment.service.ts`](../../backend/src/streams/services/assignment/stream-assignment.service.ts) | [`stream-assignment.service.test.ts`](../../backend/test/streams/services/assignment/stream-assignment.service.test.ts) |
 | Pipeline deployment targets the assigned cluster node and records success/error | [`stream-pipeline.service.ts`](../../backend/src/streams/services/orchestration/stream-pipeline.service.ts) | [`stream-pipeline.service.test.ts`](../../backend/test/streams/services/orchestration/stream-pipeline.service.test.ts) |

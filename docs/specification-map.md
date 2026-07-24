@@ -13,16 +13,16 @@ tests. It records status and conflict; requirement text belongs in OpenSpec.
 
 OpenSpec adoption is incremental under
 [ADR-0015](adr/0015-adopt-spec-driven-development-and-obsidian-navigation.md). The canonical
-[`openspec/specs/`](../openspec/specs/) directory exists but is currently empty, so no runtime
-capability below has a canonical behavioral specification. The active
-[documentation-governance change](../openspec/changes/add-feature-and-subsystem-documentation/)
-does not specify or change runtime behavior.
+[`openspec/specs/`](../openspec/specs/) directory currently contains documentation governance,
+but no runtime capability below has a canonical behavioral specification. The completed
+[documentation-governance change](../openspec/changes/archive/2026-07-24-add-feature-and-subsystem-documentation/)
+did not specify or change runtime behavior.
 
 ## Authority
 
 | Artifact | Responsibility |
 |---|---|
-| [`openspec/specs/`](../openspec/specs/) | Canonical intended observable behavior; currently empty |
+| [`openspec/specs/`](../openspec/specs/) | Canonical intended behavior, including documentation governance |
 | [`openspec/changes/`](../openspec/changes/) | Proposed behavior, design, and tasks; not canonical until synced/archived |
 | [`backend/CONVENTIONS.md`](../backend/CONVENTIONS.md) | Current engineering rules, cited by stable ID |
 | [`docs/adr/`](adr/) | Append-only architectural and tooling decisions/rationale |
@@ -46,7 +46,7 @@ conventions registry.
 | Stream inspection | No canonical specification | [Stream inspection](features/stream-inspection.md), [Streams](features/streams.md), [Media nodes](features/media-nodes.md), [Alerts](features/alerts.md) | [Stream inspection](subsystems/stream-inspection.md) | [`stream-inspection/`](../backend/src/stream-inspection/) | [`test/stream-inspection/`](../backend/test/stream-inspection/) |
 | Alert evaluation and reconciliation | No canonical specification | [Alerts](features/alerts.md), [Metrics](features/metrics.md), [Stream inspection](features/stream-inspection.md), [Nodes](features/nodes.md) | [Alert evaluation and reconciliation](subsystems/alert-evaluation-and-reconciliation.md) | [`alerts/`](../backend/src/alerts/) | [`test/alerts/`](../backend/test/alerts/) |
 | Realtime event broadcast | No canonical specification | [Gateway](features/gateway.md) and event-owning feature pages | [Realtime event broadcast](subsystems/realtime-event-broadcast.md) | [`gateway/`](../backend/src/gateway/) | [`test/gateway/`](../backend/test/gateway/) |
-| Feature/subsystem documentation governance | [Active delta specification](../openspec/changes/add-feature-and-subsystem-documentation/specs/architecture-documentation-governance/spec.md) | [Feature index](features/index.md) | [Subsystem index](subsystems/index.md) | [`DOC-06`](../backend/CONVENTIONS.md), [ADR-0017](adr/0017-feature-and-subsystem-documentation.md) | Markdown link/path checks and repository validation |
+| Feature/subsystem documentation governance | [Canonical specification](../openspec/specs/architecture-documentation-governance/spec.md) and [archived change](../openspec/changes/archive/2026-07-24-add-feature-and-subsystem-documentation/) | [Feature index](features/index.md) | [Subsystem index](subsystems/index.md) | [`DOC-06`](../backend/CONVENTIONS.md), [ADR-0017](adr/0017-feature-and-subsystem-documentation.md) | Markdown link/path checks and repository validation |
 
 ## Recorded conflicts and uncertainty
 

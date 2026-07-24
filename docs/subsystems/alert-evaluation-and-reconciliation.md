@@ -80,7 +80,7 @@ Transports lifecycle facts without changing them.
 | Initial state | Trigger | Resulting state | Owner | Evidence |
 |---|---|---|---|---|
 | No unresolved identity | Rule result desires identity | Open alert | Alerts | [`alert-reconcile.service.ts`](../../backend/src/alerts/services/reconciliation/alert-reconcile.service.ts) |
-| Open identity | Identity remains desired | Refreshed open alert | Alerts | [`alert-reconcile.service.ts`](../../backend/src/alerts/services/reconciliation/alert-reconcile.service.ts) |
+| Open identity | Identity remains desired | Refreshed open alert; `alert.updated` only when severity or message changes | Alerts | [`alert-reconcile.service.ts`](../../backend/src/alerts/services/reconciliation/alert-reconcile.service.ts) |
 | Open identity | Identity is obsolete or manually resolved | Resolved alert | Alerts | [`alert-reconcile.service.ts`](../../backend/src/alerts/services/reconciliation/alert-reconcile.service.ts), [`alert-access.service.ts`](../../backend/src/alerts/services/access/alert-access.service.ts) |
 
 ## Persistence effects
@@ -102,13 +102,14 @@ partial unique index.
 | `stream.inspected` | Stream Inspection | Inspection persisted | Alerts track ruler, Gateway |
 | `node.sampled` | Nodes | Registration/heartbeat includes resources | Alerts node ruler |
 | `alert.created` | Alerts | New unresolved identity created | Gateway |
-| `alert.updated` | Alerts | Existing unresolved identity refreshed | Gateway |
+| `alert.updated` | Alerts | Existing unresolved identity's severity or message changes | Gateway |
 | `alert.resolved` | Alerts | Reconciliation/manual resolution succeeds | Gateway |
 
 ## Success behavior
 
 Persisted unresolved alerts match the desired rule results for the reconciled source/subject
-scope, and each lifecycle outcome emits its matching event.
+scope. Creates, severity/message changes, and resolutions emit their matching lifecycle events;
+an unchanged refresh only updates `lastSeenAt`.
 
 ## Failure behavior
 
@@ -128,9 +129,10 @@ returns the resulting alert when found.
 
 ## Concurrency and consistency
 
-The partial unique index is the concurrency guard for unresolved identity. A full metric source
-can reconcile all subjects, while inspection/node events reconcile one subject. Multi-alert
-changes and lifecycle emissions are not one transaction.
+The partial unique index is the configured concurrency guard for unresolved identity, but no live
+repository integration test verifies it; service tests mock the create-or-find race result. A full
+metric source can reconcile all subjects, while inspection/node events reconcile one subject.
+Multi-alert changes and lifecycle emissions are not one transaction.
 
 ## Operational considerations
 
@@ -171,4 +173,4 @@ See [`backend/CONVENTIONS.md`](../../backend/CONVENTIONS.md).
 |---|---|---|
 | Three producer families map observations to desired alert definitions | [`services/rulers/`](../../backend/src/alerts/services/rulers/) | [`services/rulers/`](../../backend/test/alerts/services/rulers/) |
 | Reconciliation creates, refreshes, and resolves desired identities | [`alert-reconcile.service.ts`](../../backend/src/alerts/services/reconciliation/alert-reconcile.service.ts) | [`alert-reconcile.service.test.ts`](../../backend/test/alerts/services/reconciliation/alert-reconcile.service.test.ts) |
-| Mongo enforces one unresolved stable identity | [`alert.schema.ts`](../../backend/src/infrastructure/database/mongo/alert/alert.schema.ts), [`mongo-alert.repository.ts`](../../backend/src/infrastructure/database/mongo/alert/mongo-alert.repository.ts) | [`alert-reconcile.service.test.ts`](../../backend/test/alerts/services/reconciliation/alert-reconcile.service.test.ts) |
+| Mongo schema/repository configure one unresolved stable identity | [`alert.schema.ts`](../../backend/src/infrastructure/database/mongo/alert/alert.schema.ts), [`mongo-alert.repository.ts`](../../backend/src/infrastructure/database/mongo/alert/mongo-alert.repository.ts) | [`alert-reconcile.service.test.ts`](../../backend/test/alerts/services/reconciliation/alert-reconcile.service.test.ts) mocks the race result; no live repository integration test |

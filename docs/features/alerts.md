@@ -75,7 +75,7 @@ No alert provider is a supported injectable cross-feature API.
 | Event | Trigger | Payload type | Owner |
 |---|---|---|---|
 | `alert.created` | A previously absent unresolved identity is created | `Alert` (no shared event payload declaration) | `AlertReconcileService` |
-| `alert.updated` | An existing unresolved identity is refreshed | `Alert` (no shared event payload declaration) | `AlertReconcileService` |
+| `alert.updated` | An existing unresolved identity's severity or message changes | `Alert` (no shared event payload declaration) | `AlertReconcileService` |
 | `alert.resolved` | Reconciliation or manual action resolves an alert | `Alert` (no shared event payload declaration) | Reconciler/access service |
 
 ### Consumes
@@ -144,7 +144,11 @@ See the [conventions registry](../../backend/CONVENTIONS.md).
 - A failed/unknown-stream inspection is ignored rather than reconciled, so it cannot itself
   resolve a previously open track alert.
 - If a node stops sending samples, no absence event resolves its existing resource alert.
+- The partial unique Mongo index for unresolved alert identity has no live repository integration
+  test; service tests mock the repository's create-or-find result.
 - Alert lifecycle events lack shared payload declarations, contrary to `EVT-05`.
+- An unchanged desired identity refreshes `lastSeenAt` without emitting `alert.updated`; that
+  event is reserved for severity or message changes.
 - Lifecycle emission follows persistence but is not transactionally coupled to external event
   consumers; the in-process bus is best effort.
 

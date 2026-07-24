@@ -14,8 +14,9 @@ participating_features:
 
 ## Purpose
 
-Reserve a unique stream name on a least-loaded live ingest node, issue a short-lived publish
-secret, authorize MediaMTX callbacks, and hand observed publication to synchronization.
+Reserve a unique stream name on a least-loaded live ingest node, issue a publish secret alongside
+a reservation cleanup deadline, authorize MediaMTX callbacks, and hand observed publication to
+synchronization.
 
 ## Trigger
 
@@ -50,7 +51,7 @@ sequenceDiagram
     S-->>P: Ingest URL + secret
     P->>M: Publish stream
     M->>S: POST /api/ingest/auth
-    S->>D: Validate node/name/secret/expiry
+    S->>D: Validate publish action/path/secret
     S-->>M: Allow or deny
     Y->>M: Observe listed path
     Y->>S: Record discovery and continue reconciliation
@@ -106,8 +107,9 @@ Later assignment/pipeline events belong to their respective subsystem.
 
 ## Success behavior
 
-The caller receives coordinates and a secret for the persisted ingest placement; matching,
-unexpired MediaMTX authorization is accepted and the published path can be observed by Sync.
+The caller receives coordinates and a secret for the persisted ingest placement; a matching
+stored secret is accepted while it remains on the record, and the published path can be observed
+by Sync.
 
 ## Failure behavior
 
@@ -116,7 +118,7 @@ unexpired MediaMTX authorization is accepted and the published path can be obser
 | Duplicate name observed | Reject before creation | Streams | [`stream-reservation.service.ts`](../../backend/src/streams/services/orchestration/stream-reservation.service.ts) |
 | No live ingest node | Fail without creating a record | Streams | [`stream-reservation.service.test.ts`](../../backend/test/streams/services/orchestration/stream-reservation.service.test.ts) |
 | Load/coordinate lookup fails | Fail without returning a successful reservation | Streams / Media Nodes | [`stream-reservation.service.ts`](../../backend/src/streams/services/orchestration/stream-reservation.service.ts) |
-| Bad node/name/secret or expiry | Deny publish authorization | Streams | [`publish-auth.service.test.ts`](../../backend/test/streams/services/query/publish-auth.service.test.ts) |
+| Non-publish action, missing path/record/token, or wrong secret | Deny publish authorization | Streams | [`publish-auth.service.test.ts`](../../backend/test/streams/services/query/publish-auth.service.test.ts) |
 | Publication never appears | Guardedly delete after expiry/absence is confirmed | Sync / Streams | [`stream-staleness.service.test.ts`](../../backend/test/sync/services/workflows/stream-staleness.service.test.ts) |
 
 ## Idempotency
@@ -127,13 +129,17 @@ protocol: retrying after success encounters the existing name.
 ## Concurrency and consistency
 
 The duplicate check and create are separate operations. The unique index is the final concurrent
-guard, but deterministic mapping of a racing duplicate-key error to HTTP 409 is not verified.
-Node load and pending-reservation counts are snapshots, so placement is intentionally approximate.
+guard, but it has no live repository integration test and deterministic mapping of a racing
+duplicate-key error to HTTP 409 is not verified. Publish authorization does not directly check
+`reservedUntil`, ingest-node identity, or username; an expired unused token remains valid until
+Sync cleanup deletes the record, while discovery clears the token. Node load and
+pending-reservation counts are snapshots, so placement is intentionally approximate.
 
 ## Operational considerations
 
-Reservation expiry limits unused secrets. Liveness/load accuracy depends on node heartbeat and
-metric cadence. Publication auth remains dependent on the persisted node identity and secret.
+Reservation cleanup limits unused secrets, subject to Sync cadence and successful expiry deletion.
+Liveness/load accuracy depends on node heartbeat and metric cadence. Publication authorization
+depends on the persisted path and secret, not a direct caller-node identity check.
 
 ## Related features
 
@@ -165,5 +171,5 @@ See [`backend/CONVENTIONS.md`](../../backend/CONVENTIONS.md).
 | Claim | Implementation | Test |
 |---|---|---|
 | Reservation selects/persists an ingest placement and secret | [`stream-reservation.service.ts`](../../backend/src/streams/services/orchestration/stream-reservation.service.ts) | [`stream-reservation.service.test.ts`](../../backend/test/streams/services/orchestration/stream-reservation.service.test.ts) |
-| Publish authorization checks the persisted reservation | [`publish-auth.service.ts`](../../backend/src/streams/services/query/publish-auth.service.ts) | [`publish-auth.service.test.ts`](../../backend/test/streams/services/query/publish-auth.service.test.ts) |
+| Publish authorization checks the action/path and persisted publish token | [`publish-auth.service.ts`](../../backend/src/streams/services/query/publish-auth.service.ts) | [`publish-auth.service.test.ts`](../../backend/test/streams/services/query/publish-auth.service.test.ts) |
 | Observation promotes a reserved stream without regressing newer states | [`ingest-stream-synchronizer.service.ts`](../../backend/src/sync/services/workflows/ingest-stream-synchronizer.service.ts) | [`ingest-stream-synchronizer.service.test.ts`](../../backend/test/sync/services/workflows/ingest-stream-synchronizer.service.test.ts) |

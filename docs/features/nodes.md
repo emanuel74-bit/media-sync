@@ -106,8 +106,9 @@ flowchart LR
 
 ## Behavioral specifications
 
-No canonical OpenSpec specification currently exists for this capability. The canonical
-[`openspec/specs/`](../../openspec/specs/) directory is empty.
+No canonical behavioral OpenSpec specification currently exists for this capability. The
+canonical documentation-governance specification does not define Nodes runtime behavior; see the
+[specification map](../specification-map.md).
 
 ## Architecture decisions
 
@@ -140,6 +141,8 @@ See the [conventions registry](../../backend/CONVENTIONS.md).
 
 - A heartbeat for an unknown `nodeId` uses an upsert without the schema-required host, ports, and
   role; success against a live database is unverified and no repository integration test covers it.
+- The Mongo unique node identity and concurrent-upsert behavior are configured in code but have no
+  live repository integration test.
 - `NodeStatus.INACTIVE` and `NodeStatus.DRAINING` exist, but no current code path writes them.
 - A silent node is not mutated to inactive or deleted; it simply falls outside live queries after
   the configured tolerance.

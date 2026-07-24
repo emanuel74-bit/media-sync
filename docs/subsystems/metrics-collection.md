@@ -99,7 +99,7 @@ evaluation, even if an individual node scrape failed and was omitted.
 
 | Failure | Expected behavior | Owner | Evidence |
 |---|---|---|---|
-| One node scrape fails | Log/isolate it; continue other nodes | Media Nodes | [`media-mtx-metrics.service.test.ts`](../../backend/test/media-nodes/services/metrics/media-mtx-metrics.service.test.ts) |
+| One node scrape fails | Log/isolate it; continue other nodes | Media Nodes | Implemented in [`media-mtx-metrics.service.ts`](../../backend/src/media-nodes/services/metrics/media-mtx-metrics.service.ts); no direct failure-path test |
 | Collection-level failure | Log and clear the scheduler's in-process re-entry guard | Job scheduler | [`job-scheduler.service.test.ts`](../../backend/test/common/scheduling/job-scheduler.service.test.ts) |
 | Node persistence fails | Do not complete path persistence/event | Metrics | [`metric-collection.service.test.ts`](../../backend/test/metrics/services/collection/metric-collection.service.test.ts) |
 | Path persistence fails | Node batch may remain; suppress event | Metrics | [`metric-collection.service.ts`](../../backend/src/metrics/services/collection/metric-collection.service.ts) |
@@ -151,5 +151,5 @@ See [`backend/CONVENTIONS.md`](../../backend/CONVENTIONS.md).
 | Claim | Implementation | Test |
 |---|---|---|
 | Collection persists before emitting its typed snapshot | [`metric-collection.service.ts`](../../backend/src/metrics/services/collection/metric-collection.service.ts) | [`metric-collection.service.test.ts`](../../backend/test/metrics/services/collection/metric-collection.service.test.ts) |
-| Per-node scrape failures are isolated | [`media-mtx-metrics.service.ts`](../../backend/src/media-nodes/services/metrics/media-mtx-metrics.service.ts) | [`media-mtx-metrics.service.test.ts`](../../backend/test/media-nodes/services/metrics/media-mtx-metrics.service.test.ts) |
+| Per-node scrape failures are isolated | [`media-mtx-metrics.service.ts`](../../backend/src/media-nodes/services/metrics/media-mtx-metrics.service.ts) | No direct failure-path test; [`media-mtx-metrics.service.test.ts`](../../backend/test/media-nodes/services/metrics/media-mtx-metrics.service.test.ts) covers load projection only |
 | Metric observations drive desired-alert reconciliation | [`metric-alert-ruler.service.ts`](../../backend/src/alerts/services/rulers/metric-alert-ruler.service.ts) | [`metric-alert-ruler.service.test.ts`](../../backend/test/alerts/services/rulers/metric-alert-ruler.service.test.ts) |

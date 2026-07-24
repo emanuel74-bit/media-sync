@@ -53,9 +53,9 @@ specifications, conventions, or ADRs.
 ## Specifications and method
 
 - [Specification map](specification-map.md)
-- [Canonical OpenSpec specifications](../openspec/specs/) — currently empty
+- [Canonical OpenSpec specifications](../openspec/specs/) — currently documentation governance
 - [Active OpenSpec changes](../openspec/changes/)
-- [Current documentation change](../openspec/changes/add-feature-and-subsystem-documentation/)
+- [Archived documentation change](../openspec/changes/archive/2026-07-24-add-feature-and-subsystem-documentation/)
 - [Spec-driven development method](methodology/spec-driven-development.md)
 
 ## Decisions and rules

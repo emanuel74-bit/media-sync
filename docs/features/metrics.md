@@ -129,6 +129,8 @@ See the [conventions registry](../../backend/CONVENTIONS.md).
 
 - The persistence service has no direct unit or repository integration test; collection and REST
   behavior are covered with mocked dependencies.
+- Per-node scrape failure isolation is implemented but has no direct unit test; the current Media
+  Nodes metrics test covers role filtering and zero-filled load projection.
 - Node and path batches are separate writes, so a failure can leave a partial snapshot and suppress
   the collection event.
 - Samples are append-only at collection cadence; the documented code has no retention policy.
@@ -138,6 +140,6 @@ See the [conventions registry](../../backend/CONVENTIONS.md).
 | Claim | Implementation evidence | Test evidence |
 |---|---|---|
 | Collection is scheduled and re-entry guarded | [`metric-collection.service.ts`](../../backend/src/metrics/services/collection/metric-collection.service.ts) | [`metric-collection.service.test.ts`](../../backend/test/metrics/services/collection/metric-collection.service.test.ts) |
-| Live-node scrape failures are isolated per node | [`media-mtx-metrics.service.ts`](../../backend/src/media-nodes/services/metrics/media-mtx-metrics.service.ts) | [`media-mtx-metrics.service.test.ts`](../../backend/test/media-nodes/services/metrics/media-mtx-metrics.service.test.ts) |
+| Live-node scrape failures are isolated per node | [`media-mtx-metrics.service.ts`](../../backend/src/media-nodes/services/metrics/media-mtx-metrics.service.ts) | No direct failure-path test; [`media-mtx-metrics.service.test.ts`](../../backend/test/media-nodes/services/metrics/media-mtx-metrics.service.test.ts) covers load projection only |
 | Persistence precedes event emission | [`metric-collection.service.ts`](../../backend/src/metrics/services/collection/metric-collection.service.ts), [`metric-persistence.service.ts`](../../backend/src/metrics/services/persistence/metric-persistence.service.ts) | [`metric-collection.service.test.ts`](../../backend/test/metrics/services/collection/metric-collection.service.test.ts) |
 | Controller queries node/path history | [`metrics.controller.ts`](../../backend/src/metrics/controllers/metrics.controller.ts) | [`metrics.controller.test.ts`](../../backend/test/metrics/controllers/metrics.controller.test.ts) |

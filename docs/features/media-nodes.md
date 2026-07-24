@@ -131,6 +131,8 @@ See the [conventions registry](../../backend/CONVENTIONS.md).
 
 - Stream listing and stream stats application services have no direct unit tests; collection,
   callers, and the infrastructure gateway provide indirect coverage.
+- Metrics collection's per-node scrape failure isolation has no direct test; the metrics-service
+  test covers role filtering and zero-filled load projection.
 - Node resolution uses registered/self-reported coordinates only; there is no static fallback.
 - Pipeline create treats MediaMTX HTTP 409 as already-present success. Teardown treats 404 as
   success, fans out to every live cluster node, and reports other failures only after fan-out.
@@ -142,4 +144,4 @@ See the [conventions registry](../../backend/CONVENTIONS.md).
 | Resolution uses the live node registry and role-specific ports | [`node-resolver.service.ts`](../../backend/src/media-nodes/services/topology/node-resolver.service.ts) | [`node-resolver.service.test.ts`](../../backend/test/media-nodes/services/topology/node-resolver.service.test.ts) |
 | Listing isolates node failures and records observed-node coverage | [`media-mtx-stream-listing.service.ts`](../../backend/src/media-nodes/services/listing/media-mtx-stream-listing.service.ts), [`stream-collection.service.ts`](../../backend/src/media-nodes/services/listing/stream-collection.service.ts) | [`stream-collection.service.test.ts`](../../backend/test/media-nodes/services/listing/stream-collection.service.test.ts) |
 | Pipeline operations implement create/delete idempotency semantics | [`media-mtx-pipeline.service.ts`](../../backend/src/media-nodes/services/pipeline/media-mtx-pipeline.service.ts) | [`media-mtx-pipeline.service.test.ts`](../../backend/test/media-nodes/services/pipeline/media-mtx-pipeline.service.test.ts) |
-| Metrics scrape failures are isolated and missing loads are zero-filled | [`media-mtx-metrics.service.ts`](../../backend/src/media-nodes/services/metrics/media-mtx-metrics.service.ts) | [`media-mtx-metrics.service.test.ts`](../../backend/test/media-nodes/services/metrics/media-mtx-metrics.service.test.ts) |
+| Missing metrics snapshots are zero-filled for active-node load projection | [`media-mtx-metrics.service.ts`](../../backend/src/media-nodes/services/metrics/media-mtx-metrics.service.ts) | [`media-mtx-metrics.service.test.ts`](../../backend/test/media-nodes/services/metrics/media-mtx-metrics.service.test.ts) |
