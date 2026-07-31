@@ -33,7 +33,8 @@ A work order MUST identify its schema version, order/role/change/task identity, 
 digest, base SHA, issuer and issue time, allowed/forbidden/protected paths, expected file
 operations, applicable conventions/documents, focused commands, non-goals, and stop conditions.
 Paths MUST be non-empty repository-relative POSIX paths, comparisons MUST be case-normalized on
-Windows, and forbidden/protected scope MUST override allowed scope.
+Windows, and forbidden/protected scope MUST override allowed scope. Required documents and focused
+command working directories MUST resolve physically inside the repository.
 
 #### Scenario: Valid bounded work order
 
@@ -45,7 +46,8 @@ Windows, and forbidden/protected scope MUST override allowed scope.
 #### Scenario: Invalid or ambiguous path
 
 - **WHEN** an order contains an absolute path, empty path, `..` escape, repository escape,
-  case-ambiguous path, conflicting scope, undeclared deletion, or undeclared rename endpoint
+  symlink/junction escape for a required document or command directory, case-ambiguous path,
+  conflicting scope, undeclared deletion, or undeclared rename endpoint
 - **THEN** validation fails before any implementation command runs
 
 #### Scenario: Work order is not coordinator-issued
@@ -58,8 +60,8 @@ Windows, and forbidden/protected scope MUST override allowed scope.
 Preflight MUST reject execution on `master`, detached HEAD, missing or schema-invalid work orders,
 stale acceptance, unavailable bases, unknown OpenSpec changes/tasks, missing required documents,
 invalid path scope, or unexplained current changes. For accepted pre-existing tracked and
-untracked user files, it MUST record path/classification/size/content hashes without recording
-file contents.
+untracked user files, it MUST record path/classification/filesystem-mode/size/content hashes
+without recording file contents.
 
 #### Scenario: Clean feature branch with permitted user state
 
@@ -80,6 +82,10 @@ changes relative to the declared base, classify additions/modifications/deletion
 renames, enforce path scope and expected inventories, verify protected baseline hashes, run
 `git diff --check`, execute focused commands exactly as declared, and emit an ephemeral normalized
 report.
+
+Recorded checkpoint and review command results MUST match the work order's exact ordered command
+identities; a report MUST NOT substitute a different command even when its own checkpoint and
+review snapshots agree with each other.
 
 #### Scenario: Declared implementation passes checkpoint
 
@@ -144,12 +150,21 @@ exact reviewed subject SHA as its parent and MUST change only the expected evide
   tooling, operational documentation, or an unexpected evidence path
 - **THEN** evidence-only validation fails
 
+#### Scenario: Active evidence is relocated by archive
+
+- **WHEN** final integration validation targets an archived candidate
+- **THEN** it resolves exactly one dated archive root at that candidate revision
+- **AND** it maps each pre-archive implementation-evidence path to the corresponding archived path
+- **AND** a remaining active root, missing archive root, or duplicate dated archive root fails
+
 ### Requirement: Repository verification is hermetic and non-source-modifying
 
 The repository MUST expose root `npm run verify` backed by a pinned Node version, private root
-package lock, and exact OpenSpec dependency. Repository mode MUST verify backend, frontend,
-OpenSpec, documentation links/paths, diff whitespace, and final repository state without requiring
-an active work order or changing tracked or pre-existing untracked user state.
+package lock, and exact OpenSpec dependency. The pinned tool identity MUST cover the complete
+resolved lock graph and byte identity of the installed executable dependency closure. Repository
+mode MUST verify backend, frontend, OpenSpec, documentation links/paths, diff whitespace, and final
+repository state without requiring an active work order or changing tracked or pre-existing
+untracked user state.
 
 #### Scenario: Repository verification succeeds
 
@@ -158,9 +173,10 @@ an active work order or changing tracked or pre-existing untracked user state.
 - **THEN** it exits successfully with a final repository status report
 - **AND** tracked and pre-existing untracked user state matches its starting identity
 
-#### Scenario: Ambient OpenSpec differs or is absent
+#### Scenario: Ambient or installed OpenSpec differs or is absent
 
-- **WHEN** the globally installed OpenSpec command is absent or a different version
+- **WHEN** the globally installed OpenSpec command is absent or a different version, or any byte in
+  the installed executable dependency closure differs from its pinned identity
 - **THEN** repository verification still invokes the exact root-locked OpenSpec dependency
 
 #### Scenario: A verifier rewrites source
@@ -184,6 +200,26 @@ sub-gate, and emit the complete addition/modification/deletion/rename inventory.
 
 - **WHEN** change mode runs without a valid active integration work order
 - **THEN** it fails before claiming repository completion
+
+### Requirement: Final integration binds authorization and merge baselines separately
+
+The integration work order MUST use an acceptance-bearing base SHA for implementation authority.
+The final integration report MUST separately bind the complete first-parent commit sequence, raw
+diff digest, and addition/modification/deletion/rename inventory from the accepted
+`acceptance.baselineSha` through the archived candidate used for merge eligibility.
+
+#### Scenario: Exact archived candidate is merge-eligible
+
+- **WHEN** the work-order inventory matches its authorization base-to-candidate delta
+- **AND** the final report matches the full acceptance-baseline-to-candidate history and inventory
+- **AND** the target branch still equals `acceptance.baselineSha`
+- **THEN** final integration validation succeeds
+
+#### Scenario: Authorization and merge baselines are conflated
+
+- **WHEN** a final report substitutes the later acceptance-bearing work-order base for the
+  original accepted merge baseline
+- **THEN** final integration validation fails
 
 ### Requirement: Root workflow tooling has isolated deterministic tests
 

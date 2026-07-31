@@ -10,7 +10,9 @@ The repository uses OpenSpec under ADR-0015 and `DOC-05`, with `backend/CONVENTI
 engineering law and append-only ADRs under `DOC-01`/`DOC-03`. The new workflow is a tooling and
 architecture decision, so it requires ADR-0018 and the next stable `TOOL` rule. The intentional
 root-test-layout exception is a separate durable tooling decision, so it requires ADR-0019 and the
-next stable `TEST` rule. Existing `TOOL-05` remains the backend sub-gate.
+next stable `TEST` rule. The complete dependency-closure, command, protected-state, and final
+archive identities discovered during implementation require append-only ADR-0020. Existing
+`TOOL-05` remains the backend sub-gate.
 
 Current supported tooling observed at planning time is Node 22.22.0, npm 10.9.4, and
 `@fission-ai/openspec` 1.6.0. Backend and frontend retain their existing independent lockfiles.
@@ -24,7 +26,8 @@ Applicable rules are `DOC-01`, `DOC-03`, `DOC-05`, `DOC-06`, `TOOL-01`, `TOOL-02
 `TEST-01`, `TEST-02`, `TEST-05`, and `TEST-06`, together with the new workflow `TOOL` rule and
 root-test-layout `TEST` rule introduced by this change. ADR-0015 remains authoritative for OpenSpec
 adoption; ADR-0017 and `DOC-06` require the affected validation/tooling documentation to stay
-current. The retired LikeC4 model remains absent under ADR-0016.
+current. ADR-0018, ADR-0019, and ADR-0020 record the workflow decisions introduced by this change.
+The retired LikeC4 model remains absent under ADR-0016.
 
 ## Goals / Non-Goals
 
@@ -100,7 +103,8 @@ Ephemeral execution state lives only under ignored `.agents/work/`. A work order
 Paths are non-empty repository-relative POSIX paths. Absolute paths, `..`, repository escapes,
 and case-ambiguous paths are invalid; Windows comparisons are case-normalized. Expected operations
 must be allowed, while forbidden/protected scope always wins. Deletions and rename pairs are
-explicit.
+explicit. Required documents and focused-command working directories are physically resolved so
+a symlink or junction cannot redirect them outside the repository.
 
 Alternative: free-form Markdown orders. Rejected because field identity, path scope, and exact
 validation would remain ambiguous.
@@ -109,8 +113,8 @@ validation would remain ambiguous.
 
 Preflight rejects `master`, detached head, invalid/stale orders, unavailable bases, missing
 changes/tasks/documents, path conflicts, undeclared required operations, and unexplained current
-changes. It writes `.agents/work/baseline.json` containing path, classification, size, and
-content hash for pre-existing tracked/untracked user files, never contents.
+changes. It writes `.agents/work/baseline.json` containing path, Git classification, filesystem
+mode, size, and content hash for pre-existing tracked/untracked user files, never contents.
 
 Checkpoint recomputes acceptance/order validity, compares the base commit with current commits,
 index, worktree, and untracked files, and enables explicit rename detection. It normalizes one
@@ -119,7 +123,8 @@ out-of-scope or undeclared operations, changed protected baselines, whitespace e
 focused commands and writes an ephemeral report without modifying tracked artifacts.
 
 Commands are executed with fixed executable/argument arrays and explicit repository-relative
-working directories; no shell interpolation is permitted.
+working directories; no shell interpolation is permitted. Checkpoint and review validation bind
+the recorded command-result sequence back to the work order's exact ordered command identities.
 
 Alternative: rely on `git diff` of the worktree alone. Rejected because it omits commits, staged
 state, untracked additions, and reliable deletion/rename identity.
@@ -159,17 +164,20 @@ bind to a final implementation tree and report output does not exist until after
 
 The root private package pins Node 22.22.0 in `.nvmrc` and exact
 `@fission-ai/openspec` 1.6.0 in `package-lock.json`. Root scripts invoke the pinned dependency,
-not an ambient global CLI.
+not an ambient global CLI. Before invocation they verify the complete resolved lock graph and a
+known-good byte identity for every installed package in the executable OpenSpec dependency
+closure, then repeat that identity check immediately before the CLI runs.
 
 Repository mode runs:
 
 1. backend `npm run verify`;
 2. frontend `npm run verify`;
-3. pinned `openspec validate --all`;
-4. repository Markdown relative-link/path validation with explicit documented template
-   placeholders;
-5. `git diff --check`;
-6. a final state/inventory comparison proving tracked and pre-existing untracked state is
+3. root workflow formatting and isolated protocol tests;
+4. tracked schema-example and repository Markdown relative-link/path validation with explicit
+   documented template placeholders;
+5. pinned `openspec validate --all` after revalidating its complete dependency closure;
+6. `git diff --check`;
+7. a final state/inventory comparison proving tracked and pre-existing untracked state is
    unchanged.
 
 Change mode requires an integration work order, runs checkpoint, then every repository-mode check,
@@ -191,7 +199,9 @@ runner under `test/agent-workflow/*.test.mjs`, matching `scripts/agent-workflow/
 than the backend `src/` tree. Tests create isolated temporary Git repositories and fixed fixture
 files; they do not depend on the working repository's current branch or user configuration.
 ADR-0019 and the new `TEST` rule record this explicit root-tooling exception; ADR-0018 and the new
-`TOOL` rule govern the broader accepted workflow and repository verification gate.
+`TOOL` rule govern the broader accepted workflow and repository verification gate. ADR-0020
+supplements those decisions with the complete executable-closure and evidence-identity rules
+discovered while testing the implementation.
 
 Alternative: place tooling tests in `backend/test/`. Rejected because the scripts are root
 repository tools, not backend application units, and must run without backend Jest/TypeScript.
@@ -200,12 +210,17 @@ repository tools, not backend application units, and must run without backend Je
 
 Schema/governance work precedes protocol tooling; protocol tooling precedes the verifier.
 Coordinator-owned instruction/task reconciliation follows implementation. A dedicated integration
-order uses the original baseline and the authorized union of every expected operation/commit.
+order uses an acceptance-bearing authorization base and the authorized union of every
+base-to-candidate implementation operation. The final integration report separately binds the
+complete original `acceptance.baselineSha`-to-candidate commit sequence, raw diff, and
+file-operation inventory used for unchanged-`master` merge eligibility.
 
 A fresh implementation review targets the exact integrated implementation SHA. After validated
 evidence, the coordinator reconciles tasks, syncs canonical specs, archives the change, and obtains
-a fresh final integration review of the exact archive SHA. The final evidence commit is merged to
-unchanged `master` with `--ff-only`, followed by root repository verification on `master`.
+a fresh final integration review of the exact archive SHA. Final validation resolves the one dated
+archive root from that exact candidate revision and maps pre-archive implementation evidence to its
+relocated archive paths. The final evidence commit is merged to unchanged `master` with
+`--ff-only`, followed by root repository verification on `master`.
 
 Alternative: merge parallel branches opportunistically. Rejected because dependency order,
 unexpected conflicts, review freshness, and final archive identity would become ambiguous.
@@ -234,8 +249,8 @@ unexpected conflicts, review freshness, and final archive identity would become 
 ## Migration Plan
 
 1. Commit and accept the exact OpenSpec planning artifacts.
-2. Add ADR-0018 and ADR-0019, the new `TOOL` and `TEST` conventions, contract schemas/examples,
-   ignore rule, and coordinator instruction reconciliation.
+2. Add ADR-0018, ADR-0019, and ADR-0020, the new `TOOL` and `TEST` conventions, contract
+   schemas/examples, ignore rule, and coordinator instruction reconciliation.
 3. Add protocol scripts and isolated root-tooling tests.
 4. Add the pinned root package/verifier and update backend/frontend scripts.
 5. Run focused checkpoints and the integrated change gate; obtain and validate a fresh review.

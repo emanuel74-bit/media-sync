@@ -21,9 +21,11 @@ pre-existing user work or accepting stale evidence.
   diff integrity, and repository state.
 - Separate backend lint check/fix commands, add frontend typecheck/verify commands, and investigate
   Jest `--forceExit` within a bounded non-behavioral scope.
-- Add append-only workflow and root-test-layout ADRs plus the next stable `TOOL` and `TEST`
-  convention rules; update `DOC-05`, agent instructions, and validation/tooling documentation to
-  point to the canonical commands without duplicating protocol text.
+- Add append-only ADR-0018 for the accepted workflow, ADR-0019 for the root-test-layout exception,
+  and ADR-0020 for complete tool, command, protected-state, and archive identities, plus the next
+  stable `TOOL` and `TEST` convention rules; update `DOC-05`, agent instructions, and
+  validation/tooling documentation to point to the canonical commands without duplicating
+  protocol text.
 - Add Node built-in-runner tests in isolated temporary Git repositories for valid and invalid work
   orders, path operations, user-state baselines, focused commands, stale reviews, risk acceptance,
   and evidence-only commits.
@@ -42,9 +44,10 @@ Explicit non-goals:
   conversational context.
 
 Applicable rules are `DOC-01`, `DOC-03`, `DOC-05`, `TOOL-01`, `TOOL-02`, `TOOL-05`,
-`TEST-01`, `TEST-02`, `TEST-05`, and `TEST-06`. The workflow and root-test-layout decisions require
-separate ADRs plus new `TOOL` and `TEST` rules under `DOC-01`; no existing ADR is superseded.
-ADR-0015 remains the governing decision for OpenSpec adoption and repository-owned agent workflow.
+`TEST-01`, `TEST-02`, `TEST-05`, and `TEST-06`. The accepted-workflow, root-test-layout, and
+complete-identity decisions require ADR-0018, ADR-0019, and ADR-0020 plus new `TOOL` and `TEST`
+rules under `DOC-01`; no existing ADR is superseded. ADR-0015 remains the governing decision for
+OpenSpec adoption and repository-owned agent workflow.
 
 ## Capabilities
 

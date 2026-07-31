@@ -1,6 +1,6 @@
 ## 1. Accepted governance and contracts
 
-- [ ] 1.1 Add the append-only workflow and root-test-layout ADRs, ADR indexes, the new TOOL and TEST convention rules, and the DOC-05 repository-local extension without duplicating authority.
+- [ ] 1.1 Add append-only ADR-0018 for the accepted workflow, ADR-0019 for the root-test-layout exception, and ADR-0020 for complete tool, command, protected-state, and archive identities; update the ADR indexes, the new TOOL and TEST convention rules, and the DOC-05 repository-local extension without duplicating authority.
 - [ ] 1.2 Add and validate the tracked work-order schema and example plus the ignored `.agents/work/` execution-state boundary.
 - [ ] 1.3 Add and validate the tracked review-report and integration-report schemas and examples.
 - [ ] 1.4 Reconcile `AGENTS.md` and `CLAUDE.md` so they reference the accepted workflow, preserve existing instructions, and assign only coordinator-owned controls.
