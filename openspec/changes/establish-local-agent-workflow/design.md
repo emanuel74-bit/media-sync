@@ -8,8 +8,9 @@ current backend suite passes only by forcing Jest exit.
 
 The repository uses OpenSpec under ADR-0015 and `DOC-05`, with `backend/CONVENTIONS.md` as current
 engineering law and append-only ADRs under `DOC-01`/`DOC-03`. The new workflow is a tooling and
-architecture decision, so it requires ADR-0018 and the next stable `TOOL` rule. Existing
-`TOOL-05` remains the backend sub-gate.
+architecture decision, so it requires ADR-0018 and the next stable `TOOL` rule. The intentional
+root-test-layout exception is a separate durable tooling decision, so it requires ADR-0019 and the
+next stable `TEST` rule. Existing `TOOL-05` remains the backend sub-gate.
 
 Current supported tooling observed at planning time is Node 22.22.0, npm 10.9.4, and
 `@fission-ai/openspec` 1.6.0. Backend and frontend retain their existing independent lockfiles.
@@ -20,7 +21,8 @@ and developers running completion checks locally. There is no remote CI or branc
 service in scope.
 
 Applicable rules are `DOC-01`, `DOC-03`, `DOC-05`, `DOC-06`, `TOOL-01`, `TOOL-02`, `TOOL-05`,
-`TEST-01`, `TEST-02`, `TEST-05`, and `TEST-06`. ADR-0015 remains authoritative for OpenSpec
+`TEST-01`, `TEST-02`, `TEST-05`, and `TEST-06`, together with the new workflow `TOOL` rule and
+root-test-layout `TEST` rule introduced by this change. ADR-0015 remains authoritative for OpenSpec
 adoption; ADR-0017 and `DOC-06` require the affected validation/tooling documentation to stay
 current. The retired LikeC4 model remains absent under ADR-0016.
 
@@ -188,7 +190,8 @@ pinned OpenSpec, docs, complete state integrity, and one authoritative completio
 runner under `test/agent-workflow/*.test.mjs`, matching `scripts/agent-workflow/` by concern rather
 than the backend `src/` tree. Tests create isolated temporary Git repositories and fixed fixture
 files; they do not depend on the working repository's current branch or user configuration.
-ADR-0018 and the new `TOOL` rule record this explicit root-tooling exception.
+ADR-0019 and the new `TEST` rule record this explicit root-tooling exception; ADR-0018 and the new
+`TOOL` rule govern the broader accepted workflow and repository verification gate.
 
 Alternative: place tooling tests in `backend/test/`. Rejected because the scripts are root
 repository tools, not backend application units, and must run without backend Jest/TypeScript.
@@ -231,8 +234,8 @@ unexpected conflicts, review freshness, and final archive identity would become 
 ## Migration Plan
 
 1. Commit and accept the exact OpenSpec planning artifacts.
-2. Add ADR-0018, conventions, contract schemas/examples, ignore rule, and coordinator instruction
-   reconciliation.
+2. Add ADR-0018 and ADR-0019, the new `TOOL` and `TEST` conventions, contract schemas/examples,
+   ignore rule, and coordinator instruction reconciliation.
 3. Add protocol scripts and isolated root-tooling tests.
 4. Add the pinned root package/verifier and update backend/frontend scripts.
 5. Run focused checkpoints and the integrated change gate; obtain and validate a fresh review.
