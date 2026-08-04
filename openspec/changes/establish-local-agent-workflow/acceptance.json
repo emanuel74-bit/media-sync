@@ -1,9 +1,0 @@
-{
-    "schemaVersion": 1,
-    "changeId": "establish-local-agent-workflow",
-    "baselineSha": "25f75b2fd14bcafd7ff8ccb2ee2862a327e19416",
-    "planningSha": "26359f5dacf028d5c43e2dd3fa8dd16065ade55b",
-    "artifactDigest": "fb13c1eb9724e185291e9cfebb29f059c4a035fea37db56d49736f966bc99b04",
-    "acceptedBy": "codex-coordinator",
-    "acceptedAt": "2026-07-31T22:25:52.607Z"
-}
