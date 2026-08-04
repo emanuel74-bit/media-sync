@@ -173,11 +173,16 @@ untracked user state.
 - **THEN** it exits successfully with a final repository status report
 - **AND** tracked and pre-existing untracked user state matches its starting identity
 
-#### Scenario: Ambient or installed OpenSpec differs or is absent
+#### Scenario: Ambient OpenSpec differs or is absent
 
-- **WHEN** the globally installed OpenSpec command is absent or a different version, or any byte in
-  the installed executable dependency closure differs from its pinned identity
-- **THEN** repository verification still invokes the exact root-locked OpenSpec dependency
+- **WHEN** the globally installed OpenSpec command is absent or a different version
+- **THEN** repository verification invokes the exact root-locked OpenSpec dependency
+
+#### Scenario: Installed OpenSpec closure differs or is absent
+
+- **WHEN** any package, lock-graph entry, or byte in the installed executable dependency closure
+  is absent or differs from its pinned identity
+- **THEN** repository verification fails closed before invoking OpenSpec
 
 #### Scenario: A verifier rewrites source
 
