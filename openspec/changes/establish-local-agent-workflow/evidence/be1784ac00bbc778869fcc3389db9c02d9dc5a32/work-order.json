@@ -1,0 +1,139 @@
+{
+    "schemaVersion": 1,
+    "workOrderId": "integrate-establish-local-agent-workflow-topology-v3",
+    "changeId": "establish-local-agent-workflow",
+    "role": "integration",
+    "taskIds": [
+        "4.1"
+    ],
+    "acceptedArtifactDigest": "df58dda0391e83f8c5814abf0a6a384c533befca76afc2489c700069abc870f3",
+    "baseSha": "317dfa9486f63b782db974faa70d5e6b35057a20",
+    "issuedBy": "codex-coordinator",
+    "issuedAt": "2026-08-05T04:58:48.704Z",
+    "allowedPaths": [
+        ".agents/templates/integration-report.example.json",
+        ".agents/templates/integration-report.schema.json",
+        ".agents/templates/review-report.example.json",
+        ".agents/templates/review-report.schema.json",
+        ".agents/templates/work-order.example.json",
+        ".agents/templates/work-order.schema.json",
+        ".gitattributes",
+        ".gitignore",
+        ".nvmrc",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "backend/CONVENTIONS.md",
+        "backend/package.json",
+        "backend/tsconfig.json",
+        "backend/tsconfig.tsbuildinfo",
+        "docs/adr/0018-establish-accepted-local-agent-workflow.md",
+        "docs/adr/0019-place-repository-tooling-tests-at-root.md",
+        "docs/adr/0020-bind-complete-tool-and-archive-identities.md",
+        "docs/adr/README.md",
+        "docs/adr/index.md",
+        "docs/architecture/validation-and-tooling.md",
+        "frontend/package.json",
+        "openspec/changes/establish-local-agent-workflow/tasks.md",
+        "package-lock.json",
+        "package.json",
+        "scripts/agent-workflow/checkpoint.mjs",
+        "scripts/agent-workflow/preflight.mjs",
+        "scripts/agent-workflow/validate-evidence-commit.mjs",
+        "scripts/agent-workflow/validate-review.mjs",
+        "scripts/agent-workflow/verify-local.mjs",
+        "test/agent-workflow/checkpoint.test.mjs",
+        "test/agent-workflow/evidence-commit-validation.test.mjs",
+        "test/agent-workflow/preflight.test.mjs",
+        "test/agent-workflow/review-validation.test.mjs",
+        "test/agent-workflow/verify-local.test.mjs",
+        "test/agent-workflow/workflow-test-helpers.mjs"
+    ],
+    "forbiddenPaths": [],
+    "protectedPaths": [
+        ".claude/settings.local.json"
+    ],
+    "expectedAdditions": [
+        ".agents/templates/integration-report.example.json",
+        ".agents/templates/integration-report.schema.json",
+        ".agents/templates/review-report.example.json",
+        ".agents/templates/review-report.schema.json",
+        ".agents/templates/work-order.example.json",
+        ".agents/templates/work-order.schema.json",
+        ".gitattributes",
+        ".nvmrc",
+        "docs/adr/0018-establish-accepted-local-agent-workflow.md",
+        "docs/adr/0019-place-repository-tooling-tests-at-root.md",
+        "docs/adr/0020-bind-complete-tool-and-archive-identities.md",
+        "package-lock.json",
+        "package.json",
+        "scripts/agent-workflow/checkpoint.mjs",
+        "scripts/agent-workflow/preflight.mjs",
+        "scripts/agent-workflow/validate-evidence-commit.mjs",
+        "scripts/agent-workflow/validate-review.mjs",
+        "scripts/agent-workflow/verify-local.mjs",
+        "test/agent-workflow/checkpoint.test.mjs",
+        "test/agent-workflow/evidence-commit-validation.test.mjs",
+        "test/agent-workflow/preflight.test.mjs",
+        "test/agent-workflow/review-validation.test.mjs",
+        "test/agent-workflow/verify-local.test.mjs",
+        "test/agent-workflow/workflow-test-helpers.mjs"
+    ],
+    "expectedModifications": [
+        ".gitignore",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "backend/CONVENTIONS.md",
+        "backend/package.json",
+        "backend/tsconfig.json",
+        "docs/adr/README.md",
+        "docs/adr/index.md",
+        "docs/architecture/validation-and-tooling.md",
+        "frontend/package.json",
+        "openspec/changes/establish-local-agent-workflow/tasks.md"
+    ],
+    "expectedDeletions": [
+        "backend/tsconfig.tsbuildinfo"
+    ],
+    "expectedRenames": [],
+    "requiredDocuments": [
+        "backend/CONVENTIONS.md",
+        "docs/adr/0018-establish-accepted-local-agent-workflow.md",
+        "docs/adr/0019-place-repository-tooling-tests-at-root.md",
+        "docs/adr/0020-bind-complete-tool-and-archive-identities.md",
+        "openspec/changes/establish-local-agent-workflow/acceptance.json",
+        "openspec/changes/establish-local-agent-workflow/design.md",
+        "openspec/changes/establish-local-agent-workflow/specs/local-agent-workflow/spec.md"
+    ],
+    "conventionIds": [
+        "DOC-05",
+        "TEST-05",
+        "TEST-06",
+        "TEST-08",
+        "TOOL-01",
+        "TOOL-02",
+        "TOOL-05",
+        "TOOL-09"
+    ],
+    "focusedCommands": [
+        {
+            "commandId": "integration-verifier-tests",
+            "cwd": ".",
+            "argv": [
+                "node",
+                "--test",
+                "test/agent-workflow/verify-local.test.mjs"
+            ]
+        }
+    ],
+    "nonGoals": [
+        "Do not add or amend implementation commits while final verification is running.",
+        "Do not modify product behavior, runtime architecture, APIs, schemas, or deployment behavior.",
+        "Do not create review or evidence records before the exact candidate passes change verification."
+    ],
+    "stopConditions": [
+        "Stop if implementation needs any path or operation not declared by this order.",
+        "Stop if the aggregate inventory differs from this order.",
+        "Stop if any repository or focused check fails.",
+        "Stop if protected user state differs from the preflight baseline."
+    ]
+}

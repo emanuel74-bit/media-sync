@@ -1,0 +1,369 @@
+{
+    "schemaVersion": 1,
+    "reportKind": "implementation-review",
+    "reportId": "review-establish-local-agent-workflow-be1784ac",
+    "changeId": "establish-local-agent-workflow",
+    "reviewer": {
+        "reviewerId": "fresh-reviewer-be1784ac",
+        "role": "fresh-implementation-reviewer",
+        "reviewedAt": "2026-08-05T05:53:12.153Z"
+    },
+    "workOrder": {
+        "workOrderId": "integrate-establish-local-agent-workflow-topology-v3",
+        "workOrderDigest": "c8b9b1bf1e8303cc46cc254214e171accd9778d22eb236daf286f997265d5d81"
+    },
+    "acceptedArtifactDigest": "df58dda0391e83f8c5814abf0a6a384c533befca76afc2489c700069abc870f3",
+    "git": {
+        "baseSha": "317dfa9486f63b782db974faa70d5e6b35057a20",
+        "subjectSha": "be1784ac00bbc778869fcc3389db9c02d9dc5a32",
+        "subjectTreeSha": "990907200633408cf8a64fccacb8a07696d800fc",
+        "rawDiffSha256": "792f6fdacbb29fe1dbe8763a8b9728c50428982918c1ac04d792806bb1a70f32"
+    },
+    "scenarioMatrix": [
+        {
+            "requirement": "Accepted planning artifacts authorize implementation",
+            "scenario": "Coordinator accepts exact planning input",
+            "status": "pass",
+            "evidence": [
+                "Recomputed artifact digest df58dda0391e83f8c5814abf0a6a384c533befca76afc2489c700069abc870f3 from planning SHA 4b565562d30cc09eb05887eb8fe1230ec94b3d05; acceptance is absent there and present at the authorization base."
+            ]
+        },
+        {
+            "requirement": "Accepted planning artifacts authorize implementation",
+            "scenario": "Planning scope changes after acceptance",
+            "status": "pass",
+            "evidence": [
+                "Targeted stale, descendant-rewrite, and untracked-delta-spec acceptance tests passed; preflight, checkpoint, and review all recompute the accepted planning digest."
+            ]
+        },
+        {
+            "requirement": "Accepted planning artifacts authorize implementation",
+            "scenario": "Only task completion advances",
+            "status": "pass",
+            "evidence": [
+                "Task-marker normalization and semantic-edit rejection tests passed, while post-review checkbox changes remained review-stale."
+            ]
+        },
+        {
+            "requirement": "Work orders define bounded repository operations",
+            "scenario": "Valid bounded work order",
+            "status": "pass",
+            "evidence": [
+                "The active integration order schema validated and its recomputed canonical digest is c8b9b1bf1e8303cc46cc254214e171accd9778d22eb236daf286f997265d5d81."
+            ]
+        },
+        {
+            "requirement": "Work orders define bounded repository operations",
+            "scenario": "Invalid or ambiguous path",
+            "status": "pass",
+            "evidence": [
+                "Targeted path, case-collision, junction, shell, npx, npm, env, busybox, toybox, and protocol-state redirect rejection tests passed."
+            ]
+        },
+        {
+            "requirement": "Work orders define bounded repository operations",
+            "scenario": "Work order is not coordinator-issued",
+            "status": "pass",
+            "evidence": [
+                "Issuer identity is cross-bound to acceptedBy; forged coordinator evidence and stale acceptance tests passed."
+            ]
+        },
+        {
+            "requirement": "Preflight preserves existing user state",
+            "scenario": "Clean feature branch with permitted user state",
+            "status": "pass",
+            "evidence": [
+                "The protected path remains ordinary untracked, size 15915, and SHA-256 64dd64870e404fdc28154ff44a12aac610a8934526e2a0431780512ac96e2e11 without exposing its bytes."
+            ]
+        },
+        {
+            "requirement": "Preflight preserves existing user state",
+            "scenario": "Unsafe execution context",
+            "status": "pass",
+            "evidence": [
+                "Feature-branch, detached/master, unexplained-state, hostile-Git-selector, forbidden ignored path, and work-state redirect tests passed."
+            ]
+        },
+        {
+            "requirement": "Checkpoint enforces scope and focused verification",
+            "scenario": "Declared implementation passes checkpoint",
+            "status": "pass",
+            "evidence": [
+                "Checkpoint at 2026-08-05T05:04:03.695Z matches subject be1784ac00bbc778869fcc3389db9c02d9dc5a32, the exact 24/11/1/0 inventory, and one passing declared command."
+            ]
+        },
+        {
+            "requirement": "Checkpoint enforces scope and focused verification",
+            "scenario": "Scope or integrity violation",
+            "status": "pass",
+            "evidence": [
+                "Targeted out-of-scope, protected mutation, raw-index, whitespace, link escape, and same-byte classification-drift tests passed."
+            ]
+        },
+        {
+            "requirement": "Checkpoint enforces scope and focused verification",
+            "scenario": "Focused command fails",
+            "status": "pass",
+            "evidence": [
+                "Focused-command failure and failed-command mutation tests passed and proved subsequent commands are not reported as successful."
+            ]
+        },
+        {
+            "requirement": "Reviews bind to exact implementation state",
+            "scenario": "Exact passing review",
+            "status": "pass",
+            "evidence": [
+                "Independently recomputed subject tree 990907200633408cf8a64fccacb8a07696d800fc and canonical raw-diff SHA-256 792f6fdacbb29fe1dbe8763a8b9728c50428982918c1ac04d792806bb1a70f32."
+            ]
+        },
+        {
+            "requirement": "Reviews bind to exact implementation state",
+            "scenario": "Implementation changes after review",
+            "status": "pass",
+            "evidence": [
+                "Stale HEAD/tree/diff, task-marker, forged-baseline, unchanged protected descendant, and protected classification-drift review tests passed."
+            ]
+        },
+        {
+            "requirement": "Reviews bind to exact implementation state",
+            "scenario": "Risk has no coordinator acceptance",
+            "status": "pass",
+            "evidence": [
+                "Blocking-verdict and unaccepted-risk tests passed; this report has no findings and no accepted risks."
+            ]
+        },
+        {
+            "requirement": "Evidence-only commits cannot modify reviewed content",
+            "scenario": "Valid evidence-only child",
+            "status": "pass",
+            "evidence": [
+                "Coordinator gate passed all workflow tests, including exact work-order/checkpoint/report evidence validation rooted at the reviewed parent."
+            ]
+        },
+        {
+            "requirement": "Evidence-only commits cannot modify reviewed content",
+            "scenario": "Evidence commit includes another change",
+            "status": "pass",
+            "evidence": [
+                "Evidence validator source review and coordinator suite show source-bearing, missing-snapshot, wrong-parent, and tampered-snapshot commits fail closed."
+            ]
+        },
+        {
+            "requirement": "Evidence-only commits cannot modify reviewed content",
+            "scenario": "Active evidence is relocated by archive",
+            "status": "pass",
+            "evidence": [
+                "Targeted archived-evidence test passed relocation, rejected residual active roots and duplicate dated roots, and covered active-root gitlinks."
+            ]
+        },
+        {
+            "requirement": "Repository verification is hermetic and non-source-modifying",
+            "scenario": "Repository verification succeeds",
+            "status": "pass",
+            "evidence": [
+                "Coordinator exact-SHA full gate exited 0 with 5 commands and 643 state entries preserved; backend 240/240, frontend 7/7, workflow 139/139, and OpenSpec 2/2 passed."
+            ]
+        },
+        {
+            "requirement": "Repository verification is hermetic and non-source-modifying",
+            "scenario": "Ambient OpenSpec differs or is absent",
+            "status": "pass",
+            "evidence": [
+                "Command-plan inspection resolves OpenSpec directly from the root installation and invokes it through the current pinned Node executable."
+            ]
+        },
+        {
+            "requirement": "Repository verification is hermetic and non-source-modifying",
+            "scenario": "Installed OpenSpec closure differs or is absent",
+            "status": "pass",
+            "evidence": [
+                "Targeted installed-manifest, integrity, CLI-byte, transitive-byte, lock-inventory, and pre-invocation revalidation tests all passed."
+            ]
+        },
+        {
+            "requirement": "Repository verification is hermetic and non-source-modifying",
+            "scenario": "A verifier rewrites source",
+            "status": "pass",
+            "evidence": [
+                "Targeted tracked, untracked, ignored-personal, raw-index, dangling-link, and failed-subgate mutation tests passed while generated roots remained permitted."
+            ]
+        },
+        {
+            "requirement": "Change verification includes the authorized inventory",
+            "scenario": "Integrated change matches its order",
+            "status": "pass",
+            "evidence": [
+                "Direct recomputation and checkpoint both yield 24 additions, 11 modifications, 1 deletion, and 0 renames from authorization base to subject."
+            ]
+        },
+        {
+            "requirement": "Change verification includes the authorized inventory",
+            "scenario": "Change mode has no integration order",
+            "status": "pass",
+            "evidence": [
+                "Targeted non-integration-order rejection passed before repository commands, and change mode requires the active integration order."
+            ]
+        },
+        {
+            "requirement": "Final integration binds authorization and merge baselines separately",
+            "scenario": "Exact archived candidate is merge-eligible",
+            "status": "pass",
+            "evidence": [
+                "Targeted full archived-evidence sequence validated separate authorization and acceptance baselines, complete first-parent history, ordered integrations, evidence relocation, and unchanged master."
+            ]
+        },
+        {
+            "requirement": "Final integration binds authorization and merge baselines separately",
+            "scenario": "Authorization and merge baselines are conflated",
+            "status": "pass",
+            "evidence": [
+                "Source review confirms final reports recompute from acceptance.baselineSha while checkpoint and authorized inventory remain bound to workOrder.baseSha."
+            ]
+        },
+        {
+            "requirement": "Root workflow tooling has isolated deterministic tests",
+            "scenario": "Tooling tests run outside the product repository state",
+            "status": "pass",
+            "evidence": [
+                "Fresh bounded review validation passed 15 top-level and 22 total tests in isolated D-drive repositories; the coordinator exact gate passed all 90 top-level and 139 total workflow tests."
+            ]
+        },
+        {
+            "requirement": "Local workflow preserves human and coordinator authority",
+            "scenario": "Scripts complete successfully",
+            "status": "pass",
+            "evidence": [
+                "ADR-0018, TOOL-09, repository instructions, and validation documentation keep planning, role freshness, risk acceptance, integration, archive, and merge eligibility coordinator-owned."
+            ]
+        },
+        {
+            "requirement": "Local workflow preserves human and coordinator authority",
+            "scenario": "Master advanced",
+            "status": "pass",
+            "evidence": [
+                "Targeted final-review sequence rejected an advanced master; current master independently resolves to accepted baseline 25f75b2fd14bcafd7ff8ccb2ee2862a327e19416."
+            ]
+        }
+    ],
+    "conventionMatrix": [
+        {
+            "conventionId": "DOC-05",
+            "status": "pass",
+            "evidence": [
+                "The accepted active change, exact planning digest, truthful task state, coordinator exact-SHA verify:change result, and pinned OpenSpec validation agree."
+            ]
+        },
+        {
+            "conventionId": "TEST-05",
+            "status": "pass",
+            "evidence": [
+                "Core workflow operations and state-changing Git interactions are covered by preflight, checkpoint, review, evidence, and verifier tests; targeted adversarial cases passed."
+            ]
+        },
+        {
+            "conventionId": "TEST-06",
+            "status": "pass",
+            "evidence": [
+                "The isolated fixture design avoids shared mutable repository state; the coordinator gate reported 139 passing tests with no skips."
+            ]
+        },
+        {
+            "conventionId": "TEST-08",
+            "status": "pass",
+            "evidence": [
+                "All root workflow tests are Node built-in-runner .test.mjs files under test/agent-workflow and use isolated temporary Git repositories."
+            ]
+        },
+        {
+            "conventionId": "TOOL-01",
+            "status": "pass",
+            "evidence": [
+                "Coordinator formatting passed, direct check-attr showed text=auto/eol=lf on representative workflow files, and base-to-subject git diff --check passed."
+            ]
+        },
+        {
+            "conventionId": "TOOL-02",
+            "status": "pass",
+            "evidence": [
+                "Coordinator exact-SHA gate passed strict backend and frontend type checking; the change adds no TypeScript any escape."
+            ]
+        },
+        {
+            "conventionId": "TOOL-05",
+            "status": "pass",
+            "evidence": [
+                "Coordinator exact-SHA backend sub-gate passed 45 suites and 240 tests, with typecheck, check-only lint, build, and Jest success."
+            ]
+        },
+        {
+            "conventionId": "TOOL-09",
+            "status": "pass",
+            "evidence": [
+                "Coordinator exact-SHA verify:change exited 0, preserving 643 state entries; checkpoint and direct recomputation match the complete authorized inventory and pinned tool identities."
+            ]
+        }
+    ],
+    "fileOperations": {
+        "additions": [
+            ".agents/templates/integration-report.example.json",
+            ".agents/templates/integration-report.schema.json",
+            ".agents/templates/review-report.example.json",
+            ".agents/templates/review-report.schema.json",
+            ".agents/templates/work-order.example.json",
+            ".agents/templates/work-order.schema.json",
+            ".gitattributes",
+            ".nvmrc",
+            "docs/adr/0018-establish-accepted-local-agent-workflow.md",
+            "docs/adr/0019-place-repository-tooling-tests-at-root.md",
+            "docs/adr/0020-bind-complete-tool-and-archive-identities.md",
+            "package-lock.json",
+            "package.json",
+            "scripts/agent-workflow/checkpoint.mjs",
+            "scripts/agent-workflow/preflight.mjs",
+            "scripts/agent-workflow/validate-evidence-commit.mjs",
+            "scripts/agent-workflow/validate-review.mjs",
+            "scripts/agent-workflow/verify-local.mjs",
+            "test/agent-workflow/checkpoint.test.mjs",
+            "test/agent-workflow/evidence-commit-validation.test.mjs",
+            "test/agent-workflow/preflight.test.mjs",
+            "test/agent-workflow/review-validation.test.mjs",
+            "test/agent-workflow/verify-local.test.mjs",
+            "test/agent-workflow/workflow-test-helpers.mjs"
+        ],
+        "modifications": [
+            ".gitignore",
+            "AGENTS.md",
+            "CLAUDE.md",
+            "backend/CONVENTIONS.md",
+            "backend/package.json",
+            "backend/tsconfig.json",
+            "docs/adr/README.md",
+            "docs/adr/index.md",
+            "docs/architecture/validation-and-tooling.md",
+            "frontend/package.json",
+            "openspec/changes/establish-local-agent-workflow/tasks.md"
+        ],
+        "deletions": [
+            "backend/tsconfig.tsbuildinfo"
+        ],
+        "renames": []
+    },
+    "commands": [
+        {
+            "commandId": "integration-verifier-tests",
+            "cwd": ".",
+            "executable": "node",
+            "arguments": [
+                "--test",
+                "test/agent-workflow/verify-local.test.mjs"
+            ],
+            "exitCode": 0,
+            "stdoutSha256": "75a48cb85f809be54e48be5bb6df75e5e1803fabdbc887c4384058b195ef7425",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "outcome": "pass"
+        }
+    ],
+    "findings": [],
+    "verdict": "pass",
+    "acceptedRisks": []
+}

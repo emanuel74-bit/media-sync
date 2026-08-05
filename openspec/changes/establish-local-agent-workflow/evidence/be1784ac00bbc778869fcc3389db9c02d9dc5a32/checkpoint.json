@@ -1,0 +1,69 @@
+{
+    "schemaVersion": 1,
+    "workOrderId": "integrate-establish-local-agent-workflow-topology-v3",
+    "workOrderDigest": "c8b9b1bf1e8303cc46cc254214e171accd9778d22eb236daf286f997265d5d81",
+    "acceptedArtifactDigest": "df58dda0391e83f8c5814abf0a6a384c533befca76afc2489c700069abc870f3",
+    "baseSha": "317dfa9486f63b782db974faa70d5e6b35057a20",
+    "headSha": "be1784ac00bbc778869fcc3389db9c02d9dc5a32",
+    "recordedAt": "2026-08-05T05:04:03.695Z",
+    "fileOperations": {
+        "additions": [
+            ".agents/templates/integration-report.example.json",
+            ".agents/templates/integration-report.schema.json",
+            ".agents/templates/review-report.example.json",
+            ".agents/templates/review-report.schema.json",
+            ".agents/templates/work-order.example.json",
+            ".agents/templates/work-order.schema.json",
+            ".gitattributes",
+            ".nvmrc",
+            "docs/adr/0018-establish-accepted-local-agent-workflow.md",
+            "docs/adr/0019-place-repository-tooling-tests-at-root.md",
+            "docs/adr/0020-bind-complete-tool-and-archive-identities.md",
+            "package-lock.json",
+            "package.json",
+            "scripts/agent-workflow/checkpoint.mjs",
+            "scripts/agent-workflow/preflight.mjs",
+            "scripts/agent-workflow/validate-evidence-commit.mjs",
+            "scripts/agent-workflow/validate-review.mjs",
+            "scripts/agent-workflow/verify-local.mjs",
+            "test/agent-workflow/checkpoint.test.mjs",
+            "test/agent-workflow/evidence-commit-validation.test.mjs",
+            "test/agent-workflow/preflight.test.mjs",
+            "test/agent-workflow/review-validation.test.mjs",
+            "test/agent-workflow/verify-local.test.mjs",
+            "test/agent-workflow/workflow-test-helpers.mjs"
+        ],
+        "modifications": [
+            ".gitignore",
+            "AGENTS.md",
+            "CLAUDE.md",
+            "backend/CONVENTIONS.md",
+            "backend/package.json",
+            "backend/tsconfig.json",
+            "docs/adr/README.md",
+            "docs/adr/index.md",
+            "docs/architecture/validation-and-tooling.md",
+            "frontend/package.json",
+            "openspec/changes/establish-local-agent-workflow/tasks.md"
+        ],
+        "deletions": [
+            "backend/tsconfig.tsbuildinfo"
+        ],
+        "renames": []
+    },
+    "commands": [
+        {
+            "commandId": "integration-verifier-tests",
+            "cwd": ".",
+            "executable": "node",
+            "arguments": [
+                "--test",
+                "test/agent-workflow/verify-local.test.mjs"
+            ],
+            "exitCode": 0,
+            "stdoutSha256": "75a48cb85f809be54e48be5bb6df75e5e1803fabdbc887c4384058b195ef7425",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "outcome": "pass"
+        }
+    ]
+}
