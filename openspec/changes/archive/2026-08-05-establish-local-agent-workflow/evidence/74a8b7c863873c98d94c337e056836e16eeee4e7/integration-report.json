@@ -1,0 +1,589 @@
+{
+    "schemaVersion": 1,
+    "reportKind": "final-integration-review",
+    "reportId": "integration-establish-local-agent-workflow-74a8b7c",
+    "changeId": "establish-local-agent-workflow",
+    "reviewer": {
+        "reviewerId": "fresh-integration-reviewer-74a8b7c",
+        "role": "fresh-integration-reviewer",
+        "reviewedAt": "2026-08-05T07:36:41.393Z"
+    },
+    "workOrder": {
+        "workOrderId": "final-review-establish-local-agent-workflow-topology-v3",
+        "workOrderDigest": "b3bae2245d37982a8a64c6cdaf57735448ce3283b237617063c8571ceb834d7e"
+    },
+    "acceptedArtifactDigest": "df58dda0391e83f8c5814abf0a6a384c533befca76afc2489c700069abc870f3",
+    "git": {
+        "baselineSha": "25f75b2fd14bcafd7ff8ccb2ee2862a327e19416",
+        "reviewedImplementationSha": "be1784ac00bbc778869fcc3389db9c02d9dc5a32",
+        "finalArchiveSha": "74a8b7c863873c98d94c337e056836e16eeee4e7",
+        "candidateSha": "74a8b7c863873c98d94c337e056836e16eeee4e7",
+        "candidateTreeSha": "6f073f4049ee7b945aaa886fb5e94decd94ffb06",
+        "rawDiffSha256": "f60d632015765e20bc26b71f9b97fbfb30da86ec61738c9bc3fa139b57212a38"
+    },
+    "scenarioMatrix": [
+        {
+            "requirement": "Accepted planning artifacts authorize implementation",
+            "scenario": "Coordinator accepts exact planning input",
+            "status": "pass",
+            "evidence": [
+                "The archived acceptance binds baseline 25f75b2fd14bcafd7ff8ccb2ee2862a327e19416, planning SHA 4b565562d30cc09eb05887eb8fe1230ec94b3d05, and accepted artifact digest df58dda0391e83f8c5814abf0a6a384c533befca76afc2489c700069abc870f3."
+            ]
+        },
+        {
+            "requirement": "Accepted planning artifacts authorize implementation",
+            "scenario": "Planning scope changes after acceptance",
+            "status": "pass",
+            "evidence": [
+                "Final validation recomputes the accepted planning snapshot from the unique dated archive at the exact candidate revision."
+            ]
+        },
+        {
+            "requirement": "Accepted planning artifacts authorize implementation",
+            "scenario": "Only task completion advances",
+            "status": "pass",
+            "evidence": [
+                "Archived task wording remains accepted while completion markers truthfully record completed work; tasks 5.3 and 5.4 remain incomplete before final evidence and merge."
+            ]
+        },
+        {
+            "requirement": "Work orders define bounded repository operations",
+            "scenario": "Valid bounded work order",
+            "status": "pass",
+            "evidence": [
+                "The active integration work order recomputes to digest b3bae2245d37982a8a64c6cdaf57735448ce3283b237617063c8571ceb834d7e and exactly authorizes the 28/10/1/6 base-to-candidate inventory."
+            ]
+        },
+        {
+            "requirement": "Work orders define bounded repository operations",
+            "scenario": "Invalid or ambiguous path",
+            "status": "pass",
+            "evidence": [
+                "The coordinator root gate passed all 139 workflow tests, including path traversal, case ambiguity, junction escape, shell-wrapper, and protocol-state boundary rejection coverage."
+            ]
+        },
+        {
+            "requirement": "Work orders define bounded repository operations",
+            "scenario": "Work order is not coordinator-issued",
+            "status": "pass",
+            "evidence": [
+                "The order issuer codex-coordinator exactly matches the accepted coordinator identity, and the archived implementation evidence resolves to one validated coordinator-issued work order."
+            ]
+        },
+        {
+            "requirement": "Preflight preserves existing user state",
+            "scenario": "Clean feature branch with permitted user state",
+            "status": "pass",
+            "evidence": [
+                "The protected path remains ordinary untracked, size 15915, and SHA-256 64dd64870e404fdc28154ff44a12aac610a8934526e2a0431780512ac96e2e11 without reading or emitting its contents."
+            ]
+        },
+        {
+            "requirement": "Preflight preserves existing user state",
+            "scenario": "Unsafe execution context",
+            "status": "pass",
+            "evidence": [
+                "HEAD is the declared feature candidate, master remains the accepted baseline, and the bounded adversarial workflow tests cover master, detached, hostile-Git-selector, ignored-path, and redirected-state rejection."
+            ]
+        },
+        {
+            "requirement": "Checkpoint enforces scope and focused verification",
+            "scenario": "Declared implementation passes checkpoint",
+            "status": "pass",
+            "evidence": [
+                "The final checkpoint binds exact candidate 74a8b7c863873c98d94c337e056836e16eeee4e7, digest b3bae2245d37982a8a64c6cdaf57735448ce3283b237617063c8571ceb834d7e, the exact 28/10/1/6 inventory, and one passing review-validation command."
+            ]
+        },
+        {
+            "requirement": "Checkpoint enforces scope and focused verification",
+            "scenario": "Scope or integrity violation",
+            "status": "pass",
+            "evidence": [
+                "Checkpoint and root suites passed coverage for out-of-scope operations, protected classification drift, raw-index mutation, whitespace errors, links, junctions, and case collisions."
+            ]
+        },
+        {
+            "requirement": "Checkpoint enforces scope and focused verification",
+            "scenario": "Focused command fails",
+            "status": "pass",
+            "evidence": [
+                "The exact checkpoint records exit 0 for node --test test/agent-workflow/review-validation.test.mjs; failure and mutation paths are covered by the passing workflow suite."
+            ]
+        },
+        {
+            "requirement": "Reviews bind to exact implementation state",
+            "scenario": "Exact passing review",
+            "status": "pass",
+            "evidence": [
+                "The relocated passing review binds subject be1784ac00bbc778869fcc3389db9c02d9dc5a32, tree 990907200633408cf8a64fccacb8a07696d800fc, raw diff 792f6fdacbb29fe1dbe8763a8b9728c50428982918c1ac04d792806bb1a70f32, and all 28 scenarios and 8 conventions."
+            ]
+        },
+        {
+            "requirement": "Reviews bind to exact implementation state",
+            "scenario": "Implementation changes after review",
+            "status": "pass",
+            "evidence": [
+                "The reviewed implementation is followed only by its validated evidence commit, archive/sync commit, and truthful root-verification task commit; final validation resolves the exact reviewed tree from the candidate history."
+            ]
+        },
+        {
+            "requirement": "Reviews bind to exact implementation state",
+            "scenario": "Risk has no coordinator acceptance",
+            "status": "pass",
+            "evidence": [
+                "The implementation review and this final review have no findings and no accepted risks; no unaccepted risk is used to obtain a passing verdict."
+            ]
+        },
+        {
+            "requirement": "Evidence-only commits cannot modify reviewed content",
+            "scenario": "Valid evidence-only child",
+            "status": "pass",
+            "evidence": [
+                "Independent validation passed for evidence commit af873ca1e8e391ee841722bfc491fb49787699ec with exact parent be1784ac00bbc778869fcc3389db9c02d9dc5a32."
+            ]
+        },
+        {
+            "requirement": "Evidence-only commits cannot modify reviewed content",
+            "scenario": "Evidence commit includes another change",
+            "status": "pass",
+            "evidence": [
+                "The evidence commit delta contains exactly three additions: work-order.json, checkpoint.json, and review-report.json beneath the reviewed subject evidence directory."
+            ]
+        },
+        {
+            "requirement": "Evidence-only commits cannot modify reviewed content",
+            "scenario": "Active evidence is relocated by archive",
+            "status": "pass",
+            "evidence": [
+                "The candidate contains exactly one dated archive root, no active change root, and all three evidence files match their pre-archive bytes exactly."
+            ]
+        },
+        {
+            "requirement": "Repository verification is hermetic and non-source-modifying",
+            "scenario": "Repository verification succeeds",
+            "status": "pass",
+            "evidence": [
+                "Exact captured npm run verify exited 0 on candidate 74a8b7c, with backend 45/45 suites and 240/240 tests, frontend 2/2 suites and 7/7 tests, 139 workflow tests, and preserved repository state."
+            ]
+        },
+        {
+            "requirement": "Repository verification is hermetic and non-source-modifying",
+            "scenario": "Ambient OpenSpec differs or is absent",
+            "status": "pass",
+            "evidence": [
+                "Source review confirms the command plan invokes the repository-installed OpenSpec CLI through process.execPath and never resolves an ambient executable."
+            ]
+        },
+        {
+            "requirement": "Repository verification is hermetic and non-source-modifying",
+            "scenario": "Installed OpenSpec closure differs or is absent",
+            "status": "pass",
+            "evidence": [
+                "The verifier binds Node 22.22.0, OpenSpec 1.6.0, an 80-package lock graph, and installed dependency-tree bytes, then revalidates immediately before invocation; pinned OpenSpec validation passed 2/2."
+            ]
+        },
+        {
+            "requirement": "Repository verification is hermetic and non-source-modifying",
+            "scenario": "A verifier rewrites source",
+            "status": "pass",
+            "evidence": [
+                "The captured root gate reports preserved state; source review confirms before/after repository snapshots run even after a failed sub-gate, and late Node writers are rejected by passing adversarial tests."
+            ]
+        },
+        {
+            "requirement": "Change verification includes the authorized inventory",
+            "scenario": "Integrated change matches its order",
+            "status": "pass",
+            "evidence": [
+                "Independent recomputation from authorization base 317dfa9486f63b782db974faa70d5e6b35057a20 to candidate yields exactly 28 additions, 10 modifications, 1 deletion, and 6 renames, matching work order and checkpoint."
+            ]
+        },
+        {
+            "requirement": "Change verification includes the authorized inventory",
+            "scenario": "Change mode has no integration order",
+            "status": "pass",
+            "evidence": [
+                "The active order has role integration, and the passing workflow suite covers fail-closed rejection before repository commands when that role is absent."
+            ]
+        },
+        {
+            "requirement": "Final integration binds authorization and merge baselines separately",
+            "scenario": "Exact archived candidate is merge-eligible",
+            "status": "pass",
+            "evidence": [
+                "Candidate 74a8b7c and tree 6f073f4 bind the complete 11-commit first-parent history and raw baseline diff while master remains exactly 25f75b2; the archive is unique and complete."
+            ]
+        },
+        {
+            "requirement": "Final integration binds authorization and merge baselines separately",
+            "scenario": "Authorization and merge baselines are conflated",
+            "status": "pass",
+            "evidence": [
+                "The report separately binds authorization base 317dfa9 for the 28/10/1/6 work-order inventory and merge baseline 25f75b2 for the 34/10/1/0 full candidate inventory."
+            ]
+        },
+        {
+            "requirement": "Root workflow tooling has isolated deterministic tests",
+            "scenario": "Tooling tests run outside the product repository state",
+            "status": "pass",
+            "evidence": [
+                "The exact root gate passed all 90 top-level and 139 total Node workflow tests, whose fixtures execute in isolated temporary Git repositories."
+            ]
+        },
+        {
+            "requirement": "Local workflow preserves human and coordinator authority",
+            "scenario": "Scripts complete successfully",
+            "status": "pass",
+            "evidence": [
+                "ADR-0018, TOOL-09, repository instructions, and the unchanged incomplete final-review/merge tasks preserve coordinator ownership beyond machine validation."
+            ]
+        },
+        {
+            "requirement": "Local workflow preserves human and coordinator authority",
+            "scenario": "Master advanced",
+            "status": "pass",
+            "evidence": [
+                "refs/heads/master independently resolves to the accepted merge baseline 25f75b2fd14bcafd7ff8ccb2ee2862a327e19416."
+            ]
+        }
+    ],
+    "conventionMatrix": [
+        {
+            "conventionId": "DOC-05",
+            "status": "pass",
+            "evidence": [
+                "The implementation, truthful archived tasks, byte-identical canonical requirements, exact root verification, and OpenSpec validation agree."
+            ]
+        },
+        {
+            "conventionId": "TEST-05",
+            "status": "pass",
+            "evidence": [
+                "Core workflow operations and state-changing Git interactions have direct success and adversarial coverage; the root gate passed 139 workflow tests."
+            ]
+        },
+        {
+            "conventionId": "TEST-06",
+            "status": "pass",
+            "evidence": [
+                "Workflow fixtures use isolated repositories with no shared mutable state, and the exact root gate passed with no committed skips."
+            ]
+        },
+        {
+            "conventionId": "TEST-08",
+            "status": "pass",
+            "evidence": [
+                "All root workflow tests remain .test.mjs files under test/agent-workflow, use Node's built-in runner, and operate in isolated temporary Git repositories."
+            ]
+        },
+        {
+            "conventionId": "TOOL-01",
+            "status": "pass",
+            "evidence": [
+                "Root formatting passed, representative workflow files resolve to text=auto/eol=lf, and both authorization and baseline git diff --check commands passed."
+            ]
+        },
+        {
+            "conventionId": "TOOL-02",
+            "status": "pass",
+            "evidence": [
+                "The exact root gate passed strict backend and frontend type checking; the change introduces no product TypeScript escape."
+            ]
+        },
+        {
+            "conventionId": "TOOL-05",
+            "status": "pass",
+            "evidence": [
+                "The backend verification sub-gate passed 45 suites and 240 tests together with typecheck, check-only lint, and build."
+            ]
+        },
+        {
+            "conventionId": "TOOL-09",
+            "status": "pass",
+            "evidence": [
+                "The exact candidate root gate exited 0, the final checkpoint is exact, the implementation verify:change evidence is passing, and pinned OpenSpec validation passed 2/2."
+            ]
+        }
+    ],
+    "expectedCommits": [
+        {
+            "sequence": 1,
+            "sha": "38ae26fafcae25a7a9bf3f220c065e764577bf23",
+            "description": "Propose the local agent workflow change."
+        },
+        {
+            "sequence": 2,
+            "sha": "37fa9abb7679f8e33cae84b678c90ddfd6721e0b",
+            "description": "Reconcile local workflow planning scope."
+        },
+        {
+            "sequence": 3,
+            "sha": "26359f5dacf028d5c43e2dd3fa8dd16065ade55b",
+            "description": "Close workflow identity gaps."
+        },
+        {
+            "sequence": 4,
+            "sha": "c66c1be7a1534e2bc2629e526b77081a72971c3e",
+            "description": "Renew local workflow plan acceptance."
+        },
+        {
+            "sequence": 5,
+            "sha": "aeaf7cb5a4d9d326300d4eba1bf80ad6fd5b9909",
+            "description": "Clarify pinned tool tamper behavior."
+        },
+        {
+            "sequence": 6,
+            "sha": "4b565562d30cc09eb05887eb8fe1230ec94b3d05",
+            "description": "Prepare renewed planning snapshot."
+        },
+        {
+            "sequence": 7,
+            "sha": "317dfa9486f63b782db974faa70d5e6b35057a20",
+            "description": "Renew local workflow acceptance."
+        },
+        {
+            "sequence": 8,
+            "sha": "be1784ac00bbc778869fcc3389db9c02d9dc5a32",
+            "description": "Establish the reviewed local agent workflow implementation."
+        },
+        {
+            "sequence": 9,
+            "sha": "af873ca1e8e391ee841722bfc491fb49787699ec",
+            "description": "Record validated implementation review evidence."
+        },
+        {
+            "sequence": 10,
+            "sha": "fc1c44d9c8d0070b61704268a0626912ee14b2fd",
+            "description": "Synchronize and archive the local agent workflow change."
+        },
+        {
+            "sequence": 11,
+            "sha": "74a8b7c863873c98d94c337e056836e16eeee4e7",
+            "description": "Record exact archived root verification."
+        }
+    ],
+    "orderedIntegrations": [
+        {
+            "sequence": 1,
+            "integrationId": "local-agent-workflow-implementation",
+            "expectedCommitSha": "be1784ac00bbc778869fcc3389db9c02d9dc5a32",
+            "workOrderId": "integrate-establish-local-agent-workflow-topology-v3",
+            "workOrderDigest": "c8b9b1bf1e8303cc46cc254214e171accd9778d22eb236daf286f997265d5d81",
+            "sourceSubjectSha": "be1784ac00bbc778869fcc3389db9c02d9dc5a32",
+            "sourceTreeSha": "990907200633408cf8a64fccacb8a07696d800fc",
+            "fileOperations": {
+                "additions": [
+                    ".agents/templates/integration-report.example.json",
+                    ".agents/templates/integration-report.schema.json",
+                    ".agents/templates/review-report.example.json",
+                    ".agents/templates/review-report.schema.json",
+                    ".agents/templates/work-order.example.json",
+                    ".agents/templates/work-order.schema.json",
+                    ".gitattributes",
+                    ".nvmrc",
+                    "docs/adr/0018-establish-accepted-local-agent-workflow.md",
+                    "docs/adr/0019-place-repository-tooling-tests-at-root.md",
+                    "docs/adr/0020-bind-complete-tool-and-archive-identities.md",
+                    "package-lock.json",
+                    "package.json",
+                    "scripts/agent-workflow/checkpoint.mjs",
+                    "scripts/agent-workflow/preflight.mjs",
+                    "scripts/agent-workflow/validate-evidence-commit.mjs",
+                    "scripts/agent-workflow/validate-review.mjs",
+                    "scripts/agent-workflow/verify-local.mjs",
+                    "test/agent-workflow/checkpoint.test.mjs",
+                    "test/agent-workflow/evidence-commit-validation.test.mjs",
+                    "test/agent-workflow/preflight.test.mjs",
+                    "test/agent-workflow/review-validation.test.mjs",
+                    "test/agent-workflow/verify-local.test.mjs",
+                    "test/agent-workflow/workflow-test-helpers.mjs"
+                ],
+                "modifications": [
+                    ".gitignore",
+                    "AGENTS.md",
+                    "CLAUDE.md",
+                    "backend/CONVENTIONS.md",
+                    "backend/package.json",
+                    "backend/tsconfig.json",
+                    "docs/adr/README.md",
+                    "docs/adr/index.md",
+                    "docs/architecture/validation-and-tooling.md",
+                    "frontend/package.json",
+                    "openspec/changes/establish-local-agent-workflow/tasks.md"
+                ],
+                "deletions": ["backend/tsconfig.tsbuildinfo"],
+                "renames": []
+            }
+        }
+    ],
+    "fileOperations": {
+        "additions": [
+            ".agents/templates/integration-report.example.json",
+            ".agents/templates/integration-report.schema.json",
+            ".agents/templates/review-report.example.json",
+            ".agents/templates/review-report.schema.json",
+            ".agents/templates/work-order.example.json",
+            ".agents/templates/work-order.schema.json",
+            ".gitattributes",
+            ".nvmrc",
+            "docs/adr/0018-establish-accepted-local-agent-workflow.md",
+            "docs/adr/0019-place-repository-tooling-tests-at-root.md",
+            "docs/adr/0020-bind-complete-tool-and-archive-identities.md",
+            "openspec/changes/archive/2026-08-05-establish-local-agent-workflow/.openspec.yaml",
+            "openspec/changes/archive/2026-08-05-establish-local-agent-workflow/acceptance.json",
+            "openspec/changes/archive/2026-08-05-establish-local-agent-workflow/design.md",
+            "openspec/changes/archive/2026-08-05-establish-local-agent-workflow/evidence/be1784ac00bbc778869fcc3389db9c02d9dc5a32/checkpoint.json",
+            "openspec/changes/archive/2026-08-05-establish-local-agent-workflow/evidence/be1784ac00bbc778869fcc3389db9c02d9dc5a32/review-report.json",
+            "openspec/changes/archive/2026-08-05-establish-local-agent-workflow/evidence/be1784ac00bbc778869fcc3389db9c02d9dc5a32/work-order.json",
+            "openspec/changes/archive/2026-08-05-establish-local-agent-workflow/proposal.md",
+            "openspec/changes/archive/2026-08-05-establish-local-agent-workflow/specs/local-agent-workflow/spec.md",
+            "openspec/changes/archive/2026-08-05-establish-local-agent-workflow/tasks.md",
+            "openspec/specs/local-agent-workflow/spec.md",
+            "package-lock.json",
+            "package.json",
+            "scripts/agent-workflow/checkpoint.mjs",
+            "scripts/agent-workflow/preflight.mjs",
+            "scripts/agent-workflow/validate-evidence-commit.mjs",
+            "scripts/agent-workflow/validate-review.mjs",
+            "scripts/agent-workflow/verify-local.mjs",
+            "test/agent-workflow/checkpoint.test.mjs",
+            "test/agent-workflow/evidence-commit-validation.test.mjs",
+            "test/agent-workflow/preflight.test.mjs",
+            "test/agent-workflow/review-validation.test.mjs",
+            "test/agent-workflow/verify-local.test.mjs",
+            "test/agent-workflow/workflow-test-helpers.mjs"
+        ],
+        "modifications": [
+            ".gitignore",
+            "AGENTS.md",
+            "CLAUDE.md",
+            "backend/CONVENTIONS.md",
+            "backend/package.json",
+            "backend/tsconfig.json",
+            "docs/adr/README.md",
+            "docs/adr/index.md",
+            "docs/architecture/validation-and-tooling.md",
+            "frontend/package.json"
+        ],
+        "deletions": ["backend/tsconfig.tsbuildinfo"],
+        "renames": []
+    },
+    "commands": [
+        {
+            "commandId": "final-integration-review-tests",
+            "cwd": ".",
+            "executable": "node",
+            "arguments": ["--test", "test/agent-workflow/review-validation.test.mjs"],
+            "exitCode": 0,
+            "stdoutSha256": "64602fb5b2fa0a8b16e49a4e5683cba7801f99a4a89e3502b9e490f6a9fb2e5f",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "outcome": "pass"
+        }
+    ],
+    "requiredChecks": [
+        {
+            "checkId": "root-verify",
+            "outcome": "pass",
+            "result": {
+                "cwd": ".",
+                "executable": "npm",
+                "arguments": ["run", "verify"],
+                "exitCode": 0,
+                "stdoutSha256": "a20a163b2ae396f777306e6e52d2b1e4ebdcba06ca521795674487931b56c83d",
+                "stderrSha256": "2a8ed82f246828e532891626a7d66ca3f7d0588442c46950705f080c00efa310"
+            },
+            "evidence": [
+                "Exact external capture on candidate 74a8b7c exited 0 after backend 45/45 suites and 240/240 tests, frontend 2/2 suites and 7/7 tests with 8 pre-existing warnings, 139 workflow tests, pinned OpenSpec validation, and preserved repository state."
+            ]
+        },
+        {
+            "checkId": "openspec-validate-all",
+            "outcome": "pass",
+            "result": {
+                "cwd": ".",
+                "executable": ".\\node_modules\\.bin\\openspec.cmd",
+                "arguments": ["validate", "--all"],
+                "exitCode": 0,
+                "stdoutSha256": "94ddbe39ec9cacc7dadf7f570c57eaab7b7b25e6ef49dca6768976a87bc7d14d",
+                "stderrSha256": "5bc31df123a2e521acdd2c0d9477b367feec506471a91065d0a6b32c09089ed5"
+            },
+            "evidence": [
+                "The separately captured pinned OpenSpec command exited 0 and validated both archived changes, 2/2."
+            ]
+        }
+    ],
+    "reviewReferences": [
+        {
+            "reportId": "review-establish-local-agent-workflow-be1784ac",
+            "reportSha256": "d6fb8a1d6695d8250d14c09e8d4b7abb8175192b5f5338c3e885801300416ace",
+            "workOrderDigest": "c8b9b1bf1e8303cc46cc254214e171accd9778d22eb236daf286f997265d5d81",
+            "subjectSha": "be1784ac00bbc778869fcc3389db9c02d9dc5a32",
+            "subjectTreeSha": "990907200633408cf8a64fccacb8a07696d800fc",
+            "verdict": "pass",
+            "evidencePath": "openspec/changes/archive/2026-08-05-establish-local-agent-workflow/evidence/be1784ac00bbc778869fcc3389db9c02d9dc5a32/review-report.json"
+        }
+    ],
+    "evidenceReferences": [
+        {
+            "kind": "work-order",
+            "path": "openspec/changes/archive/2026-08-05-establish-local-agent-workflow/evidence/be1784ac00bbc778869fcc3389db9c02d9dc5a32/work-order.json",
+            "sha256": "c7ca781d29980a17aab4a6c45d0aaa1ef883efa6fb7aa113f883efb20910dfd7",
+            "subjectSha": "be1784ac00bbc778869fcc3389db9c02d9dc5a32"
+        },
+        {
+            "kind": "checkpoint",
+            "path": "openspec/changes/archive/2026-08-05-establish-local-agent-workflow/evidence/be1784ac00bbc778869fcc3389db9c02d9dc5a32/checkpoint.json",
+            "sha256": "f28be776e8865ca2027cd15e3d0daf40b03e6d9f16471313083928f32cc7ebe2",
+            "subjectSha": "be1784ac00bbc778869fcc3389db9c02d9dc5a32"
+        },
+        {
+            "kind": "review-report",
+            "path": "openspec/changes/archive/2026-08-05-establish-local-agent-workflow/evidence/be1784ac00bbc778869fcc3389db9c02d9dc5a32/review-report.json",
+            "sha256": "d6fb8a1d6695d8250d14c09e8d4b7abb8175192b5f5338c3e885801300416ace",
+            "subjectSha": "be1784ac00bbc778869fcc3389db9c02d9dc5a32"
+        }
+    ],
+    "evidenceOnlyCommitValidation": {
+        "commitSha": "af873ca1e8e391ee841722bfc491fb49787699ec",
+        "parentSha": "be1784ac00bbc778869fcc3389db9c02d9dc5a32",
+        "expectedEvidencePaths": [
+            "openspec/changes/establish-local-agent-workflow/evidence/be1784ac00bbc778869fcc3389db9c02d9dc5a32/checkpoint.json",
+            "openspec/changes/establish-local-agent-workflow/evidence/be1784ac00bbc778869fcc3389db9c02d9dc5a32/review-report.json",
+            "openspec/changes/establish-local-agent-workflow/evidence/be1784ac00bbc778869fcc3389db9c02d9dc5a32/work-order.json"
+        ],
+        "fileOperations": {
+            "additions": [
+                "openspec/changes/establish-local-agent-workflow/evidence/be1784ac00bbc778869fcc3389db9c02d9dc5a32/checkpoint.json",
+                "openspec/changes/establish-local-agent-workflow/evidence/be1784ac00bbc778869fcc3389db9c02d9dc5a32/review-report.json",
+                "openspec/changes/establish-local-agent-workflow/evidence/be1784ac00bbc778869fcc3389db9c02d9dc5a32/work-order.json"
+            ],
+            "modifications": [],
+            "deletions": [],
+            "renames": []
+        },
+        "validatorResult": {
+            "cwd": ".",
+            "executable": "node",
+            "arguments": [
+                "scripts/agent-workflow/validate-evidence-commit.mjs",
+                "--commit",
+                "af873ca1e8e391ee841722bfc491fb49787699ec"
+            ],
+            "exitCode": 0,
+            "stdoutSha256": "0124531c510b424beacee6dc6bb86d549df44906b91d26fba82d1de720885ead",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "outcome": "pass"
+    },
+    "findings": [],
+    "finalVerdict": "pass",
+    "acceptedRisks": [],
+    "mergeEligibility": {
+        "eligible": true,
+        "method": "ff-only",
+        "expectedMasterSha": "25f75b2fd14bcafd7ff8ccb2ee2862a327e19416",
+        "candidateSha": "74a8b7c863873c98d94c337e056836e16eeee4e7",
+        "checkedAt": "2026-08-05T07:36:42.000Z",
+        "blockers": []
+    }
+}
