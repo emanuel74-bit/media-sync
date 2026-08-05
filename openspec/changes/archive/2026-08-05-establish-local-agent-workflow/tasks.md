@@ -34,6 +34,6 @@
 ## 5. Synchronization, archive, and final merge
 
 - [x] 5.1 Reconcile task checkboxes with committed evidence, synchronize the delta spec to canonical specs, archive the completed change, and validate the archive.
-- [ ] 5.2 Run the mandatory root `npm run verify` and `openspec validate --all` checks on the archived candidate.
+- [x] 5.2 Run the mandatory root `npm run verify` and `openspec validate --all` checks on the archived candidate.
 - [ ] 5.3 Obtain a fresh final integration review over the exact archived candidate, resolve any findings, and validate the final evidence-only commit.
 - [ ] 5.4 Fast-forward the accepted baseline branch only after all gates pass, then rerun `npm run verify` and `openspec validate --all` on the merged branch.
