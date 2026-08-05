@@ -28,12 +28,12 @@
 ## 4. Integration and implementation review
 
 - [x] 4.1 Integrate the governance, contract, protocol, verifier, and test commits in dependency order and validate the aggregate file-operation inventory after each step.
-- [ ] 4.2 Run `npm run verify:change -- establish-local-agent-workflow`, then obtain a fresh implementation review bound to the exact candidate SHA and tree.
-- [ ] 4.3 Resolve all review findings, rerun affected checks, obtain a fresh passing review, and add only validated evidence commits.
+- [x] 4.2 Run `npm run verify:change -- establish-local-agent-workflow`, then obtain a fresh implementation review bound to the exact candidate SHA and tree.
+- [x] 4.3 Resolve all review findings, rerun affected checks, obtain a fresh passing review, and add only validated evidence commits.
 
 ## 5. Synchronization, archive, and final merge
 
-- [ ] 5.1 Reconcile task checkboxes with committed evidence, synchronize the delta spec to canonical specs, archive the completed change, and validate the archive.
+- [x] 5.1 Reconcile task checkboxes with committed evidence, synchronize the delta spec to canonical specs, archive the completed change, and validate the archive.
 - [ ] 5.2 Run the mandatory root `npm run verify` and `openspec validate --all` checks on the archived candidate.
 - [ ] 5.3 Obtain a fresh final integration review over the exact archived candidate, resolve any findings, and validate the final evidence-only commit.
 - [ ] 5.4 Fast-forward the accepted baseline branch only after all gates pass, then rerun `npm run verify` and `openspec validate --all` on the merged branch.
