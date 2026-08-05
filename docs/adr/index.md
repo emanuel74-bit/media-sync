@@ -27,6 +27,7 @@ By concern, for someone new to the repository:
 | Why are imports and barrels like this? | [0004](0004-curated-feature-root-barrels.md), [0008](0008-runtime-safe-barrel-imports.md) |
 | Why is there no wrapper service here? | [0005](0005-no-pass-through-services.md) |
 | What documents what? | [0006](0006-documentation-tooling-choices.md), [0015](0015-adopt-spec-driven-development-and-obsidian-navigation.md), [0016](0016-drop-likec4-architecture-model.md), [0017](0017-feature-and-subsystem-documentation.md) |
+| How is local agent work accepted and verified? | [0018](0018-establish-accepted-local-agent-workflow.md), [0019](0019-place-repository-tooling-tests-at-root.md), [0020](0020-bind-complete-tool-and-archive-identities.md) |
 | How is this deployed? | [0007](0007-backend-deploy-layout.md), [0012](0012-cluster-nodes-as-statefulset.md) |
 | How does the system know which nodes exist? | [0009](0009-pod-derived-cluster-topology.md), [0012](0012-cluster-nodes-as-statefulset.md) |
 | How do alerts work? | [0010](0010-event-driven-alert-pipeline.md), [0011](0011-node-resource-alerts-third-producer.md) |
@@ -53,6 +54,9 @@ By concern, for someone new to the repository:
 | [0015](0015-adopt-spec-driven-development-and-obsidian-navigation.md) | Accepted | Specification workflow | None |
 | [0016](0016-drop-likec4-architecture-model.md) | Accepted | Documentation tooling | LikeC4 trial decision in [0006](0006-documentation-tooling-choices.md) |
 | [0017](0017-feature-and-subsystem-documentation.md) | Accepted | Architecture documentation | None |
+| [0018](0018-establish-accepted-local-agent-workflow.md) | Accepted | Local agent workflow and verification | None |
+| [0019](0019-place-repository-tooling-tests-at-root.md) | Accepted | Repository tooling test layout | None |
+| [0020](0020-bind-complete-tool-and-archive-identities.md) | Accepted | Complete workflow identities | None |
 
 ## Related
 

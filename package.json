@@ -1,0 +1,16 @@
+{
+    "name": "media-sync-repository-tools",
+    "version": "0.0.0",
+    "private": true,
+    "engines": {
+        "node": "22.22.0"
+    },
+    "scripts": {
+        "verify": "node scripts/agent-workflow/verify-local.mjs repository",
+        "verify:change": "node scripts/agent-workflow/verify-local.mjs change",
+        "test:agent-workflow": "node --test test/agent-workflow/preflight.test.mjs test/agent-workflow/checkpoint.test.mjs test/agent-workflow/review-validation.test.mjs test/agent-workflow/evidence-commit-validation.test.mjs test/agent-workflow/verify-local.test.mjs"
+    },
+    "devDependencies": {
+        "@fission-ai/openspec": "1.6.0"
+    }
+}

@@ -26,3 +26,6 @@ number, then add a row here.
 | [0015](0015-adopt-spec-driven-development-and-obsidian-navigation.md) | Adopt OpenSpec-driven development and Obsidian navigation | Accepted | DOC-05 |
 | [0016](0016-drop-likec4-architecture-model.md) | End the LikeC4 trial — Mermaid is the sole diagram source | Accepted | DOC-02, DOC-04 (retired) |
 | [0017](0017-feature-and-subsystem-documentation.md) | Maintain feature and subsystem architecture documentation | Accepted | DOC-06 |
+| [0018](0018-establish-accepted-local-agent-workflow.md) | Establish an accepted local-agent workflow | Accepted | TOOL-09, DOC-05 |
+| [0019](0019-place-repository-tooling-tests-at-root.md) | Place repository tooling tests at the repository root | Accepted | TEST-08, TOOL-09 |
+| [0020](0020-bind-complete-tool-and-archive-identities.md) | Bind complete tool and archive identities | Accepted | TOOL-09, TEST-05, DOC-05 |

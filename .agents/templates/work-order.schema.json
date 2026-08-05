@@ -1,0 +1,230 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://media-sync.local/schemas/agent-work-order-v1.schema.json",
+    "title": "media-sync local agent work order",
+    "description": "A coordinator-issued, repository-local work order. Phase 2 semantic validators additionally enforce platform-appropriate path uniqueness (case-normalized on Windows and case-sensitive elsewhere), scope precedence, operation disjointness, and that every expected operation is allowed and is not forbidden or protected. They preserve the full declared executable token and reject direct shells, shell-script executables, and indirect wrapper chains that target a shell; this schema constrains commands to fixed argv representation but cannot enforce those execution semantics by itself.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "schemaVersion",
+        "workOrderId",
+        "changeId",
+        "role",
+        "taskIds",
+        "acceptedArtifactDigest",
+        "baseSha",
+        "issuedBy",
+        "issuedAt",
+        "allowedPaths",
+        "forbiddenPaths",
+        "protectedPaths",
+        "expectedAdditions",
+        "expectedModifications",
+        "expectedDeletions",
+        "expectedRenames",
+        "requiredDocuments",
+        "conventionIds",
+        "focusedCommands",
+        "nonGoals",
+        "stopConditions"
+    ],
+    "properties": {
+        "schemaVersion": {
+            "description": "The version of this work-order contract.",
+            "const": 1
+        },
+        "workOrderId": {
+            "description": "A stable identity unique within the change.",
+            "$ref": "#/$defs/kebabId"
+        },
+        "changeId": {
+            "description": "The OpenSpec change authorized by this order.",
+            "$ref": "#/$defs/kebabId"
+        },
+        "role": {
+            "description": "The bounded role receiving implementation authority.",
+            "enum": ["implementer", "integration"]
+        },
+        "taskIds": {
+            "description": "The exact accepted OpenSpec task identifiers assigned to this order.",
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "$ref": "#/$defs/taskId"
+            }
+        },
+        "acceptedArtifactDigest": {
+            "description": "The accepted SHA-256 planning-artifact digest.",
+            "$ref": "#/$defs/sha256"
+        },
+        "baseSha": {
+            "description": "The full Git commit SHA from which work is authorized.",
+            "$ref": "#/$defs/gitSha"
+        },
+        "issuedBy": {
+            "description": "The configured coordinator identity that issued this order.",
+            "$ref": "#/$defs/kebabId"
+        },
+        "issuedAt": {
+            "description": "The RFC 3339 time at which the coordinator issued this order.",
+            "type": "string",
+            "format": "date-time"
+        },
+        "allowedPaths": {
+            "description": "Exact repository paths on which this order may perform declared operations.",
+            "$ref": "#/$defs/pathSet"
+        },
+        "forbiddenPaths": {
+            "description": "Exact repository paths that this order must not change; this set overrides allowed paths.",
+            "$ref": "#/$defs/pathSet"
+        },
+        "protectedPaths": {
+            "description": "Exact pre-existing repository paths whose state must remain unchanged; this set overrides allowed paths.",
+            "$ref": "#/$defs/pathSet"
+        },
+        "expectedAdditions": {
+            "description": "The complete set of paths expected to be added.",
+            "$ref": "#/$defs/pathSet"
+        },
+        "expectedModifications": {
+            "description": "The complete set of paths expected to be modified.",
+            "$ref": "#/$defs/pathSet"
+        },
+        "expectedDeletions": {
+            "description": "The complete set of paths expected to be deleted.",
+            "$ref": "#/$defs/pathSet"
+        },
+        "expectedRenames": {
+            "description": "The complete set of explicit source-to-destination renames. All expected paths and rename endpoints must be case-normalized-disjoint across operation classes.",
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+                "$ref": "#/$defs/rename"
+            }
+        },
+        "requiredDocuments": {
+            "description": "Repository documents that must be read before implementation.",
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "$ref": "#/$defs/repositoryPath"
+            }
+        },
+        "conventionIds": {
+            "description": "Stable convention-rule identifiers applicable to the assigned work.",
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "$ref": "#/$defs/conventionId"
+            }
+        },
+        "focusedCommands": {
+            "description": "Commands represented as fixed working directories and argv arrays, executed in array order and stopped at the first failure. Command identity retains the full executable token. The Phase 2 semantic validator rejects direct shells, shell-script extensions, and indirect wrapper chains such as env sh -c, BusyBox shell applets, and package-runner shell targets.",
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "$ref": "#/$defs/focusedCommand"
+            }
+        },
+        "nonGoals": {
+            "description": "Explicit outcomes that this order does not authorize.",
+            "$ref": "#/$defs/nonEmptyTextSet"
+        },
+        "stopConditions": {
+            "description": "Conditions that require the role to stop and return control to the coordinator.",
+            "$ref": "#/$defs/nonEmptyTextSet"
+        }
+    },
+    "$defs": {
+        "kebabId": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "taskId": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*(?:\\.[1-9][0-9]*)*$"
+        },
+        "gitSha": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$"
+        },
+        "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+        },
+        "repositoryPath": {
+            "description": "A non-empty repository-relative POSIX path. Absolute paths, dot segments, backslashes, control characters, Windows-invalid characters, repeated separators, and trailing separators are rejected.",
+            "type": "string",
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*//)(?!.*[\\\\:*?\"<>|])(?!.*[\\u0000-\\u001f\\u007f])[^/]+(?:/[^/]+)*$"
+        },
+        "pathSet": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+                "$ref": "#/$defs/repositoryPath"
+            }
+        },
+        "rename": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["from", "to"],
+            "properties": {
+                "from": {
+                    "$ref": "#/$defs/repositoryPath"
+                },
+                "to": {
+                    "$ref": "#/$defs/repositoryPath"
+                }
+            }
+        },
+        "conventionId": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9]*-[0-9]{2}$"
+        },
+        "focusedCommand": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["commandId", "cwd", "argv"],
+            "properties": {
+                "commandId": {
+                    "$ref": "#/$defs/kebabId"
+                },
+                "cwd": {
+                    "description": "A repository-relative working directory; a single dot denotes the repository root.",
+                    "anyOf": [
+                        {
+                            "const": "."
+                        },
+                        {
+                            "$ref": "#/$defs/repositoryPath"
+                        }
+                    ]
+                },
+                "argv": {
+                    "description": "The full declared executable token followed by its fixed arguments.",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": "^[^\\u0000\\r\\n]+$"
+                    }
+                }
+            }
+        },
+        "nonEmptyTextSet": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": ".*\\S.*"
+            }
+        }
+    }
+}

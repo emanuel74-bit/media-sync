@@ -62,7 +62,7 @@ Enforced: review.
 **TOOL-04** — Rule: Imports MUST be sorted by the perfectionist scheme: grouped (builtin → external → internal `@/**` → relative), line-length ascending within groups, blank line between groups.
 Enforced: tooling (`.eslintrc.json`).
 
-**TOOL-05** — Rule: `npm run verify` (typecheck + lint + build + test) MUST pass before a change is considered done.
+**TOOL-05** — Rule: `npm run verify` from `backend/` (typecheck + lint + build + test) MUST pass as the backend verification sub-gate before a change is considered done.
 Enforced: tooling.
 
 **TOOL-06** — Rule: Bindings are `const` by default; `var` is forbidden. A surviving `let` is a smell to resolve, in order of preference: (a) a single expression (ternary / `??` / `Array.map`/`reduce`); (b) destructuring the result of one call that does the branching (`const { a, b } = compute()`); (c) extracting a named **private/local helper** that returns the value, when the computation is a nameable concept (PHIL-06 applies — extract only if the caller reads better). Keep the `let` only when none of those is clearer (a hot-loop accumulator, genuinely incremental construction). Do NOT push one-off `let`-elimination into a shared `.util.ts` — that file is for reusable pure helpers (NAME-01/02); a one-off is a private method or local function.
@@ -76,6 +76,10 @@ Enforced: review.
 **TOOL-08** — Rule: One operation per line. Do not collapse multiple bindings, or a resolve-and-then-use, into a single dense line to save vertical space — give each named step its own `const` so the reader gets a name for each intermediate. Readability beats line count (the statement-level companion to PHIL-06; the counterweight is real — do not pad trivial one-liners into three).
 Example: `StreamCollectionService.collectFromNodes` binds each node's client, its listing, and the tagged result on separate lines rather than one nested expression.
 Enforced: review.
+
+**TOOL-09** — Rule: Root `npm run verify` MUST be the hermetic, source-non-mutating repository completion gate and MUST compose the required backend, frontend, workflow-protocol, schema, documentation-link, and OpenSpec checks. For an accepted local-agent change, `npm run verify:change -- <change-id>` MUST additionally validate the accepted planning digest, active integration work order, checkpoint, and complete base-to-candidate file-operation inventory before exact-state review. Review and evidence records have their own later validation gates. The root package MUST pin the supported Node and OpenSpec versions used by these gates.
+Decision history: [ADR-0018](../docs/adr/0018-establish-accepted-local-agent-workflow.md).
+Enforced: tooling (`npm run verify`, `npm run verify:change`).
 
 ---
 
@@ -426,6 +430,10 @@ Example: `src/streams/services/assignment/hash-stream-assignment.policy.ts` → 
 
 **TEST-07** — Rule: End-to-end API checks live in the single backend-root smoke script (`test.ps1`, with an `-Up` switch to start the stack) and run against a live stack; they are not part of `npm test`. Smoke checks must clean up what they create.
 
+**TEST-08** — Rule: `TEST-01` and `TEST-02` govern backend TypeScript tests. Root ESM workflow tests are the sole layout exception: they live under `test/agent-workflow/*.test.mjs`, mirror `scripts/agent-workflow/` by concern, use Node's built-in test runner, and execute in isolated temporary Git repositories without shared mutable state or committed skips.
+Decision history: [ADR-0019](../docs/adr/0019-place-repository-tooling-tests-at-root.md).
+Enforced: tooling (`npm run verify`).
+
 ---
 
 ## 18. DOC — Documentation & decisions
@@ -442,8 +450,8 @@ Retired text: While the LikeC4 trial runs ([ADR-0006](../docs/adr/0006-documenta
 
 ---
 
-**DOC-05** — Rule: A non-trivial change that adds or changes observable behavior, a public contract, schema, event, architecture, cross-feature behavior, tooling, or a significant refactor MUST have an active OpenSpec change under `openspec/changes/` before production implementation begins. Trivial isolated changes that do not alter observable behavior MAY skip OpenSpec. `openspec/specs/` records canonical intended behavior; `docs/adr/` records durable decisions; this file remains the current engineering law. A change is complete only when its implementation, tasks, specifications, `npm run verify`, and `openspec validate --all` agree.
-Decision history: [ADR-0015](../docs/adr/0015-adopt-spec-driven-development-and-obsidian-navigation.md).
+**DOC-05** — Rule: A non-trivial change that adds or changes observable behavior, a public contract, schema, event, architecture, cross-feature behavior, tooling, or a significant refactor MUST have an active OpenSpec change under `openspec/changes/` before production implementation begins. Trivial isolated changes that do not alter observable behavior MAY skip OpenSpec. `openspec/specs/` records canonical intended behavior; `docs/adr/` records durable decisions; this file remains the current engineering law. A change is complete only when its implementation, tasks, specifications, root `npm run verify`, and `openspec validate --all` agree. Repository-local multi-agent implementation additionally requires accepted planning and the `npm run verify:change -- <change-id>` gate defined by TOOL-09.
+Decision history: [ADR-0015](../docs/adr/0015-adopt-spec-driven-development-and-obsidian-navigation.md), [ADR-0018](../docs/adr/0018-establish-accepted-local-agent-workflow.md).
 Enforced: review + tooling.
 
 **DOC-06** — Rule: Every verified top-level backend feature MUST have one architecture document at `docs/features/<feature>.md`. A capability MUST also have a document under `docs/subsystems/` when it coordinates two or more features, implements an end-to-end runtime lifecycle, crosses feature boundaries through events, combines domain behavior with an external integration, or has material failure, consistency, or idempotency semantics. Each feature or subsystem document MUST identify its responsibility boundaries, supported public surfaces, direct participants, owned data, events, primary flows, failure behavior, real code and test paths, relevant canonical OpenSpec specifications (or explicitly state that none exists), relevant ADRs, applicable convention rule IDs, evidence for material claims, and a `last_verified` date. These documents describe architecture, ownership, and implementation structure; `openspec/specs/` remains authoritative for intended observable behavior, `docs/adr/` for durable decision rationale, this registry for current engineering law, and code/tests for implementation evidence. A change that materially alters a feature responsibility or boundary, public surface, subsystem flow, state or persistence ownership, event contract, cross-feature dependency, integration boundary, failure behavior, or idempotency/consistency guarantee MUST update the affected feature or subsystem documents in the same change.

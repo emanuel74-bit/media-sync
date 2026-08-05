@@ -1,0 +1,72 @@
+{
+    "schemaVersion": 1,
+    "workOrderId": "establish-local-agent-workflow-contracts",
+    "changeId": "establish-local-agent-workflow",
+    "role": "implementer",
+    "taskIds": ["1.2"],
+    "acceptedArtifactDigest": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "baseSha": "0123456789abcdef0123456789abcdef01234567",
+    "issuedBy": "codex-coordinator",
+    "issuedAt": "2026-07-24T13:05:00Z",
+    "allowedPaths": [
+        ".agents/templates/work-order.example.json",
+        ".agents/templates/work-order.schema.json",
+        ".gitignore"
+    ],
+    "forbiddenPaths": [
+        "AGENTS.md",
+        "CLAUDE.md",
+        "backend/CONVENTIONS.md",
+        "scripts/agent-workflow/preflight.mjs"
+    ],
+    "protectedPaths": [
+        ".claude/settings.local.json",
+        "openspec/changes/establish-local-agent-workflow/acceptance.json",
+        "openspec/changes/establish-local-agent-workflow/design.md",
+        "openspec/changes/establish-local-agent-workflow/proposal.md",
+        "openspec/changes/establish-local-agent-workflow/specs/local-agent-workflow/spec.md",
+        "openspec/changes/establish-local-agent-workflow/tasks.md"
+    ],
+    "expectedAdditions": [
+        ".agents/templates/work-order.example.json",
+        ".agents/templates/work-order.schema.json"
+    ],
+    "expectedModifications": [".gitignore"],
+    "expectedDeletions": [],
+    "expectedRenames": [],
+    "requiredDocuments": [
+        "backend/CONVENTIONS.md",
+        "docs/adr/0015-adopt-spec-driven-development-and-obsidian-navigation.md",
+        "openspec/changes/establish-local-agent-workflow/design.md",
+        "openspec/changes/establish-local-agent-workflow/proposal.md",
+        "openspec/changes/establish-local-agent-workflow/specs/local-agent-workflow/spec.md",
+        "openspec/changes/establish-local-agent-workflow/tasks.md"
+    ],
+    "conventionIds": ["DOC-01", "DOC-03", "DOC-05", "TEST-06", "TOOL-01", "TOOL-05"],
+    "focusedCommands": [
+        {
+            "commandId": "validate-contract-examples",
+            "cwd": ".",
+            "argv": ["node", "--test", "test/agent-workflow/schema-contracts.test.mjs"]
+        },
+        {
+            "commandId": "validate-openspec",
+            "cwd": ".",
+            "argv": [
+                "node",
+                "node_modules/@fission-ai/openspec/bin/openspec.js",
+                "validate",
+                "--all"
+            ]
+        }
+    ],
+    "nonGoals": [
+        "Do not implement workflow scripts or repository verification.",
+        "Do not change application behavior or public contracts."
+    ],
+    "stopConditions": [
+        "Stop if an assigned path overlaps pre-existing user work.",
+        "Stop if the accepted planning digest or declared base cannot be verified.",
+        "Stop if implementation requires a path or operation not declared by this order."
+    ]
+}

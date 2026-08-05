@@ -2,6 +2,7 @@
 /backend/dist/
 /frontend/node_modules/
 /frontend/dist/
+/node_modules/
 /docs/architecture/node_modules/
 /docs/architecture/dist/
 /docs/architecture/export/
@@ -10,3 +11,5 @@
 # Personal Obsidian vault state and plugins
 .obsidian/
 # media-sync-ai-workflow:end
+
+/.agents/work/

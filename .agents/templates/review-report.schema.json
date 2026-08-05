@@ -1,0 +1,439 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://media-sync.local/schemas/review-report.schema.json",
+    "title": "Media Sync implementation review report",
+    "description": "Versioned contract for a fresh review of one exact implementation state.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "schemaVersion",
+        "reportKind",
+        "reportId",
+        "changeId",
+        "reviewer",
+        "workOrder",
+        "acceptedArtifactDigest",
+        "git",
+        "scenarioMatrix",
+        "conventionMatrix",
+        "fileOperations",
+        "commands",
+        "findings",
+        "verdict",
+        "acceptedRisks"
+    ],
+    "properties": {
+        "schemaVersion": {
+            "const": 1
+        },
+        "reportKind": {
+            "const": "implementation-review"
+        },
+        "reportId": {
+            "$ref": "#/$defs/identifier"
+        },
+        "changeId": {
+            "$ref": "#/$defs/identifier"
+        },
+        "reviewer": {
+            "$ref": "#/$defs/reviewer"
+        },
+        "workOrder": {
+            "$ref": "#/$defs/workOrderReference"
+        },
+        "acceptedArtifactDigest": {
+            "$ref": "#/$defs/sha256"
+        },
+        "git": {
+            "$ref": "#/$defs/gitIdentity"
+        },
+        "scenarioMatrix": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "$ref": "#/$defs/scenarioResult"
+            }
+        },
+        "conventionMatrix": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "$ref": "#/$defs/conventionResult"
+            }
+        },
+        "fileOperations": {
+            "$ref": "#/$defs/fileOperationInventory"
+        },
+        "commands": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "$ref": "#/$defs/commandResult"
+            }
+        },
+        "findings": {
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/finding"
+            }
+        },
+        "verdict": {
+            "enum": ["pass", "changes-required", "pass-with-accepted-risks"]
+        },
+        "acceptedRisks": {
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/acceptedRisk"
+            }
+        }
+    },
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "verdict": {
+                        "const": "pass-with-accepted-risks"
+                    }
+                },
+                "required": ["verdict"]
+            },
+            "then": {
+                "properties": {
+                    "acceptedRisks": {
+                        "minItems": 1
+                    }
+                }
+            },
+            "else": {
+                "properties": {
+                    "acceptedRisks": {
+                        "maxItems": 0
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "verdict": {
+                        "const": "changes-required"
+                    }
+                },
+                "required": ["verdict"]
+            },
+            "then": {
+                "properties": {
+                    "findings": {
+                        "minItems": 1
+                    }
+                }
+            }
+        }
+    ],
+    "$defs": {
+        "identifier": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"
+        },
+        "nonEmptyString": {
+            "type": "string",
+            "minLength": 1
+        },
+        "sha1": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$"
+        },
+        "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+        },
+        "repoPath": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*(?:^|/)\\.(?:/|$))(?!.*//)(?!.*\\\\)[^/]+(?:/[^/]+)*$"
+        },
+        "workingDirectory": {
+            "anyOf": [
+                {
+                    "const": "."
+                },
+                {
+                    "$ref": "#/$defs/repoPath"
+                }
+            ]
+        },
+        "reviewer": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["reviewerId", "role", "reviewedAt"],
+            "properties": {
+                "reviewerId": {
+                    "$ref": "#/$defs/identifier"
+                },
+                "role": {
+                    "const": "fresh-implementation-reviewer"
+                },
+                "reviewedAt": {
+                    "type": "string",
+                    "format": "date-time"
+                }
+            }
+        },
+        "workOrderReference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["workOrderId", "workOrderDigest"],
+            "properties": {
+                "workOrderId": {
+                    "$ref": "#/$defs/identifier"
+                },
+                "workOrderDigest": {
+                    "$ref": "#/$defs/sha256"
+                }
+            }
+        },
+        "gitIdentity": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["baseSha", "subjectSha", "subjectTreeSha", "rawDiffSha256"],
+            "properties": {
+                "baseSha": {
+                    "$ref": "#/$defs/sha1"
+                },
+                "subjectSha": {
+                    "$ref": "#/$defs/sha1"
+                },
+                "subjectTreeSha": {
+                    "$ref": "#/$defs/sha1"
+                },
+                "rawDiffSha256": {
+                    "description": "SHA-256 of the canonical git diff --binary --full-index --no-ext-diff --no-textconv --find-renames=50% --diff-algorithm=default --no-indent-heuristic output from baseSha to subjectSha.",
+                    "$ref": "#/$defs/sha256"
+                }
+            }
+        },
+        "evidenceText": {
+            "type": "string",
+            "minLength": 1
+        },
+        "scenarioResult": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["requirement", "scenario", "status", "evidence"],
+            "properties": {
+                "requirement": {
+                    "$ref": "#/$defs/nonEmptyString"
+                },
+                "scenario": {
+                    "$ref": "#/$defs/nonEmptyString"
+                },
+                "status": {
+                    "enum": ["pass", "fail", "not-applicable"]
+                },
+                "evidence": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/$defs/evidenceText"
+                    }
+                }
+            }
+        },
+        "conventionResult": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["conventionId", "status", "evidence"],
+            "properties": {
+                "conventionId": {
+                    "type": "string",
+                    "pattern": "^[A-Z]+-[0-9]{2}$"
+                },
+                "status": {
+                    "enum": ["pass", "fail", "not-applicable"]
+                },
+                "evidence": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/$defs/evidenceText"
+                    }
+                }
+            }
+        },
+        "rename": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["from", "to"],
+            "properties": {
+                "from": {
+                    "$ref": "#/$defs/repoPath"
+                },
+                "to": {
+                    "$ref": "#/$defs/repoPath"
+                }
+            }
+        },
+        "fileOperationInventory": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["additions", "modifications", "deletions", "renames"],
+            "properties": {
+                "additions": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                        "$ref": "#/$defs/repoPath"
+                    }
+                },
+                "modifications": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                        "$ref": "#/$defs/repoPath"
+                    }
+                },
+                "deletions": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                        "$ref": "#/$defs/repoPath"
+                    }
+                },
+                "renames": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/rename"
+                    }
+                }
+            }
+        },
+        "commandResult": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "commandId",
+                "cwd",
+                "executable",
+                "arguments",
+                "exitCode",
+                "stdoutSha256",
+                "stderrSha256",
+                "outcome"
+            ],
+            "properties": {
+                "commandId": {
+                    "$ref": "#/$defs/identifier"
+                },
+                "cwd": {
+                    "$ref": "#/$defs/workingDirectory"
+                },
+                "executable": {
+                    "$ref": "#/$defs/nonEmptyString"
+                },
+                "arguments": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "exitCode": {
+                    "type": "integer"
+                },
+                "stdoutSha256": {
+                    "$ref": "#/$defs/sha256"
+                },
+                "stderrSha256": {
+                    "$ref": "#/$defs/sha256"
+                },
+                "outcome": {
+                    "enum": ["pass", "fail"]
+                }
+            }
+        },
+        "findingEvidence": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "lineStart", "lineEnd", "detail"],
+            "properties": {
+                "path": {
+                    "$ref": "#/$defs/repoPath"
+                },
+                "lineStart": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "lineEnd": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "detail": {
+                    "$ref": "#/$defs/nonEmptyString"
+                }
+            }
+        },
+        "finding": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["findingId", "severity", "status", "title", "description", "evidence"],
+            "properties": {
+                "findingId": {
+                    "$ref": "#/$defs/identifier"
+                },
+                "severity": {
+                    "enum": ["blocking", "major", "minor", "note"]
+                },
+                "status": {
+                    "enum": ["open", "resolved", "accepted-risk"]
+                },
+                "title": {
+                    "$ref": "#/$defs/nonEmptyString"
+                },
+                "description": {
+                    "$ref": "#/$defs/nonEmptyString"
+                },
+                "evidence": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/$defs/findingEvidence"
+                    }
+                }
+            }
+        },
+        "acceptedRisk": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "riskId",
+                "findingId",
+                "coordinatorId",
+                "acceptedAt",
+                "rationale",
+                "followUpDisposition"
+            ],
+            "properties": {
+                "riskId": {
+                    "$ref": "#/$defs/identifier"
+                },
+                "findingId": {
+                    "$ref": "#/$defs/identifier"
+                },
+                "coordinatorId": {
+                    "$ref": "#/$defs/identifier"
+                },
+                "acceptedAt": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "rationale": {
+                    "$ref": "#/$defs/nonEmptyString"
+                },
+                "followUpDisposition": {
+                    "$ref": "#/$defs/nonEmptyString"
+                }
+            }
+        }
+    }
+}

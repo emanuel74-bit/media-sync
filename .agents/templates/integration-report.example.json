@@ -1,0 +1,202 @@
+{
+    "schemaVersion": 1,
+    "reportKind": "final-integration-review",
+    "reportId": "integration-establish-local-agent-workflow-001",
+    "changeId": "establish-local-agent-workflow",
+    "reviewer": {
+        "reviewerId": "fresh-reviewer-integration-001",
+        "role": "fresh-integration-reviewer",
+        "reviewedAt": "2026-07-24T16:00:00.000Z"
+    },
+    "workOrder": {
+        "workOrderId": "final-integrate-establish-local-agent-workflow",
+        "workOrderDigest": "997809e4a4da7fd40ae33b83e0cb75b9d396b51d21646b0bf127dfff716197e8"
+    },
+    "acceptedArtifactDigest": "60b1264fbd46be0374d6cb98a457f34fde08b5e2467a141f144bd2a2e6a30f2d",
+    "git": {
+        "baselineSha": "25f75b2fd14bcafd7ff8ccb2ee2862a327e19416",
+        "reviewedImplementationSha": "6f0173d4e15c35c7bae279b65998645f39727482",
+        "finalArchiveSha": "266ec841a313476ea6cf2d7e453e490ae0585e54",
+        "candidateSha": "266ec841a313476ea6cf2d7e453e490ae0585e54",
+        "candidateTreeSha": "e4d7e1da52ea4fac2e89082c1e5d4dc029dd5c2f",
+        "rawDiffSha256": "9e0a6305885bbd1834ed2c34817f3b0111538c4ebc9946603e1a9729fda8ebed"
+    },
+    "scenarioMatrix": [
+        {
+            "requirement": "Reviews bind to exact implementation state",
+            "scenario": "Exact final integration review",
+            "status": "pass",
+            "evidence": [
+                "The validator recomputed the accepted digest, work order, archive commit, tree, and raw diff identities."
+            ]
+        },
+        {
+            "requirement": "Coordinator and human authority remain explicit",
+            "scenario": "Fast-forward merge eligibility",
+            "status": "pass",
+            "evidence": [
+                "The final report records an eligible ff-only merge with no unaccepted risk."
+            ]
+        }
+    ],
+    "conventionMatrix": [
+        {
+            "conventionId": "TOOL-09",
+            "status": "pass",
+            "evidence": ["Root repository verification passed on the exact archived candidate."]
+        },
+        {
+            "conventionId": "DOC-05",
+            "status": "pass",
+            "evidence": [
+                "The implementation, archived specification, tasks, and required validation agree."
+            ]
+        }
+    ],
+    "expectedCommits": [
+        {
+            "sequence": 1,
+            "sha": "b4b65f1a7e57bfeb4b33289757d14242f8644211",
+            "description": "Add accepted governance and versioned workflow contracts."
+        },
+        {
+            "sequence": 2,
+            "sha": "48b66e75fbabe47ec5f1441fe8ca16fb2971e662",
+            "description": "Add protocol tooling, hermetic verification, tests, and archived artifacts."
+        }
+    ],
+    "orderedIntegrations": [
+        {
+            "sequence": 1,
+            "integrationId": "workflow-contracts",
+            "expectedCommitSha": "b4b65f1a7e57bfeb4b33289757d14242f8644211",
+            "workOrderId": "implement-workflow-contracts",
+            "workOrderDigest": "0ef6619ae1d68cd5f779756d60050ea9cc2a1c04643eb67fe8b10b81db5cae0a",
+            "sourceSubjectSha": "d1ab4333dbd80a6c03be3f0454866a788bfb4514",
+            "sourceTreeSha": "67bec456108e1fd0453d75ed63e574fca3c0fa2d",
+            "fileOperations": {
+                "additions": [".agents/templates/review-report.schema.json"],
+                "modifications": [],
+                "deletions": [],
+                "renames": []
+            }
+        }
+    ],
+    "fileOperations": {
+        "additions": [
+            ".agents/templates/review-report.schema.json",
+            "openspec/specs/local-agent-workflow/spec.md"
+        ],
+        "modifications": ["AGENTS.md", "backend/CONVENTIONS.md"],
+        "deletions": [],
+        "renames": [
+            {
+                "from": "openspec/changes/establish-local-agent-workflow/specs/local-agent-workflow/spec.md",
+                "to": "openspec/changes/archive/2026-07-24-establish-local-agent-workflow/specs/local-agent-workflow/spec.md"
+            }
+        ]
+    },
+    "commands": [
+        {
+            "commandId": "integration-checkpoint",
+            "cwd": ".",
+            "executable": "node",
+            "arguments": ["--test", "test/agent-workflow/verify-local.test.mjs"],
+            "exitCode": 0,
+            "stdoutSha256": "333bfd74e8f2d248bf4c58eb829a3c9495d61787a851046b8979e9ee5f29825d",
+            "stderrSha256": "7e6b710b765404cccbad9eedcff7615fc37b269d6db12cd81a58be541d93083c",
+            "outcome": "pass"
+        }
+    ],
+    "requiredChecks": [
+        {
+            "checkId": "root-verify",
+            "outcome": "pass",
+            "result": {
+                "cwd": ".",
+                "executable": "npm",
+                "arguments": ["run", "verify"],
+                "exitCode": 0,
+                "stdoutSha256": "333bfd74e8f2d248bf4c58eb829a3c9495d61787a851046b8979e9ee5f29825d",
+                "stderrSha256": "7e6b710b765404cccbad9eedcff7615fc37b269d6db12cd81a58be541d93083c"
+            },
+            "evidence": [
+                "Root verification passed on the exact archived candidate without changing repository state."
+            ]
+        }
+    ],
+    "reviewReferences": [
+        {
+            "reportId": "review-establish-local-agent-workflow-001",
+            "reportSha256": "940fe76920fca3e3d7c9703b3ec8dad016901c676ce22750edde55ed0f3ec4f7",
+            "workOrderDigest": "f069f2746ac18f7720a8ac1742f042218af74e15da0d5e30a58b25c28c93659e",
+            "subjectSha": "6f0173d4e15c35c7bae279b65998645f39727482",
+            "subjectTreeSha": "67bec456108e1fd0453d75ed63e574fca3c0fa2d",
+            "verdict": "pass",
+            "evidencePath": "openspec/changes/archive/2026-07-24-establish-local-agent-workflow/evidence/6f0173d4e15c35c7bae279b65998645f39727482/review-report.json"
+        }
+    ],
+    "evidenceReferences": [
+        {
+            "kind": "work-order",
+            "path": "openspec/changes/archive/2026-07-24-establish-local-agent-workflow/evidence/6f0173d4e15c35c7bae279b65998645f39727482/work-order.json",
+            "sha256": "6d498575eb784e318e20a7d71ed70d7de5604276f9281755993685961d84912b",
+            "subjectSha": "6f0173d4e15c35c7bae279b65998645f39727482"
+        },
+        {
+            "kind": "checkpoint",
+            "path": "openspec/changes/archive/2026-07-24-establish-local-agent-workflow/evidence/6f0173d4e15c35c7bae279b65998645f39727482/checkpoint.json",
+            "sha256": "47320987f9a49d5b00119b960f247a956773f57543982b8bfcb6da5bb3afd9ef",
+            "subjectSha": "6f0173d4e15c35c7bae279b65998645f39727482"
+        },
+        {
+            "kind": "review-report",
+            "path": "openspec/changes/archive/2026-07-24-establish-local-agent-workflow/evidence/6f0173d4e15c35c7bae279b65998645f39727482/review-report.json",
+            "sha256": "940fe76920fca3e3d7c9703b3ec8dad016901c676ce22750edde55ed0f3ec4f7",
+            "subjectSha": "6f0173d4e15c35c7bae279b65998645f39727482"
+        }
+    ],
+    "evidenceOnlyCommitValidation": {
+        "commitSha": "6693a11bb837d2a4afb324b0aecc72fb906edcc5",
+        "parentSha": "6f0173d4e15c35c7bae279b65998645f39727482",
+        "expectedEvidencePaths": [
+            "openspec/changes/establish-local-agent-workflow/evidence/6f0173d4e15c35c7bae279b65998645f39727482/work-order.json",
+            "openspec/changes/establish-local-agent-workflow/evidence/6f0173d4e15c35c7bae279b65998645f39727482/checkpoint.json",
+            "openspec/changes/establish-local-agent-workflow/evidence/6f0173d4e15c35c7bae279b65998645f39727482/review-report.json"
+        ],
+        "fileOperations": {
+            "additions": [
+                "openspec/changes/establish-local-agent-workflow/evidence/6f0173d4e15c35c7bae279b65998645f39727482/work-order.json",
+                "openspec/changes/establish-local-agent-workflow/evidence/6f0173d4e15c35c7bae279b65998645f39727482/checkpoint.json",
+                "openspec/changes/establish-local-agent-workflow/evidence/6f0173d4e15c35c7bae279b65998645f39727482/review-report.json"
+            ],
+            "modifications": [],
+            "deletions": [],
+            "renames": []
+        },
+        "validatorResult": {
+            "cwd": ".",
+            "executable": "node",
+            "arguments": [
+                "scripts/agent-workflow/validate-evidence-commit.mjs",
+                "--commit",
+                "6693a11bb837d2a4afb324b0aecc72fb906edcc5"
+            ],
+            "exitCode": 0,
+            "stdoutSha256": "91c179e2d36f528aa8642a81daabae1ab39e4ee3cc54126bd2638784b10723cf",
+            "stderrSha256": "7e6b710b765404cccbad9eedcff7615fc37b269d6db12cd81a58be541d93083c"
+        },
+        "outcome": "pass"
+    },
+    "findings": [],
+    "finalVerdict": "pass",
+    "acceptedRisks": [],
+    "mergeEligibility": {
+        "eligible": true,
+        "method": "ff-only",
+        "expectedMasterSha": "25f75b2fd14bcafd7ff8ccb2ee2862a327e19416",
+        "candidateSha": "266ec841a313476ea6cf2d7e453e490ae0585e54",
+        "checkedAt": "2026-07-24T16:05:00.000Z",
+        "blockers": []
+    }
+}

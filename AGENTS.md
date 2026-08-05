@@ -42,6 +42,19 @@ skip a formal change.
 Implement accepted tasks incrementally. Keep `tasks.md` accurate. Do not document
 planned work as complete.
 
+## Accepted local-agent workflow
+
+For a coordinator-issued multi-agent change, follow
+[ADR-0018](docs/adr/0018-establish-accepted-local-agent-workflow.md), `TOOL-09`, and the
+versioned contracts under `.agents/templates/`. The coordinator accepts planning, issues work
+orders, owns `tasks.md`, assigns fresh review roles, and accepts risks. Implementers must use the
+active work order under `.agents/work/`, stay within its declared paths and operations, and never
+mark OpenSpec tasks complete.
+
+Use the repository scripts under `scripts/agent-workflow/` for preflight, checkpoint, exact-state
+review, and evidence-commit validation. Those scripts validate recorded state; they do not replace
+coordinator role separation or human acceptance.
+
 ## Decisions
 
 Follow the documentation rules in `backend/CONVENTIONS.md`. Architecture, public-contract,
@@ -56,6 +69,9 @@ Run focused checks during implementation. Before completion, run:
 npm run verify
 openspec validate --all
 ```
+
+For an accepted active change, also run `npm run verify:change -- <change-id>` before exact-state
+implementation review, as defined by `TOOL-09`.
 
 Report changed files, relevant rule IDs, commands run, results, and remaining risks.
 Do not claim completion when required validation did not pass.
