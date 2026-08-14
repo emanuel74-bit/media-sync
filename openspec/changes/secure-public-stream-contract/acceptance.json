@@ -1,0 +1,9 @@
+{
+    "schemaVersion": 1,
+    "changeId": "secure-public-stream-contract",
+    "baselineSha": "468fa64141ccd2afe70846499e74c89ee9020852",
+    "planningSha": "6c1597a4dbcad4dfde4a6734f73fc46a62d44f24",
+    "artifactDigest": "6d29b5f600acf766a18fcf2a8ca6fb862246dc632a0c3dbefcf802b96b5e7e7e",
+    "acceptedBy": "codex-coordinator",
+    "acceptedAt": "2026-08-05T08:25:24.110Z"
+}
