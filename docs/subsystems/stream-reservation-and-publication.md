@@ -154,7 +154,7 @@ update, assignment, and unassignment responses deliberately cannot be used to re
 
 ## Behavioral specifications
 
-[`public-stream-contract`](../../openspec/changes/secure-public-stream-contract/specs/public-stream-contract/spec.md) defines the
+[`public-stream-contract`](../../openspec/specs/public-stream-contract/spec.md) defines the
 general-response secrecy boundary and the intentional reservation delivery exception. See the
 [specification map](../specification-map.md) for the repository-wide capability index.
 

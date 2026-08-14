@@ -125,7 +125,7 @@ flowchart LR
 
 ## Behavioral specifications
 
-- [`public-stream-contract`](../../openspec/changes/secure-public-stream-contract/specs/public-stream-contract/spec.md) defines the
+- [`public-stream-contract`](../../openspec/specs/public-stream-contract/spec.md) defines the
   credential-free general response and the intentional reservation credential exception.
 - See the [specification map](../specification-map.md) for the repository-wide capability index.
 

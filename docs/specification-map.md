@@ -1,7 +1,7 @@
 ---
 type: specification-map
 status: active
-last_verified: 2026-07-23
+last_verified: 2026-08-14
 ---
 
 <!-- cspell:words openspec frontmatter opsx MediaMTX nodeId -->
@@ -13,8 +13,8 @@ tests. It records status and conflict; requirement text belongs in OpenSpec.
 
 OpenSpec adoption is incremental under
 [ADR-0015](adr/0015-adopt-spec-driven-development-and-obsidian-navigation.md). The canonical
-[`openspec/specs/`](../openspec/specs/) directory currently contains documentation governance,
-but no runtime capability below has a canonical behavioral specification. The completed
+[`openspec/specs/`](../openspec/specs/) directory contains documentation governance, the local
+agent workflow, and the public stream contract. The completed
 [documentation-governance change](../openspec/changes/archive/2026-07-24-add-feature-and-subsystem-documentation/)
 did not specify or change runtime behavior.
 
@@ -39,7 +39,7 @@ conventions registry.
 | Capability | OpenSpec | Feature documents | Subsystem documents | Code | Tests |
 |---|---|---|---|---|---|
 | Node registration and heartbeat | No canonical specification | [Nodes](features/nodes.md) | [Node registration and heartbeat](subsystems/node-registration-and-heartbeat.md) | [`nodes/`](../backend/src/nodes/) | [`test/nodes/`](../backend/test/nodes/) |
-| Stream reservation and publication | No canonical specification | [Streams](features/streams.md), [Nodes](features/nodes.md), [Media nodes](features/media-nodes.md), [Sync](features/sync.md) | [Stream reservation and publication](subsystems/stream-reservation-and-publication.md) | [`streams/`](../backend/src/streams/), [`sync/`](../backend/src/sync/) | [`test/streams/`](../backend/test/streams/), [`test/sync/`](../backend/test/sync/) |
+| Stream reservation and publication | [Public stream contract](../openspec/specs/public-stream-contract/spec.md) | [Streams](features/streams.md), [Nodes](features/nodes.md), [Media nodes](features/media-nodes.md), [Sync](features/sync.md) | [Stream reservation and publication](subsystems/stream-reservation-and-publication.md) | [`streams/`](../backend/src/streams/), [`sync/`](../backend/src/sync/) | [`test/streams/`](../backend/test/streams/), [`test/sync/`](../backend/test/sync/) |
 | Stream assignment and pipeline deployment | No canonical specification | [Streams](features/streams.md), [Media nodes](features/media-nodes.md), [Sync](features/sync.md) | [Assignment and pipeline deployment](subsystems/stream-assignment-and-pipeline-deployment.md) | [`streams/`](../backend/src/streams/), [`media-nodes/`](../backend/src/media-nodes/) | [`test/streams/`](../backend/test/streams/), [`test/media-nodes/`](../backend/test/media-nodes/) |
 | Synchronization and reconciliation | No canonical specification | [Sync](features/sync.md), [Streams](features/streams.md), [Nodes](features/nodes.md), [Media nodes](features/media-nodes.md) | [Synchronization and reconciliation](subsystems/synchronization-and-reconciliation.md) | [`sync/`](../backend/src/sync/) | [`test/sync/`](../backend/test/sync/) |
 | Metrics collection | No canonical specification | [Metrics](features/metrics.md), [Media nodes](features/media-nodes.md), [Nodes](features/nodes.md), [Alerts](features/alerts.md) | [Metrics collection](subsystems/metrics-collection.md) | [`metrics/`](../backend/src/metrics/), [`media-nodes/`](../backend/src/media-nodes/) | [`test/metrics/`](../backend/test/metrics/), [`test/media-nodes/`](../backend/test/media-nodes/) |

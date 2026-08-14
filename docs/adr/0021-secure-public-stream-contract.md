@@ -36,7 +36,7 @@ The frontend will mirror the boundary: its general `Stream` type has no `publish
 `StreamReservation` type retains the field, and lifecycle presentation derives reserved-stage
 timestamps from status and non-secret timestamps rather than credential presence. The observable
 contract is defined by the
-[`public-stream-contract` delta specification](../../openspec/changes/secure-public-stream-contract/specs/public-stream-contract/spec.md).
+[`public-stream-contract` specification](../../openspec/specs/public-stream-contract/spec.md).
 
 ## Consequences
 

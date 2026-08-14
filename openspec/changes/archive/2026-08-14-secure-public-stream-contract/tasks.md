@@ -63,25 +63,25 @@
 
 - [x] 6.1 Integrate the bounded implementation in declared dependency order and verify the exact
   base-to-candidate additions, modifications, deletions, and renames against the work order.
-- [ ] 6.2 Run the accepted checkpoint and
+- [x] 6.2 Run the accepted checkpoint and
   `npm run verify:change -- secure-public-stream-contract` on the exact committed implementation
   candidate.
-- [ ] 6.3 Obtain a fresh implementation review bound to the exact candidate SHA, tree, raw diff,
+- [x] 6.3 Obtain a fresh implementation review bound to the exact candidate SHA, tree, raw diff,
   scenario matrix, convention matrix, command results, and file-operation inventory.
-- [ ] 6.4 Resolve every blocking finding, rerun affected checks, and obtain a fresh passing exact-
+- [x] 6.4 Resolve every blocking finding, rerun affected checks, and obtain a fresh passing exact-
   state review; do not accept or document unresolved risk without coordinator authorization.
-- [ ] 6.5 Record the normalized work order, checkpoint, and passing implementation report under
+- [x] 6.5 Record the normalized work order, checkpoint, and passing implementation report under
   immutable subject-SHA evidence paths and validate the evidence-only commit.
-- [ ] 6.6 Record any workflow friction in a separately named follow-up OpenSpec proposal outside
+- [x] 6.6 Record any workflow friction in a separately named follow-up OpenSpec proposal outside
   this change's implementation inventory; do not bundle workflow-tooling changes into this change.
 
 ## 7. Specification synchronization and archive
 
-- [ ] 7.1 Coordinator-reconcile task checkboxes with committed implementation and validated evidence;
+- [x] 7.1 Coordinator-reconcile task checkboxes with committed implementation and validated evidence;
   do not mark planned, failed, or unevidenced work complete.
-- [ ] 7.2 Synchronize the `public-stream-contract` delta to canonical `openspec/specs/` only after the
+- [x] 7.2 Synchronize the `public-stream-contract` delta to canonical `openspec/specs/` only after the
   implementation and passing review agree with every requirement and scenario.
-- [ ] 7.3 Archive `secure-public-stream-contract`, preserve its implementation evidence under the
+- [x] 7.3 Archive `secure-public-stream-contract`, preserve its implementation evidence under the
   dated archive root, update affected specification navigation, and validate the archive.
 - [ ] 7.4 Run root `npm run verify` and `openspec validate --all` on the exact archived candidate.
 
