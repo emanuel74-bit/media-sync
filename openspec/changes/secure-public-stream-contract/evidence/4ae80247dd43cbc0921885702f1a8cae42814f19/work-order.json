@@ -1,0 +1,210 @@
+{
+    "schemaVersion": 1,
+    "workOrderId": "integrate-secure-public-stream-contract",
+    "changeId": "secure-public-stream-contract",
+    "role": "integration",
+    "taskIds": [
+        "6.1"
+    ],
+    "acceptedArtifactDigest": "6d29b5f600acf766a18fcf2a8ca6fb862246dc632a0c3dbefcf802b96b5e7e7e",
+    "baseSha": "73f45982808fc514a82bf989890fe92fc90e45c3",
+    "issuedBy": "codex-coordinator",
+    "issuedAt": "2026-08-14T10:33:06.5920353Z",
+    "allowedPaths": [
+        "backend/API_DOCUMENTATION.md",
+        "backend/src/streams/controllers/index.ts",
+        "backend/src/streams/controllers/map-stream-to-public-stream.mapper.ts",
+        "backend/src/streams/controllers/streams.controller.ts",
+        "backend/src/streams/domain/types/index.ts",
+        "backend/src/streams/domain/types/public-stream.types.ts",
+        "backend/test/streams/controllers/ingest.controller.test.ts",
+        "backend/test/streams/controllers/streams.controller.test.ts",
+        "docs/adr/0021-secure-public-stream-contract.md",
+        "docs/adr/README.md",
+        "docs/adr/index.md",
+        "docs/features/streams.md",
+        "docs/subsystems/stream-reservation-and-publication.md",
+        "frontend/src/lib/lifecycle.ts",
+        "frontend/src/mocks/fixtures.ts",
+        "frontend/src/mocks/handlers.ts",
+        "frontend/src/test/api-contract.test.ts",
+        "frontend/src/test/lifecycle.test.ts",
+        "frontend/src/types/index.ts",
+        "openspec/changes/secure-public-stream-contract/tasks.md"
+    ],
+    "forbiddenPaths": [
+        "AGENTS.md",
+        "CLAUDE.md",
+        "backend/CONVENTIONS.md",
+        "backend/src/streams/domain/types/stream-reservation.types.ts",
+        "backend/src/streams/domain/types/stream.types.ts",
+        "backend/src/streams/infrastructure/repositories/mongo-stream.repository.ts",
+        "backend/src/streams/infrastructure/schemas/stream.schema.ts",
+        "backend/src/streams/services/publish-auth.service.ts",
+        "docs/adr/0013-reserve-publish-ingest-cluster.md"
+    ],
+    "protectedPaths": [
+        ".claude/settings.local.json",
+        "openspec/changes/secure-public-stream-contract/acceptance.json",
+        "openspec/changes/secure-public-stream-contract/design.md",
+        "openspec/changes/secure-public-stream-contract/proposal.md",
+        "openspec/changes/secure-public-stream-contract/specs/public-stream-contract/spec.md"
+    ],
+    "expectedAdditions": [
+        "backend/src/streams/controllers/map-stream-to-public-stream.mapper.ts",
+        "backend/src/streams/domain/types/public-stream.types.ts",
+        "backend/test/streams/controllers/ingest.controller.test.ts",
+        "docs/adr/0021-secure-public-stream-contract.md",
+        "frontend/src/test/lifecycle.test.ts"
+    ],
+    "expectedModifications": [
+        "backend/API_DOCUMENTATION.md",
+        "backend/src/streams/controllers/index.ts",
+        "backend/src/streams/controllers/streams.controller.ts",
+        "backend/src/streams/domain/types/index.ts",
+        "backend/test/streams/controllers/streams.controller.test.ts",
+        "docs/adr/README.md",
+        "docs/adr/index.md",
+        "docs/features/streams.md",
+        "docs/subsystems/stream-reservation-and-publication.md",
+        "frontend/src/lib/lifecycle.ts",
+        "frontend/src/mocks/fixtures.ts",
+        "frontend/src/mocks/handlers.ts",
+        "frontend/src/test/api-contract.test.ts",
+        "frontend/src/types/index.ts",
+        "openspec/changes/secure-public-stream-contract/tasks.md"
+    ],
+    "expectedDeletions": [],
+    "expectedRenames": [],
+    "requiredDocuments": [
+        "backend/CONVENTIONS.md",
+        "backend/API_DOCUMENTATION.md",
+        "docs/adr/0013-reserve-publish-ingest-cluster.md",
+        "docs/adr/0017-feature-and-subsystem-documentation.md",
+        "docs/adr/0021-secure-public-stream-contract.md",
+        "docs/features/streams.md",
+        "docs/subsystems/stream-reservation-and-publication.md",
+        "openspec/changes/secure-public-stream-contract/acceptance.json",
+        "openspec/changes/secure-public-stream-contract/design.md",
+        "openspec/changes/secure-public-stream-contract/proposal.md",
+        "openspec/changes/secure-public-stream-contract/specs/public-stream-contract/spec.md",
+        "openspec/changes/secure-public-stream-contract/tasks.md"
+    ],
+    "conventionIds": [
+        "ARCH-01",
+        "DATA-06",
+        "DOC-01",
+        "DOC-03",
+        "DOC-05",
+        "DOC-06",
+        "DTO-02",
+        "NAME-02",
+        "NAME-03",
+        "SVC-05",
+        "TEST-01",
+        "TEST-02",
+        "TEST-05",
+        "TEST-06",
+        "TOOL-01",
+        "TOOL-02",
+        "TOOL-05",
+        "TOOL-09",
+        "TYPE-02",
+        "TYPE-03"
+    ],
+    "focusedCommands": [
+        {
+            "commandId": "backend-controller-contract-tests",
+            "cwd": "backend",
+            "argv": [
+                "node",
+                "node_modules/jest/bin/jest.js",
+                "--runInBand",
+                "test/streams/controllers/streams.controller.test.ts",
+                "test/streams/controllers/ingest.controller.test.ts"
+            ]
+        },
+        {
+            "commandId": "backend-typecheck",
+            "cwd": "backend",
+            "argv": [
+                "node",
+                "node_modules/typescript/bin/tsc",
+                "--noEmit",
+                "--incremental",
+                "false"
+            ]
+        },
+        {
+            "commandId": "backend-lint",
+            "cwd": "backend",
+            "argv": [
+                "node",
+                "node_modules/eslint/bin/eslint.js",
+                "--no-error-on-unmatched-pattern",
+                "src/**/*.ts",
+                "test/**/*.ts"
+            ]
+        },
+        {
+            "commandId": "frontend-contract-tests",
+            "cwd": "frontend",
+            "argv": [
+                "node",
+                "node_modules/vitest/vitest.mjs",
+                "run",
+                "src/test/api-contract.test.ts",
+                "src/test/lifecycle.test.ts"
+            ]
+        },
+        {
+            "commandId": "frontend-typecheck",
+            "cwd": "frontend",
+            "argv": [
+                "node",
+                "node_modules/typescript/bin/tsc",
+                "--noEmit"
+            ]
+        },
+        {
+            "commandId": "frontend-lint",
+            "cwd": "frontend",
+            "argv": [
+                "node",
+                "node_modules/eslint/bin/eslint.js",
+                "."
+            ]
+        },
+        {
+            "commandId": "diff-check",
+            "cwd": ".",
+            "argv": [
+                "git",
+                "diff",
+                "--check"
+            ]
+        },
+        {
+            "commandId": "validate-change",
+            "cwd": ".",
+            "argv": [
+                "node",
+                "node_modules/@fission-ai/openspec/bin/openspec.js",
+                "validate",
+                "secure-public-stream-contract"
+            ]
+        }
+    ],
+    "nonGoals": [
+        "Do not amend the exact implementation candidate during verification or review.",
+        "Do not change token persistence, authorization, schemas, events, dependencies, configuration, or deployment topology.",
+        "Do not synchronize or archive the change before a fresh exact-state implementation review passes.",
+        "Do not advance master during implementation review."
+    ],
+    "stopConditions": [
+        "Stop if candidate SHA, tree, parent, accepted digest, or exact file-operation inventory changes.",
+        "Stop if any focused, root, OpenSpec, checkpoint, or review validation fails.",
+        "Stop if protected user state or the accepted master baseline changes.",
+        "Stop if any blocking finding cannot be resolved by a newly authorized implementation candidate."
+    ]
+}

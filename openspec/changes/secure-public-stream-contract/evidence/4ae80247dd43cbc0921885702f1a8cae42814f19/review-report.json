@@ -1,0 +1,448 @@
+{
+    "schemaVersion": 1,
+    "reportKind": "implementation-review",
+    "reportId": "review-secure-public-stream-contract-4ae80247",
+    "changeId": "secure-public-stream-contract",
+    "reviewer": {
+        "reviewerId": "fresh-reviewer-4ae80247",
+        "role": "fresh-implementation-reviewer",
+        "reviewedAt": "2026-08-14T11:02:10.258Z"
+    },
+    "workOrder": {
+        "workOrderId": "integrate-secure-public-stream-contract",
+        "workOrderDigest": "19e87091bd58f098295753e7db3b7fc0fc4cac7719e49de057e94d96def39ac4"
+    },
+    "acceptedArtifactDigest": "6d29b5f600acf766a18fcf2a8ca6fb862246dc632a0c3dbefcf802b96b5e7e7e",
+    "git": {
+        "baseSha": "73f45982808fc514a82bf989890fe92fc90e45c3",
+        "subjectSha": "4ae80247dd43cbc0921885702f1a8cae42814f19",
+        "subjectTreeSha": "9d534bacdececd6090b6e43b6686f5002ca7a49e",
+        "rawDiffSha256": "6c2eea19e8d6f6d5eba4de0a5a2e539a376510cb87175ba2655e4a874a12b94a"
+    },
+    "scenarioMatrix": [
+        {
+            "requirement": "General stream reads never expose publish credentials",
+            "scenario": "Stream collection contains a reserved token-bearing record",
+            "status": "pass",
+            "evidence": [
+                "StreamsController.findAll awaits one query call and maps every result through the explicitly enumerated mapper; the token-bearing reserved fixture asserts preserved public fields and absence of publishToken."
+            ]
+        },
+        {
+            "requirement": "General stream reads never expose publish credentials",
+            "scenario": "Single-stream query finds a token-bearing record",
+            "status": "pass",
+            "evidence": [
+                "StreamsController.findOne projects the non-null internal Stream through mapStreamToPublicStream, and the focused controller test asserts the token-bearing result has no publishToken property."
+            ]
+        },
+        {
+            "requirement": "General stream mutations never expose publish credentials",
+            "scenario": "Manual stream creation returns a stream",
+            "status": "pass",
+            "evidence": [
+                "The create controller preserves DTO-to-service field mapping, then projects the token-bearing returned Stream; its test asserts the complete safe shape and publishToken absence."
+            ]
+        },
+        {
+            "requirement": "General stream mutations never expose publish credentials",
+            "scenario": "Stream update returns a token-bearing internal stream",
+            "status": "pass",
+            "evidence": [
+                "The update controller makes one StreamCrudService call and projects its result; the token-bearing update test verifies safe fields and credential redaction."
+            ]
+        },
+        {
+            "requirement": "General stream mutations never expose publish credentials",
+            "scenario": "Assignment returns a token-bearing internal stream",
+            "status": "pass",
+            "evidence": [
+                "The assign controller maps the single assignment-service result, and its token-bearing test verifies assignment fields survive while publishToken does not."
+            ]
+        },
+        {
+            "requirement": "General stream mutations never expose publish credentials",
+            "scenario": "Unassignment returns a token-bearing internal stream",
+            "status": "pass",
+            "evidence": [
+                "The unassign controller maps the single assignment-service result, and its token-bearing test verifies cleared assignment fields survive while publishToken does not."
+            ]
+        },
+        {
+            "requirement": "General stream absence semantics remain unchanged",
+            "scenario": "Stream collection is empty",
+            "status": "pass",
+            "evidence": [
+                "Array.map preserves an empty collection, and the focused controller test asserts findAll returns exactly an empty array."
+            ]
+        },
+        {
+            "requirement": "General stream absence semantics remain unchanged",
+            "scenario": "Single stream does not exist",
+            "status": "pass",
+            "evidence": [
+                "findOne explicitly returns null for a null query result, and the focused controller test verifies the unchanged null response."
+            ]
+        },
+        {
+            "requirement": "Reservation explicitly delivers publish credentials",
+            "scenario": "Publisher reserves an ingest stream",
+            "status": "pass",
+            "evidence": [
+                "IngestController remains a direct StreamReservation boundary; its new controller test verifies name, ingest node, expiry, token, and a URL containing that same token, while the existing reservation-service test verifies generated-token persistence and URL construction."
+            ]
+        },
+        {
+            "requirement": "General redaction does not change internal credential behavior",
+            "scenario": "Public projection of a reserved stream",
+            "status": "pass",
+            "evidence": [
+                "The pure mapper constructs a new PublicStream without mutating its input; internal Stream, Mongo mapping, schema, and reservation write paths are outside the diff and retain publishToken."
+            ]
+        },
+        {
+            "requirement": "General redaction does not change internal credential behavior",
+            "scenario": "Publisher authenticates after a general stream query",
+            "status": "pass",
+            "evidence": [
+                "PublishAuthService and its matching-path/token tests are unchanged; the independent focused review run passed all six publish-auth tests after exercising the projected controller paths."
+            ]
+        },
+        {
+            "requirement": "Frontend models keep general streams separate from reservations",
+            "scenario": "Frontend consumes a general stream",
+            "status": "pass",
+            "evidence": [
+                "Frontend Stream no longer defines publishToken and the general reserved fixture no longer supplies one; strict frontend typecheck passed in the coordinator gate."
+            ]
+        },
+        {
+            "requirement": "Frontend models keep general streams separate from reservations",
+            "scenario": "Frontend consumes a reservation",
+            "status": "pass",
+            "evidence": [
+                "StreamReservation still requires publishToken and publishUrl; both the API contract test and typed MSW reservation mock assert the token and credential-bearing URL remain together."
+            ]
+        },
+        {
+            "requirement": "Reserved lifecycle timestamps use only non-secret state",
+            "scenario": "Reserved stream has an update timestamp",
+            "status": "pass",
+            "evidence": [
+                "stageTimestamp returns updatedAt when status is reserved, and the focused lifecycle test verifies the exact update timestamp."
+            ]
+        },
+        {
+            "requirement": "Reserved lifecycle timestamps use only non-secret state",
+            "scenario": "Reserved stream lacks an update timestamp",
+            "status": "pass",
+            "evidence": [
+                "The nullish fallback selects createdAt for a reserved stream without updatedAt, as verified by the focused lifecycle test."
+            ]
+        },
+        {
+            "requirement": "Reserved lifecycle timestamps use only non-secret state",
+            "scenario": "Reserved stream lacks both candidate timestamps",
+            "status": "pass",
+            "evidence": [
+                "The reserved-stage helper returns undefined when both timestamps are absent, as verified by the focused lifecycle test."
+            ]
+        },
+        {
+            "requirement": "Reserved lifecycle timestamps use only non-secret state",
+            "scenario": "Stream is not currently reserved",
+            "status": "pass",
+            "evidence": [
+                "The helper gates on status before considering timestamps, and the focused lifecycle test verifies a non-reserved stream returns undefined despite both timestamps being present."
+            ]
+        }
+    ],
+    "conventionMatrix": [
+        {
+            "conventionId": "ARCH-01",
+            "status": "pass",
+            "evidence": [
+                "Each affected controller method performs I/O shaping around exactly one existing service call; the pure mapper introduces no business logic, repository access, or client access."
+            ]
+        },
+        {
+            "conventionId": "DATA-06",
+            "status": "pass",
+            "evidence": [
+                "The new public boundary mapper enumerates every allowed property and uses no object spread; the unchanged Mongo toDomain mapper continues retaining internal publishToken explicitly."
+            ]
+        },
+        {
+            "conventionId": "DOC-01",
+            "status": "pass",
+            "evidence": [
+                "Append-only ADR-0021 records the deliberate public-contract boundary and its compatibility consequences."
+            ]
+        },
+        {
+            "conventionId": "DOC-03",
+            "status": "pass",
+            "evidence": [
+                "ADR-0013 is byte-identical across the reviewed delta; ADR-0021 explicitly complements rather than rewrites or supersedes it."
+            ]
+        },
+        {
+            "conventionId": "DOC-05",
+            "status": "pass",
+            "evidence": [
+                "The implementation is bound to the accepted active OpenSpec change, recomputed planning digest, truthful task state, passing verify:change gate, and valid delta specification."
+            ]
+        },
+        {
+            "conventionId": "DOC-06",
+            "status": "pass",
+            "evidence": [
+                "Streams feature and reservation/publication subsystem pages were updated with responsibility boundaries, public surfaces, evidence links, governing sources, and last_verified 2026-08-14."
+            ]
+        },
+        {
+            "conventionId": "DTO-02",
+            "status": "pass",
+            "evidence": [
+                "Create, update, and assignment DTOs remain transport-only and are translated into existing service arguments before the returned domain Stream is projected."
+            ]
+        },
+        {
+            "conventionId": "NAME-02",
+            "status": "pass",
+            "evidence": [
+                "The pure shape transformer is intent-named map-stream-to-public-stream.mapper.ts with the required mapper suffix."
+            ]
+        },
+        {
+            "conventionId": "NAME-03",
+            "status": "pass",
+            "evidence": [
+                "PublicStream is declared as an interface in public-stream.types.ts; no .interface.ts file is introduced."
+            ]
+        },
+        {
+            "conventionId": "SVC-05",
+            "status": "pass",
+            "evidence": [
+                "No pass-through service was added; the response projection is a pure mapper owned by the controller boundary."
+            ]
+        },
+        {
+            "conventionId": "TEST-01",
+            "status": "pass",
+            "evidence": [
+                "The new backend IngestController test lives under backend/test/streams/controllers, mirroring its source controller path."
+            ]
+        },
+        {
+            "conventionId": "TEST-02",
+            "status": "pass",
+            "evidence": [
+                "The new backend unit test is named ingest.controller.test.ts and is discovered by Jest."
+            ]
+        },
+        {
+            "conventionId": "TEST-05",
+            "status": "pass",
+            "evidence": [
+                "Controller tests cover delegation, input mapping, every stream-returning projection, absence semantics, and the intentional reservation exception."
+            ]
+        },
+        {
+            "conventionId": "TEST-06",
+            "status": "pass",
+            "evidence": [
+                "Controller mocks are recreated in beforeEach, lifecycle inputs are constructed per case, no tests are skipped, and the independent focused runs passed 30 tests."
+            ]
+        },
+        {
+            "conventionId": "TOOL-01",
+            "status": "pass",
+            "evidence": [
+                "Backend and frontend lint passed in the exact checkpoint, and the exact base-to-subject git diff --check passed independently."
+            ]
+        },
+        {
+            "conventionId": "TOOL-02",
+            "status": "pass",
+            "evidence": [
+                "Strict backend and frontend typechecks passed in the exact checkpoint; no any escape is introduced by the changed production code."
+            ]
+        },
+        {
+            "conventionId": "TOOL-05",
+            "status": "pass",
+            "evidence": [
+                "The coordinator's exact-SHA verify:change gate passed the backend sub-gate with 46 suites and 243 tests, plus typecheck, lint, and build."
+            ]
+        },
+        {
+            "conventionId": "TOOL-09",
+            "status": "pass",
+            "evidence": [
+                "The coordinator's npm run verify:change gate passed on subject 4ae80247 with 661 state entries preserved; checkpoint and direct recomputation agree on identity and inventory."
+            ]
+        },
+        {
+            "conventionId": "TYPE-02",
+            "status": "pass",
+            "evidence": [
+                "The new mapper and all changed controller methods declare explicit parameter and return types."
+            ]
+        },
+        {
+            "conventionId": "TYPE-03",
+            "status": "pass",
+            "evidence": [
+                "The feature-private PublicStream shape resides under streams/domain/types and is exported through the nested domain type barrel."
+            ]
+        }
+    ],
+    "fileOperations": {
+        "additions": [
+            "backend/src/streams/controllers/map-stream-to-public-stream.mapper.ts",
+            "backend/src/streams/domain/types/public-stream.types.ts",
+            "backend/test/streams/controllers/ingest.controller.test.ts",
+            "docs/adr/0021-secure-public-stream-contract.md",
+            "frontend/src/test/lifecycle.test.ts"
+        ],
+        "modifications": [
+            "backend/API_DOCUMENTATION.md",
+            "backend/src/streams/controllers/index.ts",
+            "backend/src/streams/controllers/streams.controller.ts",
+            "backend/src/streams/domain/types/index.ts",
+            "backend/test/streams/controllers/streams.controller.test.ts",
+            "docs/adr/README.md",
+            "docs/adr/index.md",
+            "docs/features/streams.md",
+            "docs/subsystems/stream-reservation-and-publication.md",
+            "frontend/src/lib/lifecycle.ts",
+            "frontend/src/mocks/fixtures.ts",
+            "frontend/src/mocks/handlers.ts",
+            "frontend/src/test/api-contract.test.ts",
+            "frontend/src/types/index.ts",
+            "openspec/changes/secure-public-stream-contract/tasks.md"
+        ],
+        "deletions": [],
+        "renames": []
+    },
+    "commands": [
+        {
+            "commandId": "backend-controller-contract-tests",
+            "cwd": "backend",
+            "executable": "node",
+            "arguments": [
+                "node_modules/jest/bin/jest.js",
+                "--runInBand",
+                "test/streams/controllers/streams.controller.test.ts",
+                "test/streams/controllers/ingest.controller.test.ts"
+            ],
+            "exitCode": 0,
+            "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderrSha256": "92dd2abd724694ace7db6fc0c5975000575ea10ebbb91f6b854ec343a81c53c7",
+            "outcome": "pass"
+        },
+        {
+            "commandId": "backend-typecheck",
+            "cwd": "backend",
+            "executable": "node",
+            "arguments": [
+                "node_modules/typescript/bin/tsc",
+                "--noEmit",
+                "--incremental",
+                "false"
+            ],
+            "exitCode": 0,
+            "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "outcome": "pass"
+        },
+        {
+            "commandId": "backend-lint",
+            "cwd": "backend",
+            "executable": "node",
+            "arguments": [
+                "node_modules/eslint/bin/eslint.js",
+                "--no-error-on-unmatched-pattern",
+                "src/**/*.ts",
+                "test/**/*.ts"
+            ],
+            "exitCode": 0,
+            "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "outcome": "pass"
+        },
+        {
+            "commandId": "frontend-contract-tests",
+            "cwd": "frontend",
+            "executable": "node",
+            "arguments": [
+                "node_modules/vitest/vitest.mjs",
+                "run",
+                "src/test/api-contract.test.ts",
+                "src/test/lifecycle.test.ts"
+            ],
+            "exitCode": 0,
+            "stdoutSha256": "d7693fff3f004d8a954ce763df7f10b7de11a8e5a12a21d45912fc12909d07d0",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "outcome": "pass"
+        },
+        {
+            "commandId": "frontend-typecheck",
+            "cwd": "frontend",
+            "executable": "node",
+            "arguments": [
+                "node_modules/typescript/bin/tsc",
+                "--noEmit"
+            ],
+            "exitCode": 0,
+            "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "outcome": "pass"
+        },
+        {
+            "commandId": "frontend-lint",
+            "cwd": "frontend",
+            "executable": "node",
+            "arguments": [
+                "node_modules/eslint/bin/eslint.js",
+                "."
+            ],
+            "exitCode": 0,
+            "stdoutSha256": "33d33cee8e14bc3380a9b8f00956f48007f87f53c2465b99c91d8fbebbb3364d",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "outcome": "pass"
+        },
+        {
+            "commandId": "diff-check",
+            "cwd": ".",
+            "executable": "git",
+            "arguments": [
+                "diff",
+                "--check"
+            ],
+            "exitCode": 0,
+            "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "outcome": "pass"
+        },
+        {
+            "commandId": "validate-change",
+            "cwd": ".",
+            "executable": "node",
+            "arguments": [
+                "node_modules/@fission-ai/openspec/bin/openspec.js",
+                "validate",
+                "secure-public-stream-contract"
+            ],
+            "exitCode": 0,
+            "stdoutSha256": "1076e7a8bc4e93d6db5c80f7753808febd506f1e8554f3196931547a1e3bb73d",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "outcome": "pass"
+        }
+    ],
+    "findings": [],
+    "verdict": "pass",
+    "acceptedRisks": []
+}

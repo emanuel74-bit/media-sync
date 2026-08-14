@@ -1,0 +1,152 @@
+{
+    "schemaVersion": 1,
+    "workOrderId": "integrate-secure-public-stream-contract",
+    "workOrderDigest": "19e87091bd58f098295753e7db3b7fc0fc4cac7719e49de057e94d96def39ac4",
+    "acceptedArtifactDigest": "6d29b5f600acf766a18fcf2a8ca6fb862246dc632a0c3dbefcf802b96b5e7e7e",
+    "baseSha": "73f45982808fc514a82bf989890fe92fc90e45c3",
+    "headSha": "4ae80247dd43cbc0921885702f1a8cae42814f19",
+    "recordedAt": "2026-08-14T10:36:17.987Z",
+    "fileOperations": {
+        "additions": [
+            "backend/src/streams/controllers/map-stream-to-public-stream.mapper.ts",
+            "backend/src/streams/domain/types/public-stream.types.ts",
+            "backend/test/streams/controllers/ingest.controller.test.ts",
+            "docs/adr/0021-secure-public-stream-contract.md",
+            "frontend/src/test/lifecycle.test.ts"
+        ],
+        "modifications": [
+            "backend/API_DOCUMENTATION.md",
+            "backend/src/streams/controllers/index.ts",
+            "backend/src/streams/controllers/streams.controller.ts",
+            "backend/src/streams/domain/types/index.ts",
+            "backend/test/streams/controllers/streams.controller.test.ts",
+            "docs/adr/README.md",
+            "docs/adr/index.md",
+            "docs/features/streams.md",
+            "docs/subsystems/stream-reservation-and-publication.md",
+            "frontend/src/lib/lifecycle.ts",
+            "frontend/src/mocks/fixtures.ts",
+            "frontend/src/mocks/handlers.ts",
+            "frontend/src/test/api-contract.test.ts",
+            "frontend/src/types/index.ts",
+            "openspec/changes/secure-public-stream-contract/tasks.md"
+        ],
+        "deletions": [],
+        "renames": []
+    },
+    "commands": [
+        {
+            "commandId": "backend-controller-contract-tests",
+            "cwd": "backend",
+            "executable": "node",
+            "arguments": [
+                "node_modules/jest/bin/jest.js",
+                "--runInBand",
+                "test/streams/controllers/streams.controller.test.ts",
+                "test/streams/controllers/ingest.controller.test.ts"
+            ],
+            "exitCode": 0,
+            "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderrSha256": "92dd2abd724694ace7db6fc0c5975000575ea10ebbb91f6b854ec343a81c53c7",
+            "outcome": "pass"
+        },
+        {
+            "commandId": "backend-typecheck",
+            "cwd": "backend",
+            "executable": "node",
+            "arguments": [
+                "node_modules/typescript/bin/tsc",
+                "--noEmit",
+                "--incremental",
+                "false"
+            ],
+            "exitCode": 0,
+            "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "outcome": "pass"
+        },
+        {
+            "commandId": "backend-lint",
+            "cwd": "backend",
+            "executable": "node",
+            "arguments": [
+                "node_modules/eslint/bin/eslint.js",
+                "--no-error-on-unmatched-pattern",
+                "src/**/*.ts",
+                "test/**/*.ts"
+            ],
+            "exitCode": 0,
+            "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "outcome": "pass"
+        },
+        {
+            "commandId": "frontend-contract-tests",
+            "cwd": "frontend",
+            "executable": "node",
+            "arguments": [
+                "node_modules/vitest/vitest.mjs",
+                "run",
+                "src/test/api-contract.test.ts",
+                "src/test/lifecycle.test.ts"
+            ],
+            "exitCode": 0,
+            "stdoutSha256": "d7693fff3f004d8a954ce763df7f10b7de11a8e5a12a21d45912fc12909d07d0",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "outcome": "pass"
+        },
+        {
+            "commandId": "frontend-typecheck",
+            "cwd": "frontend",
+            "executable": "node",
+            "arguments": [
+                "node_modules/typescript/bin/tsc",
+                "--noEmit"
+            ],
+            "exitCode": 0,
+            "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "outcome": "pass"
+        },
+        {
+            "commandId": "frontend-lint",
+            "cwd": "frontend",
+            "executable": "node",
+            "arguments": [
+                "node_modules/eslint/bin/eslint.js",
+                "."
+            ],
+            "exitCode": 0,
+            "stdoutSha256": "33d33cee8e14bc3380a9b8f00956f48007f87f53c2465b99c91d8fbebbb3364d",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "outcome": "pass"
+        },
+        {
+            "commandId": "diff-check",
+            "cwd": ".",
+            "executable": "git",
+            "arguments": [
+                "diff",
+                "--check"
+            ],
+            "exitCode": 0,
+            "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "outcome": "pass"
+        },
+        {
+            "commandId": "validate-change",
+            "cwd": ".",
+            "executable": "node",
+            "arguments": [
+                "node_modules/@fission-ai/openspec/bin/openspec.js",
+                "validate",
+                "secure-public-stream-contract"
+            ],
+            "exitCode": 0,
+            "stdoutSha256": "1076e7a8bc4e93d6db5c80f7753808febd506f1e8554f3196931547a1e3bb73d",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "outcome": "pass"
+        }
+    ]
+}
