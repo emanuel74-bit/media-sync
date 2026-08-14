@@ -83,7 +83,7 @@
   implementation and passing review agree with every requirement and scenario.
 - [x] 7.3 Archive `secure-public-stream-contract`, preserve its implementation evidence under the
   dated archive root, update affected specification navigation, and validate the archive.
-- [ ] 7.4 Run root `npm run verify` and `openspec validate --all` on the exact archived candidate.
+- [x] 7.4 Run root `npm run verify` and `openspec validate --all` on the exact archived candidate.
 
 ## 8. Final integration review, merge, and post-merge gates
 
