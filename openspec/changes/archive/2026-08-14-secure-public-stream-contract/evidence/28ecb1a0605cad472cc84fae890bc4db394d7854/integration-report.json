@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "reportKind": "final-integration-review",
+  "reportId": "integration-secure-public-stream-contract-28ecb1a",
+  "changeId": "secure-public-stream-contract",
+  "reviewer": {"reviewerId": "fresh-integration-reviewer-28ecb1a", "role": "fresh-integration-reviewer", "reviewedAt": "2026-08-14T12:16:48.153Z"},
+  "workOrder": {"workOrderId": "final-review-secure-public-stream-contract", "workOrderDigest": "05da2b6d50e9c3d54262f95cacbb4e8dccabfbb77cbf3da71ccd6e3fc7aef69d"},
+  "acceptedArtifactDigest": "6d29b5f600acf766a18fcf2a8ca6fb862246dc632a0c3dbefcf802b96b5e7e7e",
+  "git": {
+    "baselineSha": "468fa64141ccd2afe70846499e74c89ee9020852",
+    "reviewedImplementationSha": "4ae80247dd43cbc0921885702f1a8cae42814f19",
+    "finalArchiveSha": "28ecb1a0605cad472cc84fae890bc4db394d7854",
+    "candidateSha": "28ecb1a0605cad472cc84fae890bc4db394d7854",
+    "candidateTreeSha": "745a1abac9e132634784af7936ffc8e69ec68740",
+    "rawDiffSha256": "231662e14835f47f80c338687ce5c8e3a12c05ef670a0d1bd414d7a0abb8fcab"
+  },
+  "scenarioMatrix": [
+    {"requirement": "General stream reads never expose publish credentials", "scenario": "Stream collection contains a reserved token-bearing record", "status": "pass", "evidence": ["findAll explicitly projects every result, and its token-bearing reserved fixture proves safe-field preservation and publishToken absence."]},
+    {"requirement": "General stream reads never expose publish credentials", "scenario": "Single-stream query finds a token-bearing record", "status": "pass", "evidence": ["findOne explicitly projects a found Stream, and its focused test proves the response has no publishToken property."]},
+    {"requirement": "General stream mutations never expose publish credentials", "scenario": "Manual stream creation returns a stream", "status": "pass", "evidence": ["create preserves DTO mapping and projects the token-bearing service result; focused coverage proves redaction."]},
+    {"requirement": "General stream mutations never expose publish credentials", "scenario": "Stream update returns a token-bearing internal stream", "status": "pass", "evidence": ["update makes one existing service call and projects the returned internal Stream; focused coverage proves redaction."]},
+    {"requirement": "General stream mutations never expose publish credentials", "scenario": "Assignment returns a token-bearing internal stream", "status": "pass", "evidence": ["assign projects its single service result and preserves assignment fields without publishToken."]},
+    {"requirement": "General stream mutations never expose publish credentials", "scenario": "Unassignment returns a token-bearing internal stream", "status": "pass", "evidence": ["unassign projects its single service result and preserves cleared assignment fields without publishToken."]},
+    {"requirement": "General stream absence semantics remain unchanged", "scenario": "Stream collection is empty", "status": "pass", "evidence": ["Array projection preserves an empty collection, as proved by the focused controller test."]},
+    {"requirement": "General stream absence semantics remain unchanged", "scenario": "Single stream does not exist", "status": "pass", "evidence": ["findOne explicitly preserves a null query result, as proved by the focused controller test."]},
+    {"requirement": "Reservation explicitly delivers publish credentials", "scenario": "Publisher reserves an ingest stream", "status": "pass", "evidence": ["IngestController remains the direct StreamReservation boundary; backend and frontend tests prove token, matching credential-bearing URL, node, name, and expiry."]},
+    {"requirement": "General redaction does not change internal credential behavior", "scenario": "Public projection of a reserved stream", "status": "pass", "evidence": ["The mapper creates a separate PublicStream; Stream, Mongo schema/mapping, reservation writes, and publish authorization are unchanged."]},
+    {"requirement": "General redaction does not change internal credential behavior", "scenario": "Publisher authenticates after a general stream query", "status": "pass", "evidence": ["PublishAuthService and persistence are outside the delta; the independent focused run passed all publish-auth cases with projected controller coverage."]},
+    {"requirement": "Frontend models keep general streams separate from reservations", "scenario": "Frontend consumes a general stream", "status": "pass", "evidence": ["Frontend Stream and general fixtures contain no publishToken; the exact root gate passed strict type checking."]},
+    {"requirement": "Frontend models keep general streams separate from reservations", "scenario": "Frontend consumes a reservation", "status": "pass", "evidence": ["StreamReservation retains publishToken and publishUrl; typed mock and API test prove the relationship."]},
+    {"requirement": "Reserved lifecycle timestamps use only non-secret state", "scenario": "Reserved stream has an update timestamp", "status": "pass", "evidence": ["stageTimestamp returns updatedAt for reserved status, as proved by the focused lifecycle test."]},
+    {"requirement": "Reserved lifecycle timestamps use only non-secret state", "scenario": "Reserved stream lacks an update timestamp", "status": "pass", "evidence": ["The reserved-stage fallback returns createdAt when updatedAt is absent, as proved by the focused test."]},
+    {"requirement": "Reserved lifecycle timestamps use only non-secret state", "scenario": "Reserved stream lacks both candidate timestamps", "status": "pass", "evidence": ["The reserved-stage helper returns undefined when both timestamps are absent, as proved by the focused test."]},
+    {"requirement": "Reserved lifecycle timestamps use only non-secret state", "scenario": "Stream is not currently reserved", "status": "pass", "evidence": ["The helper gates on reserved status and returns undefined for another status despite populated timestamps."]}
+  ],
+  "conventionMatrix": [
+    {"conventionId": "ARCH-01", "status": "pass", "evidence": ["Changed controller methods shape I/O around exactly one existing service call and introduce no repository/client access or business decision."]},
+    {"conventionId": "DATA-06", "status": "pass", "evidence": ["The public mapper enumerates every allowed field without spread; internal persistence mapping is unchanged."]},
+    {"conventionId": "DOC-01", "status": "pass", "evidence": ["Append-only ADR-0021 records the public-contract decision."]},
+    {"conventionId": "DOC-03", "status": "pass", "evidence": ["ADR-0013 is unchanged; ADR-0021 explicitly complements it."]},
+    {"conventionId": "DOC-05", "status": "pass", "evidence": ["Archived change, canonical spec, implementation, task state, exact gates, and accepted digest agree."]},
+    {"conventionId": "DOC-06", "status": "pass", "evidence": ["Streams feature and reservation/publication subsystem pages document the boundary, evidence, sources, and verification date."]},
+    {"conventionId": "DTO-02", "status": "pass", "evidence": ["DTOs remain transport-only and are translated before service calls; only returned domain values are projected."]},
+    {"conventionId": "NAME-02", "status": "pass", "evidence": ["The shape transformer has the required map-stream-to-public-stream.mapper.ts name."]},
+    {"conventionId": "NAME-03", "status": "pass", "evidence": ["PublicStream is declared in public-stream.types.ts; no .interface.ts file was introduced."]},
+    {"conventionId": "SVC-05", "status": "pass", "evidence": ["No pass-through service was added; response shaping is a pure boundary mapper."]},
+    {"conventionId": "TEST-01", "status": "pass", "evidence": ["The new backend controller test mirrors its source path under backend/test."]},
+    {"conventionId": "TEST-02", "status": "pass", "evidence": ["The new backend unit file uses the .test.ts suffix and is discovered by Jest."]},
+    {"conventionId": "TEST-05", "status": "pass", "evidence": ["Controller coverage proves delegation, inputs, six projections, empty/null semantics, and reservation delivery."]},
+    {"conventionId": "TEST-06", "status": "pass", "evidence": ["Mocks and inputs are recreated per case, no relevant test is skipped, and focused runs passed."]},
+    {"conventionId": "TOOL-01", "status": "pass", "evidence": ["Exact root formatting/lint and baseline-to-candidate diff check passed."]},
+    {"conventionId": "TOOL-02", "status": "pass", "evidence": ["Exact root strict backend/frontend type checks passed; no any escape was introduced."]},
+    {"conventionId": "TOOL-05", "status": "pass", "evidence": ["Backend verification passed typecheck, lint, build, 46/46 suites, and 243/243 tests."]},
+    {"conventionId": "TOOL-09", "status": "pass", "evidence": ["Implementation verify:change evidence, final checkpoint, exact root gate, and 665 preserved state entries agree."]},
+    {"conventionId": "TYPE-02", "status": "pass", "evidence": ["The mapper and every changed controller method declare explicit signatures."]},
+    {"conventionId": "TYPE-03", "status": "pass", "evidence": ["Feature-private PublicStream resides under streams/domain/types and its nested barrel."]}
+  ],
+  "expectedCommits": [
+    {"sequence": 1, "sha": "6c1597a4dbcad4dfde4a6734f73fc46a62d44f24", "description": "Propose the secure public stream contract change."},
+    {"sequence": 2, "sha": "73f45982808fc514a82bf989890fe92fc90e45c3", "description": "Record coordinator acceptance of the exact planning snapshot."},
+    {"sequence": 3, "sha": "4ae80247dd43cbc0921885702f1a8cae42814f19", "description": "Implement credential-safe public stream responses."},
+    {"sequence": 4, "sha": "d42460a6856563de4a505b6e018ac0eaaf189373", "description": "Record validated implementation-review evidence."},
+    {"sequence": 5, "sha": "8dc7bff614bf4a4df7229bd4a82459113c54d8ba", "description": "Synchronize the canonical specification and archive the change."},
+    {"sequence": 6, "sha": "28ecb1a0605cad472cc84fae890bc4db394d7854", "description": "Record exact archived root and OpenSpec verification."}
+  ],
+  "orderedIntegrations": [{
+    "sequence": 1,
+    "integrationId": "secure-public-stream-contract-implementation",
+    "expectedCommitSha": "4ae80247dd43cbc0921885702f1a8cae42814f19",
+    "workOrderId": "integrate-secure-public-stream-contract",
+    "workOrderDigest": "19e87091bd58f098295753e7db3b7fc0fc4cac7719e49de057e94d96def39ac4",
+    "sourceSubjectSha": "4ae80247dd43cbc0921885702f1a8cae42814f19",
+    "sourceTreeSha": "9d534bacdececd6090b6e43b6686f5002ca7a49e",
+    "fileOperations": {
+      "additions": ["backend/src/streams/controllers/map-stream-to-public-stream.mapper.ts", "backend/src/streams/domain/types/public-stream.types.ts", "backend/test/streams/controllers/ingest.controller.test.ts", "docs/adr/0021-secure-public-stream-contract.md", "frontend/src/test/lifecycle.test.ts"],
+      "modifications": ["backend/API_DOCUMENTATION.md", "backend/src/streams/controllers/index.ts", "backend/src/streams/controllers/streams.controller.ts", "backend/src/streams/domain/types/index.ts", "backend/test/streams/controllers/streams.controller.test.ts", "docs/adr/README.md", "docs/adr/index.md", "docs/features/streams.md", "docs/subsystems/stream-reservation-and-publication.md", "frontend/src/lib/lifecycle.ts", "frontend/src/mocks/fixtures.ts", "frontend/src/mocks/handlers.ts", "frontend/src/test/api-contract.test.ts", "frontend/src/types/index.ts", "openspec/changes/secure-public-stream-contract/tasks.md"],
+      "deletions": [], "renames": []
+    }
+  }],
+  "fileOperations": {
+    "additions": ["backend/src/streams/controllers/map-stream-to-public-stream.mapper.ts", "backend/src/streams/domain/types/public-stream.types.ts", "backend/test/streams/controllers/ingest.controller.test.ts", "docs/adr/0021-secure-public-stream-contract.md", "frontend/src/test/lifecycle.test.ts", "openspec/changes/archive/2026-08-14-secure-public-stream-contract/.openspec.yaml", "openspec/changes/archive/2026-08-14-secure-public-stream-contract/acceptance.json", "openspec/changes/archive/2026-08-14-secure-public-stream-contract/design.md", "openspec/changes/archive/2026-08-14-secure-public-stream-contract/evidence/4ae80247dd43cbc0921885702f1a8cae42814f19/checkpoint.json", "openspec/changes/archive/2026-08-14-secure-public-stream-contract/evidence/4ae80247dd43cbc0921885702f1a8cae42814f19/review-report.json", "openspec/changes/archive/2026-08-14-secure-public-stream-contract/evidence/4ae80247dd43cbc0921885702f1a8cae42814f19/work-order.json", "openspec/changes/archive/2026-08-14-secure-public-stream-contract/proposal.md", "openspec/changes/archive/2026-08-14-secure-public-stream-contract/specs/public-stream-contract/spec.md", "openspec/changes/archive/2026-08-14-secure-public-stream-contract/tasks.md", "openspec/specs/public-stream-contract/spec.md"],
+    "modifications": ["backend/API_DOCUMENTATION.md", "backend/src/streams/controllers/index.ts", "backend/src/streams/controllers/streams.controller.ts", "backend/src/streams/domain/types/index.ts", "backend/test/streams/controllers/streams.controller.test.ts", "docs/adr/README.md", "docs/adr/index.md", "docs/features/streams.md", "docs/index.md", "docs/specification-map.md", "docs/subsystems/stream-reservation-and-publication.md", "frontend/src/lib/lifecycle.ts", "frontend/src/mocks/fixtures.ts", "frontend/src/mocks/handlers.ts", "frontend/src/test/api-contract.test.ts", "frontend/src/types/index.ts"],
+    "deletions": [], "renames": []
+  },
+  "commands": [{"commandId": "final-integration-review-tests", "cwd": ".", "executable": "node", "arguments": ["--test", "test/agent-workflow/review-validation.test.mjs"], "exitCode": 0, "stdoutSha256": "0d8202164567e27c7f5bf8c1cee2db187cad0444007c46d0050289f2a756f1d2", "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "outcome": "pass"}],
+  "requiredChecks": [
+    {"checkId": "root-verify", "outcome": "pass", "result": {"cwd": ".", "executable": "C:\\nvm4w\\nodejs\\npm.cmd", "arguments": ["run", "verify"], "exitCode": 0, "stdoutSha256": "1bb3e5b33e89db4908cfdd14a07ec0664743d3ae25c20d719192b0f0cb3776a8", "stderrSha256": "861895b18a9cfe377e3a2db29c7666b3102333cb4822518164f507a97ab29153"}, "evidence": ["Exact 28ecb1a capture hashes match: backend 46/46 and 243/243, frontend 3/3 and 11/11, workflow 139/139, OpenSpec 3/3, 665 state entries preserved."]},
+    {"checkId": "openspec-validate-all", "outcome": "pass", "result": {"cwd": ".", "executable": "D:\\codeShit\\media-sync\\node_modules\\.bin\\openspec.cmd", "arguments": ["validate", "--all"], "exitCode": 0, "stdoutSha256": "ea7972848cd5b5998fa358453a633f0fa5c8df694913d0e6f81d20072e4961e1", "stderrSha256": "5bc31df123a2e521acdd2c0d9477b367feec506471a91065d0a6b32c09089ed5"}, "evidence": ["Exact 28ecb1a OpenSpec capture hashes match and record 3 passed, 0 failed."]}
+  ],
+  "reviewReferences": [{"reportId": "review-secure-public-stream-contract-4ae80247", "reportSha256": "d94cdf0ae236c5e9aa578f8452acfba16f1e3554fcf84e39643c080a7662c963", "workOrderDigest": "19e87091bd58f098295753e7db3b7fc0fc4cac7719e49de057e94d96def39ac4", "subjectSha": "4ae80247dd43cbc0921885702f1a8cae42814f19", "subjectTreeSha": "9d534bacdececd6090b6e43b6686f5002ca7a49e", "verdict": "pass", "evidencePath": "openspec/changes/archive/2026-08-14-secure-public-stream-contract/evidence/4ae80247dd43cbc0921885702f1a8cae42814f19/review-report.json"}],
+  "evidenceReferences": [
+    {"kind": "work-order", "path": "openspec/changes/archive/2026-08-14-secure-public-stream-contract/evidence/4ae80247dd43cbc0921885702f1a8cae42814f19/work-order.json", "sha256": "6bd21857b0c723565ad839be4a9642d22214af137467718e3353dd48fa721f40", "subjectSha": "4ae80247dd43cbc0921885702f1a8cae42814f19"},
+    {"kind": "checkpoint", "path": "openspec/changes/archive/2026-08-14-secure-public-stream-contract/evidence/4ae80247dd43cbc0921885702f1a8cae42814f19/checkpoint.json", "sha256": "da139518d0af386e73925ac78a4a5777a37662f3f7bbe4bc4564055c5eb6c458", "subjectSha": "4ae80247dd43cbc0921885702f1a8cae42814f19"},
+    {"kind": "review-report", "path": "openspec/changes/archive/2026-08-14-secure-public-stream-contract/evidence/4ae80247dd43cbc0921885702f1a8cae42814f19/review-report.json", "sha256": "d94cdf0ae236c5e9aa578f8452acfba16f1e3554fcf84e39643c080a7662c963", "subjectSha": "4ae80247dd43cbc0921885702f1a8cae42814f19"}
+  ],
+  "evidenceOnlyCommitValidation": {
+    "commitSha": "d42460a6856563de4a505b6e018ac0eaaf189373", "parentSha": "4ae80247dd43cbc0921885702f1a8cae42814f19",
+    "expectedEvidencePaths": ["openspec/changes/secure-public-stream-contract/evidence/4ae80247dd43cbc0921885702f1a8cae42814f19/checkpoint.json", "openspec/changes/secure-public-stream-contract/evidence/4ae80247dd43cbc0921885702f1a8cae42814f19/review-report.json", "openspec/changes/secure-public-stream-contract/evidence/4ae80247dd43cbc0921885702f1a8cae42814f19/work-order.json"],
+    "fileOperations": {"additions": ["openspec/changes/secure-public-stream-contract/evidence/4ae80247dd43cbc0921885702f1a8cae42814f19/checkpoint.json", "openspec/changes/secure-public-stream-contract/evidence/4ae80247dd43cbc0921885702f1a8cae42814f19/review-report.json", "openspec/changes/secure-public-stream-contract/evidence/4ae80247dd43cbc0921885702f1a8cae42814f19/work-order.json"], "modifications": [], "deletions": [], "renames": []},
+    "validatorResult": {"cwd": ".", "executable": "node", "arguments": ["scripts/agent-workflow/validate-evidence-commit.mjs", "--commit", "d42460a6856563de4a505b6e018ac0eaaf189373"], "exitCode": 0, "stdoutSha256": "68978455a90b5babfaa6cc1289b0a0f59ecb66a12976f2356f616cdb6e66e47a", "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+    "outcome": "pass"
+  },
+  "findings": [],
+  "finalVerdict": "pass",
+  "acceptedRisks": [],
+  "mergeEligibility": {"eligible": true, "method": "ff-only", "expectedMasterSha": "468fa64141ccd2afe70846499e74c89ee9020852", "candidateSha": "28ecb1a0605cad472cc84fae890bc4db394d7854", "checkedAt": "2026-08-14T12:16:49.153Z", "blockers": []}
+}

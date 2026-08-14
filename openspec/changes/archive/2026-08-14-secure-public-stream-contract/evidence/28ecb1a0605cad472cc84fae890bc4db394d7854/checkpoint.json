@@ -1,0 +1,82 @@
+{
+    "schemaVersion": 1,
+    "workOrderId": "final-review-secure-public-stream-contract",
+    "workOrderDigest": "05da2b6d50e9c3d54262f95cacbb4e8dccabfbb77cbf3da71ccd6e3fc7aef69d",
+    "acceptedArtifactDigest": "6d29b5f600acf766a18fcf2a8ca6fb862246dc632a0c3dbefcf802b96b5e7e7e",
+    "baseSha": "73f45982808fc514a82bf989890fe92fc90e45c3",
+    "headSha": "28ecb1a0605cad472cc84fae890bc4db394d7854",
+    "recordedAt": "2026-08-14T11:41:58.186Z",
+    "fileOperations": {
+        "additions": [
+            "backend/src/streams/controllers/map-stream-to-public-stream.mapper.ts",
+            "backend/src/streams/domain/types/public-stream.types.ts",
+            "backend/test/streams/controllers/ingest.controller.test.ts",
+            "docs/adr/0021-secure-public-stream-contract.md",
+            "frontend/src/test/lifecycle.test.ts",
+            "openspec/changes/archive/2026-08-14-secure-public-stream-contract/evidence/4ae80247dd43cbc0921885702f1a8cae42814f19/checkpoint.json",
+            "openspec/changes/archive/2026-08-14-secure-public-stream-contract/evidence/4ae80247dd43cbc0921885702f1a8cae42814f19/review-report.json",
+            "openspec/changes/archive/2026-08-14-secure-public-stream-contract/evidence/4ae80247dd43cbc0921885702f1a8cae42814f19/work-order.json",
+            "openspec/specs/public-stream-contract/spec.md"
+        ],
+        "modifications": [
+            "backend/API_DOCUMENTATION.md",
+            "backend/src/streams/controllers/index.ts",
+            "backend/src/streams/controllers/streams.controller.ts",
+            "backend/src/streams/domain/types/index.ts",
+            "backend/test/streams/controllers/streams.controller.test.ts",
+            "docs/adr/README.md",
+            "docs/adr/index.md",
+            "docs/features/streams.md",
+            "docs/index.md",
+            "docs/specification-map.md",
+            "docs/subsystems/stream-reservation-and-publication.md",
+            "frontend/src/lib/lifecycle.ts",
+            "frontend/src/mocks/fixtures.ts",
+            "frontend/src/mocks/handlers.ts",
+            "frontend/src/test/api-contract.test.ts",
+            "frontend/src/types/index.ts"
+        ],
+        "deletions": [],
+        "renames": [
+            {
+                "from": "openspec/changes/secure-public-stream-contract/.openspec.yaml",
+                "to": "openspec/changes/archive/2026-08-14-secure-public-stream-contract/.openspec.yaml"
+            },
+            {
+                "from": "openspec/changes/secure-public-stream-contract/acceptance.json",
+                "to": "openspec/changes/archive/2026-08-14-secure-public-stream-contract/acceptance.json"
+            },
+            {
+                "from": "openspec/changes/secure-public-stream-contract/design.md",
+                "to": "openspec/changes/archive/2026-08-14-secure-public-stream-contract/design.md"
+            },
+            {
+                "from": "openspec/changes/secure-public-stream-contract/proposal.md",
+                "to": "openspec/changes/archive/2026-08-14-secure-public-stream-contract/proposal.md"
+            },
+            {
+                "from": "openspec/changes/secure-public-stream-contract/specs/public-stream-contract/spec.md",
+                "to": "openspec/changes/archive/2026-08-14-secure-public-stream-contract/specs/public-stream-contract/spec.md"
+            },
+            {
+                "from": "openspec/changes/secure-public-stream-contract/tasks.md",
+                "to": "openspec/changes/archive/2026-08-14-secure-public-stream-contract/tasks.md"
+            }
+        ]
+    },
+    "commands": [
+        {
+            "commandId": "final-integration-review-tests",
+            "cwd": ".",
+            "executable": "node",
+            "arguments": [
+                "--test",
+                "test/agent-workflow/review-validation.test.mjs"
+            ],
+            "exitCode": 0,
+            "stdoutSha256": "0d8202164567e27c7f5bf8c1cee2db187cad0444007c46d0050289f2a756f1d2",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "outcome": "pass"
+        }
+    ]
+}
