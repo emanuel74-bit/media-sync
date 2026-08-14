@@ -3,6 +3,7 @@
  */
 
 export * from "./stream.types";
+export * from "./public-stream.types";
 export * from "./stream-metadata.types";
 export * from "./create-stream-data.types";
 export * from "./update-stream-data.types";

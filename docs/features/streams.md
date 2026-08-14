@@ -2,7 +2,7 @@
 type: feature
 feature: streams
 status: active
-last_verified: 2026-07-23
+last_verified: 2026-08-14
 code_paths:
   - backend/src/streams
   - backend/src/infrastructure/database/mongo/stream
@@ -25,6 +25,7 @@ Media Nodes feature.
 
 - Stream creation, reservation, query, update, deletion, assignment, and status transitions.
 - The `Stream` domain record, including embedded reservation and assignment fields.
+- Explicit credential-free projection of internal stream records at the general REST boundary.
 - Legal lifecycle moves and compare-and-set retry through `StreamStatusService`.
 - Selection inputs for ingest placement and cluster assignment; reservation and assignment
   persistence remain separate because one is birth-time state and one is a mutation.
@@ -45,8 +46,8 @@ Media Nodes feature.
 | `StreamsFacadeService` | Supported multi-operation cross-feature facade | Sync, Stream Inspection |
 | `StreamQueryService` | Supported read-only cross-feature service | Alerts |
 | `StreamRepository` and domain types | Persistence port and compile-time contracts from the curated root barrel | `DatabaseModule`, Mongo adapter, dependent feature types |
-| `GET/POST/PATCH/DELETE /api/streams...` | External query, manual onboarding, update/delete, assignment, and unassignment surface | REST clients |
-| `POST /api/ingest/streams` | Reserve a publish slot and receive node coordinates/secret | Publishers |
+| `GET/POST/PATCH/DELETE /api/streams...` | Query, manual onboarding, update/delete, assignment, and unassignment; every returned stream is a credential-free `PublicStream` | REST clients |
+| `POST /api/ingest/streams` | Reserve a publish slot and receive the `StreamReservation` node coordinates, token, and credential-bearing URL | Publishers |
 | `POST /api/ingest/auth` | MediaMTX HTTP publish authorization | Ingest MediaMTX nodes |
 
 `StreamStatusService`, `StreamAssignmentService`, and `StreamPipelineService` appear in the
@@ -56,7 +57,8 @@ cross-feature services.
 ## Entry points
 
 - [`StreamsController`](../../backend/src/streams/controllers/streams.controller.ts) exposes the
-  manual/query REST surface.
+  manual/query REST surface and projects all stream-returning results through
+  [`mapStreamToPublicStream`](../../backend/src/streams/controllers/map-stream-to-public-stream.mapper.ts).
 - [`IngestController`](../../backend/src/streams/controllers/ingest.controller.ts) starts the
   reservation flow.
 - [`IngestAuthController`](../../backend/src/streams/controllers/ingest-auth.controller.ts)
@@ -72,6 +74,7 @@ cross-feature services.
 | Mutation | [`services/mutation/`](../../backend/src/streams/services/mutation/) | CRUD plus the single lifecycle-transition authority |
 | Orchestration | [`services/orchestration/`](../../backend/src/streams/services/orchestration/) | Reservation, manual setup, and cluster pipeline lifecycle |
 | Query | [`services/query/`](../../backend/src/streams/services/query/) | Stream reads, assignment summaries, reservation counts, publish auth |
+| HTTP projection | [`controllers/map-stream-to-public-stream.mapper.ts`](../../backend/src/streams/controllers/map-stream-to-public-stream.mapper.ts) | Explicitly enumerates the credential-free general stream response |
 | Domain | [`domain/`](../../backend/src/streams/domain/) | Stream shapes and lifecycle transition table |
 | Persistence port | [`repositories/`](../../backend/src/streams/repositories/) | Storage-independent stream operations |
 
@@ -80,6 +83,10 @@ cross-feature services.
 | Entity or state | Contract | Persistence adapter | Ownership |
 |---|---|---|---|
 | Stream and embedded reservation/assignment state | [`Stream`](../../backend/src/streams/domain/types/stream.types.ts), [`StreamRepository`](../../backend/src/streams/repositories/stream.repository.ts) | [`MongoStreamRepository`](../../backend/src/infrastructure/database/mongo/stream/mongo-stream.repository.ts), [`StreamSchema`](../../backend/src/infrastructure/database/mongo/stream/stream.schema.ts) | Streams owns domain meaning and mutations; Database infrastructure owns Mongo mapping |
+
+`PublicStream` is a transport projection, not persisted state. The internal `Stream` retains
+`publishToken` for publish authorization. Only `StreamReservation`, returned by the ingest reserve
+endpoint, intentionally crosses the public boundary with that credential.
 
 ## Events
 
@@ -118,12 +125,13 @@ flowchart LR
 
 ## Behavioral specifications
 
-No canonical behavioral OpenSpec specification currently exists for this capability. The
-canonical documentation-governance specification does not define Streams runtime behavior; see
-the [specification map](../specification-map.md).
+- [`public-stream-contract`](../../openspec/changes/secure-public-stream-contract/specs/public-stream-contract/spec.md) defines the
+  credential-free general response and the intentional reservation credential exception.
+- See the [specification map](../specification-map.md) for the repository-wide capability index.
 
 ## Architecture decisions
 
+- [ADR-0021: Project general stream responses without publish credentials](../adr/0021-secure-public-stream-contract.md) — Accepted; complements ADR-0013.
 - [ADR-0013: Reserve→publish ingestion on a per-node ingest cluster](../adr/0013-reserve-publish-ingest-cluster.md) — Accepted.
 - [ADR-0014: Guard stream lifecycle transitions atomically](../adr/0014-guard-stream-lifecycle-transitions.md) — Accepted.
 - [ADR-0004: Curated feature-root barrels](../adr/0004-curated-feature-root-barrels.md) — Accepted.
@@ -137,6 +145,8 @@ See the [conventions registry](../../backend/CONVENTIONS.md).
 |---|---|
 | `PHIL-01`, `DIR-01` | Feature-oriented ownership |
 | `PHIL-05`, `SVC-04`, `TOOL-03` | Curated public surface and facade boundary |
+| `ARCH-01`, `DTO-02`, `TYPE-03` | Controller-only projection and feature-private response shape |
+| `DATA-06`, `NAME-02` | Explicit boundary mapping in a purpose-named mapper |
 | `DATA-01`, `ARCH-08` | Repository port and centralized Mongo binding |
 | `DATA-07`, `SVC-07` | One guarded stream lifecycle authority |
 | `INT-06` | Per-node ingest/cluster targeting |
@@ -159,13 +169,15 @@ See the [conventions registry](../../backend/CONVENTIONS.md).
   `reservedUntil`, the ingest-node identity, or the supplied username. An expired unused secret
   remains usable until Sync deletes the reservation; discovery clears the stored secret.
 - Several produced stream events lack shared payload types, contrary to `EVT-05`.
-- The two ingest controllers do not have direct controller tests; their services do.
+- `IngestAuthController` does not have a direct controller test; its service does.
 - Manual stream deletion/disable does not have a verified cluster-pipeline teardown path.
 
 ## Evidence
 
 | Claim | Implementation evidence | Test evidence |
 |---|---|---|
+| General Streams responses preserve safe fields and omit `publishToken` | [`streams.controller.ts`](../../backend/src/streams/controllers/streams.controller.ts), [`map-stream-to-public-stream.mapper.ts`](../../backend/src/streams/controllers/map-stream-to-public-stream.mapper.ts), [`public-stream.types.ts`](../../backend/src/streams/domain/types/public-stream.types.ts) | [`streams.controller.test.ts`](../../backend/test/streams/controllers/streams.controller.test.ts) |
+| Ingest reservation returns the token and a URL containing the same credential | [`ingest.controller.ts`](../../backend/src/streams/controllers/ingest.controller.ts), [`stream-reservation.service.ts`](../../backend/src/streams/services/orchestration/stream-reservation.service.ts) | [`ingest.controller.test.ts`](../../backend/test/streams/controllers/ingest.controller.test.ts), [`stream-reservation.service.test.ts`](../../backend/test/streams/services/orchestration/stream-reservation.service.test.ts) |
 | Lifecycle writes use one transition authority with compare-and-set retry | [`stream-status.service.ts`](../../backend/src/streams/services/mutation/stream-status.service.ts), [`mongo-stream.repository.ts`](../../backend/src/infrastructure/database/mongo/stream/mongo-stream.repository.ts) | [`stream-status.service.test.ts`](../../backend/test/streams/services/mutation/stream-status.service.test.ts) |
 | Reservation persists birth-time ingest placement, a cleanup deadline, and a publish secret | [`stream-reservation.service.ts`](../../backend/src/streams/services/orchestration/stream-reservation.service.ts), [`stream-crud.service.ts`](../../backend/src/streams/services/mutation/stream-crud.service.ts) | [`stream-reservation.service.test.ts`](../../backend/test/streams/services/orchestration/stream-reservation.service.test.ts), [`publish-auth.service.test.ts`](../../backend/test/streams/services/query/publish-auth.service.test.ts) |
 | Cluster assignment is sticky/deterministic for live candidates | [`stream-assignment.service.ts`](../../backend/src/streams/services/assignment/stream-assignment.service.ts) | [`stream-assignment.service.test.ts`](../../backend/test/streams/services/assignment/stream-assignment.service.test.ts) |

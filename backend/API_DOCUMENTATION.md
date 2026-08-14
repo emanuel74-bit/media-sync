@@ -66,7 +66,6 @@ Retrieve a list of all streams.
 ```json
 [
   {
-    "_id": "string",
     "name": "string",
     "source": "string",
     "status": "created|reserved|discovered|pending_assignment|assigned|synced|sync_error|stale",
@@ -77,6 +76,8 @@ Retrieve a list of all streams.
     "lastError": "string|null",
     "activeConsumers": number,
     "isManual": boolean,
+    "ingestNode": "string|null",
+    "reservedUntil": "2023-01-01T00:05:00.000Z|null",
     "assignedNode": "string|null",
     "assignedAt": "2023-01-01T00:00:00.000Z|null",
     "createdAt": "2023-01-01T00:00:00.000Z",
@@ -84,6 +85,23 @@ Retrieve a list of all streams.
   }
 ]
 ```
+
+Every general endpoint that returns a stream uses this credential-free `PublicStream`
+representation. The persisted `publishToken` is never included, even when the stream is
+`reserved`.
+
+| Endpoint | General stream response |
+| --- | --- |
+| `GET /api/streams` | `PublicStream[]` |
+| `GET /api/streams/{name}` | `PublicStream` or `null` |
+| `POST /api/streams` | `PublicStream` |
+| `PATCH /api/streams/{name}` | `PublicStream` |
+| `PATCH /api/streams/{name}/assign` | `PublicStream` |
+| `PATCH /api/streams/{name}/unassign` | `PublicStream` |
+
+**Breaking compatibility note:** callers must not obtain or recover a publish credential from a
+general Streams response. A publisher must retain the one intentionally delivered by
+`POST /api/ingest/streams`; see [ADR-0021](../docs/adr/0021-secure-public-stream-contract.md).
 
 ### Create Stream
 
@@ -235,6 +253,11 @@ Reserve a publish slot for a new stream. Rejects a name that already exists (409
 ```
 
 Publish to `publishUrl` as-is (the per-reservation secret is already embedded as RTSP credentials). The reservation is held until `expiresAt`; publishing before then activates it.
+
+This reservation response is the intentional credential-delivery exception. `publishToken` is
+non-empty and `publishUrl` embeds that same value; neither field is copied into any general
+Streams response. This behavior remains governed by
+[ADR-0013](../docs/adr/0013-reserve-publish-ingest-cluster.md).
 
 ### Ingest Publish Auth (internal)
 
@@ -692,11 +715,10 @@ All endpoints may return the following error formats:
 
 ## Data Models
 
-### Stream
+### PublicStream (general Streams responses)
 
 ```typescript
 {
-  _id: string;
   name: string;                 // unique
   source: string;
   status: 'created' | 'reserved' | 'discovered' | 'pending_assignment' | 'assigned' | 'synced' | 'sync_error' | 'stale';
@@ -707,12 +729,31 @@ All endpoints may return the following error formats:
   lastError?: string | null;
   activeConsumers: number;
   isManual: boolean;
+  ingestNode?: string | null;
+  reservedUntil?: Date | null;
   assignedNode?: string | null;
   assignedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
 ```
+
+`PublicStream` deliberately has no `publishToken` property.
+
+### StreamReservation (publish credential delivery)
+
+```typescript
+{
+  name: string;
+  ingestNode: string;
+  publishUrl: string;       // embeds publishToken as the RTSP password
+  publishToken: string;
+  expiresAt: Date;
+}
+```
+
+`StreamReservation` is returned only by `POST /api/ingest/streams`. General Streams endpoints
+return `PublicStream` instead.
 
 ### Alert
 

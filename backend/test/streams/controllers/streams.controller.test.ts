@@ -2,7 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 
 import { StreamStatus } from "@/common";
 import { StreamsController } from "@/streams/controllers";
-import { Stream, StreamAssignmentInfo } from "@/streams/domain";
+import { PublicStream, Stream, StreamAssignmentInfo } from "@/streams/domain";
 import {
     StreamAssignmentService,
     StreamCrudService,
@@ -23,8 +23,35 @@ const makeStream = (overrides: Partial<Stream> = {}): Stream => ({
     lastSeenAt: new Date(),
     lastSyncedAt: null,
     lastError: null,
+    ingestNode: "ingest-1",
+    reservedUntil: new Date(),
+    publishToken: "internal-publish-secret",
+    createdAt: new Date(),
+    updatedAt: new Date(),
     ...overrides,
 });
+
+function expectPublicStream(result: PublicStream, stream: Stream): void {
+    expect(result).toEqual({
+        name: stream.name,
+        source: stream.source,
+        status: stream.status,
+        metadata: stream.metadata,
+        isEnabled: stream.isEnabled,
+        lastSeenAt: stream.lastSeenAt,
+        lastSyncedAt: stream.lastSyncedAt,
+        lastError: stream.lastError,
+        activeConsumers: stream.activeConsumers,
+        isManual: stream.isManual,
+        ingestNode: stream.ingestNode,
+        reservedUntil: stream.reservedUntil,
+        assignedNode: stream.assignedNode,
+        assignedAt: stream.assignedAt,
+        createdAt: stream.createdAt,
+        updatedAt: stream.updatedAt,
+    });
+    expect(result).not.toHaveProperty("publishToken");
+}
 
 const makeAssignment = (overrides: Partial<StreamAssignmentInfo> = {}): StreamAssignmentInfo => ({
     name: "stream-1",
@@ -75,18 +102,28 @@ describe("StreamsController", () => {
         controller = module.get<StreamsController>(StreamsController);
     });
 
-    it("delegates findAll to StreamQueryService", async () => {
-        const streams = [makeStream()];
+    it("projects token-bearing findAll results into public streams", async () => {
+        const streams = [makeStream({ status: StreamStatus.RESERVED })];
         streamQuery.findAll.mockResolvedValue(streams);
 
         const result = await controller.findAll();
 
-        expect(result).toBe(streams);
+        expect(result).toHaveLength(1);
+        expectPublicStream(result[0], streams[0]);
         expect(streamQuery.findAll).toHaveBeenCalledTimes(1);
     });
 
-    it("maps create dto fields to StreamSetupService.onboard", async () => {
-        const created = makeStream();
+    it("preserves an empty findAll result", async () => {
+        streamQuery.findAll.mockResolvedValue([]);
+
+        const result = await controller.findAll();
+
+        expect(result).toEqual([]);
+        expect(streamQuery.findAll).toHaveBeenCalledTimes(1);
+    });
+
+    it("maps create dto fields and projects the token-bearing result", async () => {
+        const created = makeStream({ isManual: true });
         streamSetup.onboard.mockResolvedValue(created);
 
         const result = await controller.create({
@@ -95,7 +132,7 @@ describe("StreamsController", () => {
             isEnabled: true,
         });
 
-        expect(result).toBe(created);
+        expectPublicStream(result, created);
         expect(streamSetup.onboard).toHaveBeenCalledWith({
             name: "stream-1",
             source: "rtsp://source",
@@ -113,17 +150,27 @@ describe("StreamsController", () => {
         expect(streamQuery.getAssignmentInfo).toHaveBeenCalledTimes(1);
     });
 
-    it("delegates findOne to StreamQueryService.findByName", async () => {
+    it("projects a token-bearing findOne result into a public stream", async () => {
         const stream = makeStream();
         streamQuery.findByName.mockResolvedValue(stream);
 
         const result = await controller.findOne("stream-1");
 
-        expect(result).toBe(stream);
+        expect(result).not.toBeNull();
+        expectPublicStream(result!, stream);
         expect(streamQuery.findByName).toHaveBeenCalledWith("stream-1");
     });
 
-    it("maps update dto fields to StreamCrudService.update", async () => {
+    it("preserves a null findOne result", async () => {
+        streamQuery.findByName.mockResolvedValue(null);
+
+        const result = await controller.findOne("missing-stream");
+
+        expect(result).toBeNull();
+        expect(streamQuery.findByName).toHaveBeenCalledWith("missing-stream");
+    });
+
+    it("maps update dto fields and projects the token-bearing result", async () => {
         const updated = makeStream({ status: StreamStatus.SYNCED, isEnabled: false });
         streamCrud.update.mockResolvedValue(updated);
 
@@ -133,7 +180,7 @@ describe("StreamsController", () => {
             status: StreamStatus.SYNCED,
         });
 
-        expect(result).toBe(updated);
+        expectPublicStream(result, updated);
         expect(streamCrud.update).toHaveBeenCalledWith("stream-1", {
             source: "rtsp://updated",
             isEnabled: false,
@@ -149,23 +196,31 @@ describe("StreamsController", () => {
         expect(streamCrud.remove).toHaveBeenCalledWith("stream-1");
     });
 
-    it("delegates assign to StreamAssignmentService.assignToNode", async () => {
-        const assigned = makeStream({ assignedNode: "node-1", assignedAt: new Date() });
+    it("delegates assign and projects the token-bearing result", async () => {
+        const assigned = makeStream({
+            status: StreamStatus.ASSIGNED,
+            assignedNode: "node-1",
+            assignedAt: new Date(),
+        });
         streamAssignment.assignToNode.mockResolvedValue(assigned);
 
         const result = await controller.assign("stream-1", { nodeId: "node-1" });
 
-        expect(result).toBe(assigned);
+        expectPublicStream(result, assigned);
         expect(streamAssignment.assignToNode).toHaveBeenCalledWith("stream-1", "node-1");
     });
 
-    it("delegates unassign to StreamAssignmentService.clearAssignment", async () => {
-        const unassigned = makeStream({ assignedNode: null, assignedAt: null });
+    it("delegates unassign and projects the token-bearing result", async () => {
+        const unassigned = makeStream({
+            status: StreamStatus.PENDING_ASSIGNMENT,
+            assignedNode: null,
+            assignedAt: null,
+        });
         streamAssignment.clearAssignment.mockResolvedValue(unassigned);
 
         const result = await controller.unassign("stream-1");
 
-        expect(result).toBe(unassigned);
+        expectPublicStream(result, unassigned);
         expect(streamAssignment.clearAssignment).toHaveBeenCalledWith("stream-1");
     });
 });

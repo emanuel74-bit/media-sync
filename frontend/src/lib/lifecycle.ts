@@ -68,7 +68,9 @@ export function stageTimestamp(
     case "created":
       return stream.createdAt;
     case "reserved":
-      return stream.publishToken ? stream.updatedAt : undefined;
+      return stream.status === "reserved"
+        ? (stream.updatedAt ?? stream.createdAt)
+        : undefined;
     case "discovered":
       return stream.lastSeenAt;
     case "assigned":

@@ -50,7 +50,6 @@ export interface Stream {
   isManual: boolean;
   ingestNode?: string | null;
   reservedUntil?: string | null;
-  publishToken?: string | null;
   assignedNode?: string | null;
   assignedAt?: string | null;
   createdAt?: string;

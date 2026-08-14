@@ -29,3 +29,4 @@ number, then add a row here.
 | [0018](0018-establish-accepted-local-agent-workflow.md) | Establish an accepted local-agent workflow | Accepted | TOOL-09, DOC-05 |
 | [0019](0019-place-repository-tooling-tests-at-root.md) | Place repository tooling tests at the repository root | Accepted | TEST-08, TOOL-09 |
 | [0020](0020-bind-complete-tool-and-archive-identities.md) | Bind complete tool and archive identities | Accepted | TOOL-09, TEST-05, DOC-05 |
+| [0021](0021-secure-public-stream-contract.md) | Project general stream responses without publish credentials | Accepted | ARCH-01, DATA-06, DOC-01, DOC-03, DTO-02, NAME-02, TYPE-03, TEST-05 |

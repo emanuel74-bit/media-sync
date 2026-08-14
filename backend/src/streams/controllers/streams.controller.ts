@@ -1,8 +1,9 @@
 import { ApiTags } from "@nestjs/swagger";
 import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
 
-import { Stream, StreamAssignmentInfo } from "../domain";
+import { PublicStream, StreamAssignmentInfo } from "../domain";
 import { AssignStreamDto, CreateStreamDto, UpdateStreamDto } from "../dto";
+import { mapStreamToPublicStream } from "./map-stream-to-public-stream.mapper";
 import {
     StreamAssignmentService,
     StreamCrudService,
@@ -21,17 +22,19 @@ export class StreamsController {
     ) {}
 
     @Get()
-    findAll(): Promise<Stream[]> {
-        return this.streamQuery.findAll();
+    async findAll(): Promise<PublicStream[]> {
+        const streams = await this.streamQuery.findAll();
+        return streams.map(mapStreamToPublicStream);
     }
 
     @Post()
-    create(@Body() dto: CreateStreamDto): Promise<Stream> {
-        return this.streamSetup.onboard({
+    async create(@Body() dto: CreateStreamDto): Promise<PublicStream> {
+        const stream = await this.streamSetup.onboard({
             name: dto.name,
             source: dto.source,
             isEnabled: dto.isEnabled,
         });
+        return mapStreamToPublicStream(stream);
     }
 
     @Get("assignment")
@@ -40,17 +43,19 @@ export class StreamsController {
     }
 
     @Get(":name")
-    findOne(@Param("name") name: string): Promise<Stream | null> {
-        return this.streamQuery.findByName(name);
+    async findOne(@Param("name") name: string): Promise<PublicStream | null> {
+        const stream = await this.streamQuery.findByName(name);
+        return stream ? mapStreamToPublicStream(stream) : null;
     }
 
     @Patch(":name")
-    update(@Param("name") name: string, @Body() dto: UpdateStreamDto): Promise<Stream> {
-        return this.streamCrud.update(name, {
+    async update(@Param("name") name: string, @Body() dto: UpdateStreamDto): Promise<PublicStream> {
+        const stream = await this.streamCrud.update(name, {
             source: dto.source,
             isEnabled: dto.isEnabled,
             status: dto.status,
         });
+        return mapStreamToPublicStream(stream);
     }
 
     @Delete(":name")
@@ -59,12 +64,17 @@ export class StreamsController {
     }
 
     @Patch(":name/assign")
-    assign(@Param("name") name: string, @Body() assignStreamDto: AssignStreamDto): Promise<Stream> {
-        return this.streamAssignment.assignToNode(name, assignStreamDto.nodeId);
+    async assign(
+        @Param("name") name: string,
+        @Body() assignStreamDto: AssignStreamDto,
+    ): Promise<PublicStream> {
+        const stream = await this.streamAssignment.assignToNode(name, assignStreamDto.nodeId);
+        return mapStreamToPublicStream(stream);
     }
 
     @Patch(":name/unassign")
-    unassign(@Param("name") name: string): Promise<Stream> {
-        return this.streamAssignment.clearAssignment(name);
+    async unassign(@Param("name") name: string): Promise<PublicStream> {
+        const stream = await this.streamAssignment.clearAssignment(name);
+        return mapStreamToPublicStream(stream);
     }
 }

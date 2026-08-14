@@ -5,3 +5,4 @@
 export * from "./ingest.controller";
 export * from "./streams.controller";
 export * from "./ingest-auth.controller";
+export * from "./map-stream-to-public-stream.mapper";

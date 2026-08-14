@@ -2,66 +2,66 @@
 
 - [x] 1.1 Coordinator-review the proposal, design, `public-stream-contract` delta specification,
   and this checklist for consistency, then run `openspec validate secure-public-stream-contract`.
-- [ ] 1.2 Commit the complete planning artifacts and record coordinator acceptance with the exact
+- [x] 1.2 Commit the complete planning artifacts and record coordinator acceptance with the exact
   baseline SHA, planning SHA, normalized artifact digest, identity, and timestamp.
-- [ ] 1.3 Issue a bounded integration work order to a fresh implementer with the complete expected
+- [x] 1.3 Issue a bounded integration work order to a fresh implementer with the complete expected
   file-operation inventory, protected paths, rules, ADRs, docs, focused commands, and non-goals.
-- [ ] 1.4 Run the accepted-workflow preflight and stop before implementation if authorization,
+- [x] 1.4 Run the accepted-workflow preflight and stop before implementation if authorization,
   scope, branch, baseline, worktree, or protected-state validation fails.
 
 ## 2. Public stream response boundary
 
-- [ ] 2.1 Add append-only ADR-0021 documenting explicit general-stream projection and the
+- [x] 2.1 Add append-only ADR-0021 documenting explicit general-stream projection and the
   intentional ADR-0013 reservation-credential exception.
-- [ ] 2.2 Add ADR-0021 to `docs/adr/README.md` and `docs/adr/index.md` without rewriting ADR-0013.
-- [ ] 2.3 Add the explicitly enumerated `PublicStream` type and update the required nested domain
+- [x] 2.2 Add ADR-0021 to `docs/adr/README.md` and `docs/adr/index.md` without rewriting ADR-0013.
+- [x] 2.3 Add the explicitly enumerated `PublicStream` type and update the required nested domain
   type/domain barrels without changing the internal `Stream` type.
-- [ ] 2.4 Add the pure `mapStreamToPublicStream` controller-bound mapper, explicitly enumerate safe
+- [x] 2.4 Add the pure `mapStreamToPublicStream` controller-bound mapper, explicitly enumerate safe
   fields without spread, and update the required controller barrel.
-- [ ] 2.5 Project `GET /api/streams` and `GET /api/streams/:name` through `PublicStream`, preserving
+- [x] 2.5 Project `GET /api/streams` and `GET /api/streams/:name` through `PublicStream`, preserving
   empty-array and `null` behavior.
-- [ ] 2.6 Project `POST /api/streams` and `PATCH /api/streams/:name` through `PublicStream` while
+- [x] 2.6 Project `POST /api/streams` and `PATCH /api/streams/:name` through `PublicStream` while
   retaining the existing input DTO-to-service mappings.
-- [ ] 2.7 Project `PATCH /api/streams/:name/assign` and
+- [x] 2.7 Project `PATCH /api/streams/:name/assign` and
   `PATCH /api/streams/:name/unassign` through `PublicStream`.
-- [ ] 2.8 Extend `streams.controller.test.ts` with token-bearing internal results proving redaction
+- [x] 2.8 Extend `streams.controller.test.ts` with token-bearing internal results proving redaction
   for list, single, create, update, assign, and unassign plus empty-array and `null` preservation.
-- [ ] 2.9 Add a mirrored `ingest.controller.test.ts` proving `POST /api/ingest/streams` still returns
+- [x] 2.9 Add a mirrored `ingest.controller.test.ts` proving `POST /api/ingest/streams` still returns
   the reservation token and a publish URL containing the same credential.
 
 ## 3. Frontend contract and lifecycle
 
-- [ ] 3.1 Remove `publishToken` from frontend `Stream`, retain it on `StreamReservation`, and update
+- [x] 3.1 Remove `publishToken` from frontend `Stream`, retain it on `StreamReservation`, and update
   general-stream fixtures so they cannot use reservation credentials.
-- [ ] 3.2 Keep the ingest reservation mock explicitly returning both `publishToken` and the
+- [x] 3.2 Keep the ingest reservation mock explicitly returning both `publishToken` and the
   credential-bearing `publishUrl` under the distinct reservation contract.
-- [ ] 3.3 Change the reserved-stage lifecycle timestamp to use `updatedAt`, then `createdAt`, only
+- [x] 3.3 Change the reserved-stage lifecycle timestamp to use `updatedAt`, then `createdAt`, only
   while status is `reserved`, returning `undefined` when neither exists or status is not reserved.
-- [ ] 3.4 Extend the frontend API contract test to assert intentional reservation credential
+- [x] 3.4 Extend the frontend API contract test to assert intentional reservation credential
   delivery and add focused lifecycle tests for every status/timestamp fallback scenario.
 
 ## 4. Public documentation
 
-- [ ] 4.1 Update `backend/API_DOCUMENTATION.md` with the credential-free general response matrix,
+- [x] 4.1 Update `backend/API_DOCUMENTATION.md` with the credential-free general response matrix,
   the breaking compatibility note, and the unchanged reservation credential response.
-- [ ] 4.2 Update `docs/features/streams.md` with the public projection boundary, ADR/spec links,
+- [x] 4.2 Update `docs/features/streams.md` with the public projection boundary, ADR/spec links,
   implementation and test evidence, governing rules, and a refreshed `last_verified` date.
-- [ ] 4.3 Update `docs/subsystems/stream-reservation-and-publication.md` with the general-response
+- [x] 4.3 Update `docs/subsystems/stream-reservation-and-publication.md` with the general-response
   secrecy boundary, intentional reservation delivery, ADR/spec links, evidence, and refreshed
   `last_verified` date.
 
 ## 5. Focused implementation validation
 
-- [ ] 5.1 Run the focused backend Streams and Ingest controller tests, backend typecheck, and
+- [x] 5.1 Run the focused backend Streams and Ingest controller tests, backend typecheck, and
   backend lint; resolve every failure without weakening the credential matrix.
-- [ ] 5.2 Run the focused frontend API/lifecycle tests, frontend typecheck, and frontend lint;
+- [x] 5.2 Run the focused frontend API/lifecycle tests, frontend typecheck, and frontend lint;
   resolve every failure and retain the reservation exception.
-- [ ] 5.3 Run `git diff --check` and `openspec validate secure-public-stream-contract`, then reconcile
+- [x] 5.3 Run `git diff --check` and `openspec validate secure-public-stream-contract`, then reconcile
   implementation, tests, ADRs, documentation, and task state before integration.
 
 ## 6. Accepted implementation review and evidence
 
-- [ ] 6.1 Integrate the bounded implementation in declared dependency order and verify the exact
+- [x] 6.1 Integrate the bounded implementation in declared dependency order and verify the exact
   base-to-candidate additions, modifications, deletions, and renames against the work order.
 - [ ] 6.2 Run the accepted checkpoint and
   `npm run verify:change -- secure-public-stream-contract` on the exact committed implementation

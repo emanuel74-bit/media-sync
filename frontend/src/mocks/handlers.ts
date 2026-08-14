@@ -1,6 +1,6 @@
 import { http, HttpResponse } from "msw";
 
-import type { Alert, Node, Stream } from "@/types";
+import type { Alert, Node, Stream, StreamReservation } from "@/types";
 
 import { db, nodeMetricSeries, pathMetricSeries, timestamps } from "./fixtures";
 
@@ -106,17 +106,15 @@ export const handlers = [
     // --- ingest ---
     http.post("/api/ingest/streams", async ({ request }) => {
         const { name } = (await request.json()) as { name: string };
-        return HttpResponse.json(
-            {
-                name,
-                ingestNode: "ingest-node-1",
-                publishUrl: `rtsp://sync:syncpass@10.0.0.11:8554/${name}`,
-                publishToken:
-                    "mock-token-" + Math.random().toString(36).slice(2, 10),
-                expiresAt: new Date(Date.now() + 5 * 60_000).toISOString(),
-            },
-            { status: 201 },
-        );
+        const publishToken = `mock-token-${Math.random().toString(36).slice(2, 10)}`;
+        const reservation: StreamReservation = {
+            name,
+            ingestNode: "ingest-node-1",
+            publishUrl: `rtsp://publish:${encodeURIComponent(publishToken)}@10.0.0.11:8554/${name}`,
+            publishToken,
+            expiresAt: new Date(Date.now() + 5 * 60_000).toISOString(),
+        };
+        return HttpResponse.json(reservation, { status: 201 });
     }),
 
     // --- nodes ---

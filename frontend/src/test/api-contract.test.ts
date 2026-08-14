@@ -74,7 +74,11 @@ describe("backend REST contract", () => {
 
     const reservation = await ingestApi.reserve("event-1");
 
+    expect(reservation.name).toBe("event-1");
     expect(reservation.ingestNode).toBe("ingest-1");
+    expect(reservation.publishToken).toBe("secret");
+    expect(reservation.publishUrl).toContain(`:${reservation.publishToken}@`);
+    expect(reservation.expiresAt).toBe("2026-07-21T10:00:00.000Z");
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/ingest/streams",
       expect.objectContaining({

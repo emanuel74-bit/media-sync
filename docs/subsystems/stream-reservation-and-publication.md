@@ -2,7 +2,7 @@
 type: subsystem
 subsystem: stream-reservation-and-publication
 status: active
-last_verified: 2026-07-23
+last_verified: 2026-08-14
 participating_features:
   - streams
   - nodes
@@ -14,9 +14,9 @@ participating_features:
 
 ## Purpose
 
-Reserve a unique stream name on a least-loaded live ingest node, issue a publish secret alongside
-a reservation cleanup deadline, authorize MediaMTX callbacks, and hand observed publication to
-synchronization.
+Reserve a unique stream name on a least-loaded live ingest node, deliver a publish secret only in
+the reservation response, authorize MediaMTX callbacks, keep that secret out of general stream
+responses, and hand observed publication to synchronization.
 
 ## Trigger
 
@@ -48,7 +48,7 @@ sequenceDiagram
     S->>D: Check stream name
     S->>N: Live ingest nodes + loads
     S->>D: Create reserved stream + secret
-    S-->>P: Ingest URL + secret
+    S-->>P: Reservation response only: ingest URL + secret
     P->>M: Publish stream
     M->>S: POST /api/ingest/auth
     S->>D: Validate publish action/path/secret
@@ -61,7 +61,9 @@ sequenceDiagram
 
 ### Streams
 
-Owns reservation identity, placement persistence, publish secret, expiry, and authorization.
+Owns reservation identity, placement persistence, publish secret, expiry, authorization, and the
+explicit credential-free projection used by every general Streams response. The internal record
+retains the token; only `POST /api/ingest/streams` returns it to a publisher.
 
 ### Nodes
 
@@ -107,9 +109,10 @@ Later assignment/pipeline events belong to their respective subsystem.
 
 ## Success behavior
 
-The caller receives coordinates and a secret for the persisted ingest placement; a matching
-stored secret is accepted while it remains on the record, and the published path can be observed
-by Sync.
+The caller receives coordinates and a secret for the persisted ingest placement only from the
+reservation endpoint. Its `publishUrl` contains the same token returned in `publishToken`. A
+matching stored secret is accepted while it remains on the record, the published path can be
+observed by Sync, and later general stream reads or mutations return safe fields without the token.
 
 ## Failure behavior
 
@@ -141,6 +144,9 @@ Reservation cleanup limits unused secrets, subject to Sync cadence and successfu
 Liveness/load accuracy depends on node heartbeat and metric cadence. Publication authorization
 depends on the persisted path and secret, not a direct caller-node identity check.
 
+Clients must retain the credential from the reservation response. General list, lookup, create,
+update, assignment, and unassignment responses deliberately cannot be used to recover it.
+
 ## Related features
 
 [Streams](../features/streams.md), [Nodes](../features/nodes.md),
@@ -148,18 +154,23 @@ depends on the persisted path and secret, not a direct caller-node identity chec
 
 ## Behavioral specifications
 
-No canonical behavioral OpenSpec exists; see the [specification map](../specification-map.md).
+[`public-stream-contract`](../../openspec/changes/secure-public-stream-contract/specs/public-stream-contract/spec.md) defines the
+general-response secrecy boundary and the intentional reservation delivery exception. See the
+[specification map](../specification-map.md) for the repository-wide capability index.
 
 ## Architecture decisions
 
-[ADR-0013](../adr/0013-reserve-publish-ingest-cluster.md) and
-[ADR-0014](../adr/0014-guard-stream-lifecycle-transitions.md).
+[ADR-0013](../adr/0013-reserve-publish-ingest-cluster.md),
+[ADR-0014](../adr/0014-guard-stream-lifecycle-transitions.md), and
+[ADR-0021](../adr/0021-secure-public-stream-contract.md). ADR-0021 complements ADR-0013: the
+former owns the general-response boundary and the latter owns credential creation and delivery.
 
 ## Governing conventions
 
 | Rule | Relevance |
 |---|---|
 | `ARCH-11`, `INT-06` | Live registry topology and per-node targeting |
+| `ARCH-01`, `DATA-06`, `TYPE-03` | Explicit controller projection from internal to public stream shape |
 | `DATA-07` | Guarded lifecycle authority after birth-state creation |
 | `EVT-01`, `EVT-05` | Mutation-owned reservation event and payload typing |
 | `TEST-05`, `DOC-06` | Cross-service evidence and subsystem maintenance |
@@ -170,6 +181,8 @@ See [`backend/CONVENTIONS.md`](../../backend/CONVENTIONS.md).
 
 | Claim | Implementation | Test |
 |---|---|---|
+| General stream responses omit the internally persisted publish token | [`streams.controller.ts`](../../backend/src/streams/controllers/streams.controller.ts), [`map-stream-to-public-stream.mapper.ts`](../../backend/src/streams/controllers/map-stream-to-public-stream.mapper.ts) | [`streams.controller.test.ts`](../../backend/test/streams/controllers/streams.controller.test.ts) |
+| Reservation response deliberately retains the token and credential-bearing URL | [`ingest.controller.ts`](../../backend/src/streams/controllers/ingest.controller.ts), [`stream-reservation.service.ts`](../../backend/src/streams/services/orchestration/stream-reservation.service.ts) | [`ingest.controller.test.ts`](../../backend/test/streams/controllers/ingest.controller.test.ts), [`stream-reservation.service.test.ts`](../../backend/test/streams/services/orchestration/stream-reservation.service.test.ts) |
 | Reservation selects/persists an ingest placement and secret | [`stream-reservation.service.ts`](../../backend/src/streams/services/orchestration/stream-reservation.service.ts) | [`stream-reservation.service.test.ts`](../../backend/test/streams/services/orchestration/stream-reservation.service.test.ts) |
 | Publish authorization checks the action/path and persisted publish token | [`publish-auth.service.ts`](../../backend/src/streams/services/query/publish-auth.service.ts) | [`publish-auth.service.test.ts`](../../backend/test/streams/services/query/publish-auth.service.test.ts) |
 | Observation promotes a reserved stream without regressing newer states | [`ingest-stream-synchronizer.service.ts`](../../backend/src/sync/services/workflows/ingest-stream-synchronizer.service.ts) | [`ingest-stream-synchronizer.service.test.ts`](../../backend/test/sync/services/workflows/ingest-stream-synchronizer.service.test.ts) |

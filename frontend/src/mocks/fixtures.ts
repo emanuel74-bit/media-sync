@@ -16,7 +16,7 @@ const minutesAhead = (m: number) =>
 
 export const db = {
   // Streams cover every StreamStatus + manual/auto, assigned/unassigned,
-  // reserved (token), error, stale, and varied metadata.
+  // reserved (with expiry), error, stale, and varied metadata.
   streams: [
     {
       name: "camera/lobby",
@@ -152,7 +152,6 @@ export const db = {
       assignedNode: null,
       assignedAt: null,
       reservedUntil: minutesAhead(4),
-      publishToken: "rsv_9f3c2a7be1",
       createdAt: minutesAgo(1),
       updatedAt: minutesAgo(1),
     },

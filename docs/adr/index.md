@@ -32,6 +32,7 @@ By concern, for someone new to the repository:
 | How does the system know which nodes exist? | [0009](0009-pod-derived-cluster-topology.md), [0012](0012-cluster-nodes-as-statefulset.md) |
 | How do alerts work? | [0010](0010-event-driven-alert-pipeline.md), [0011](0011-node-resource-alerts-third-producer.md) |
 | How does a stream get in and get placed? | [0013](0013-reserve-publish-ingest-cluster.md), [0014](0014-guard-stream-lifecycle-transitions.md) |
+| Where may stream publish credentials cross the REST boundary? | [0013](0013-reserve-publish-ingest-cluster.md), [0021](0021-secure-public-stream-contract.md) |
 
 ## ADR navigation
 
@@ -57,6 +58,7 @@ By concern, for someone new to the repository:
 | [0018](0018-establish-accepted-local-agent-workflow.md) | Accepted | Local agent workflow and verification | None |
 | [0019](0019-place-repository-tooling-tests-at-root.md) | Accepted | Repository tooling test layout | None |
 | [0020](0020-bind-complete-tool-and-archive-identities.md) | Accepted | Complete workflow identities | None |
+| [0021](0021-secure-public-stream-contract.md) | Accepted | Public stream contract | None |
 
 ## Related
 
